@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Food Cost Percentage Calculator With VAT or Sales Tax (Free) | DoughMath Studio</title>
+<meta name="description" content="Free food cost % calculator for cafes, restaurants and food trucks. Works out food cost on the price without VAT or sales tax and the menu price you need for your target food cost.">
+<link rel="canonical" href="https://doughmath-studio.github.io/tools/food-cost-calculator/">
+<meta property="og:title" content="Free Food Cost % Calculator (VAT-aware)">
+<meta property="og:description" content="Real food cost % on the price without tax, and the menu price for your target.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://doughmath-studio.github.io/tools/food-cost-calculator/">
+<meta property="og:image" content="https://doughmath-studio.github.io/assets/pins/pin-food-cost-tax.png">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Food Cost Percentage Calculator","applicationCategory":"BusinessApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://doughmath-studio.github.io/tools/food-cost-calculator/","publisher":{"@type":"Organization","name":"DoughMath Studio"}}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="wrap"><a class="brand" href="/">Dough<span>Math</span> Studio</a><nav class="nav"><a href="/#tools">Free tools</a><a href="/#guides">Guides</a><a href="/#shop">Templates</a><a href="/about/">About</a></nav></div></header>
+
+<main class="wrap narrow">
+<p class="crumbs"><a href="/">Home</a> › Free tools</p>
+<h1>Food Cost % Calculator</h1>
+<p class="lead">For cafes, restaurants, food trucks and caterers. Get your real food cost percentage on the price without tax, and the menu price that hits your target.</p>
+
+<section class="calc" aria-label="Food cost calculator">
+  <div class="fields">
+    <div class="field">
+      <label for="price">Menu price</label>
+      <input id="price" type="number" inputmode="decimal" min="0" step="0.01" value="12.30">
+      <span class="hint">The price the guest sees.</span>
+    </div>
+    <div class="field">
+      <label for="incl">Does the menu price include tax?</label>
+      <select id="incl">
+        <option value="yes">Yes, VAT is included (EU, UK)</option>
+        <option value="no">No, tax is added at checkout (US, Canada)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="tax">Tax rate, %</label>
+      <input id="tax" type="number" inputmode="decimal" min="0" max="50" step="0.5" value="23">
+      <span class="hint">Your VAT or sales tax rate for food.</span>
+    </div>
+    <div class="field">
+      <label for="plate">Plate cost</label>
+      <input id="plate" type="number" inputmode="decimal" min="0" step="0.01" value="3.00">
+      <span class="hint">Cost of all ingredients on the plate.</span>
+    </div>
+    <div class="field">
+      <label for="target">Target food cost, %</label>
+      <input id="target" type="number" inputmode="decimal" min="1" max="90" step="1" value="30">
+    </div>
+  </div>
+
+  <div class="results" aria-live="polite">
+    <div class="result-main">
+      <div class="label">Real food cost</div>
+      <div class="value" id="fc">–</div>
+      <div class="sub" id="fcSub"></div>
+    </div>
+    <table class="result-table">
+      <tr><td>Price without tax</td><td id="net">–</td></tr>
+      <tr id="naiveRow"><td>Food cost if you divide by the price with tax (wrong)</td><td id="naive">–</td></tr>
+      <tr><td>Gross profit per plate (before labor and rent)</td><td id="gp">–</td></tr>
+      <tr><td><strong>Menu price for your target food cost</strong></td><td id="sugg">–</td></tr>
+    </table>
+    <div class="note" id="note" hidden></div>
+  </div>
+</section>
+
+<h2>Why the tax matters</h2>
+<p>VAT or sales tax is money you collect for the government, not revenue. Food cost % must be measured against what you keep:</p>
+<p class="formula">Food cost % = plate cost ÷ menu price without tax</p>
+<p>With 23% VAT, a 12.30 dish is really 10.00 to you. A 3.00 plate looks like 24% food cost, but the real figure is 30%. That gap is the difference between "on target" and "where did the money go". The full explanation, with yield and theoretical vs actual food cost, is in <a href="/guides/food-cost-percentage-with-tax/">Food cost percentage: divide by the price without tax</a>.</p>
+
+<div class="cta">
+  <h3>Cost your whole menu at once</h3>
+  <p>Our restaurant workbook costs every dish from your real pack prices, handles prep recipes like sauces and doughs, yield %, VAT-aware menu prices, menu engineering and a weekly food cost tracker. Google Sheets and Excel.</p>
+  <div class="btns">
+    <a class="btn" href="https://www.etsy.com/listing/4591988033">See the Restaurant Food Cost Workbook on Etsy</a>
+  </div>
+</div>
+
+<h2>More free tools</h2>
+<div class="grid">
+  <a class="card" href="/tools/baking-price-calculator/" style="text-decoration:none;color:inherit"><h3>Baked goods price calculator</h3><p>True cost per piece with your time and overhead, plus a suggested price.</p><span class="more">Open →</span></a>
+  <a class="card" href="/tools/recipe-scaler/" style="text-decoration:none;color:inherit"><h3>Recipe scaler and cups to grams</h3><p>Scale a recipe to any yield and convert cups and spoons to grams.</p><span class="more">Open →</span></a>
+</div>
+</main>
+
+<footer class="site-footer"><div class="wrap"><span>© 2026 DoughMath Studio · Tools by a professional cook</span><span><a href="/privacy/">Privacy</a> · <a href="https://doughmathstudio.etsy.com">Etsy shop</a></span></div></footer>
+
+<script>
+(function () {
+  var ids = ["price","incl","tax","plate","target"];
+  var el = {};
+  ids.forEach(function (id) { el[id] = document.getElementById(id); });
+  function num(id) { var v = parseFloat(String(el[id].value).replace(",", ".")); return isFinite(v) ? v : 0; }
+  function set(id, t) { document.getElementById(id).textContent = t; }
+  function pct(v) { return (v * 100).toFixed(1) + "%"; }
+  function m(v) { return v.toFixed(2); }
+  function calc() {
+    var price = num("price"), incl = el.incl.value === "yes", tax = Math.max(0, num("tax")) / 100,
+        plate = Math.max(0, num("plate")), target = num("target") / 100;
+    var note = document.getElementById("note");
+    note.hidden = true;
+    if (price <= 0) { set("fc", "–"); set("fcSub", "Enter a menu price."); return; }
+    var net = incl ? price / (1 + tax) : price;
+    var fc = plate / net;
+    set("fc", pct(fc));
+    set("fcSub", "Target " + (target * 100).toFixed(0) + "% · " + (fc <= target ? "on or below target" : "above target by " + ((fc - target) * 100).toFixed(1) + " points"));
+    set("net", m(net));
+    document.getElementById("naiveRow").style.display = incl && tax > 0 ? "" : "none";
+    set("naive", pct(plate / price));
+    set("gp", m(net - plate));
+    if (target > 0 && target < 1) {
+      var suggNet = plate / target;
+      var sugg = incl ? suggNet * (1 + tax) : suggNet;
+      set("sugg", m(sugg) + (incl ? " incl. tax" : " before tax"));
+    } else { set("sugg", "–"); }
+    if (fc > target && target > 0) { note.textContent = "This dish is above your target. Options: raise the price, trim the portion, or swap an ingredient."; note.hidden = false; }
+  }
+  ids.forEach(function (id) { el[id].addEventListener("input", calc); el[id].addEventListener("change", calc); });
+  el.incl.addEventListener("change", function () {
+    if (el.incl.value === "no" && num("tax") === 23) { el.tax.value = "8"; }
+    if (el.incl.value === "yes" && num("tax") === 8) { el.tax.value = "23"; }
+    calc();
+  });
+  calc();
+})();
+</script>
+</body>
+</html>

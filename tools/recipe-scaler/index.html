@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recipe Scaler and Cups to Grams Converter for Bakers (Free) | DoughMath Studio</title>
+<meta name="description" content="Free recipe scaler for bakers: change the yield of any recipe and convert cups, tablespoons and teaspoons of flour, sugar, butter and more to grams.">
+<link rel="canonical" href="https://doughmath-studio.github.io/tools/recipe-scaler/">
+<meta property="og:title" content="Free Recipe Scaler + Cups to Grams">
+<meta property="og:description" content="Scale a recipe to any yield and convert cups and spoons to grams.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://doughmath-studio.github.io/tools/recipe-scaler/">
+<meta property="og:image" content="https://doughmath-studio.github.io/assets/pins/pin-recipe-scaler.png">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Recipe Scaler and Cups to Grams Converter","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://doughmath-studio.github.io/tools/recipe-scaler/","publisher":{"@type":"Organization","name":"DoughMath Studio"}}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="wrap"><a class="brand" href="/">Dough<span>Math</span> Studio</a><nav class="nav"><a href="/#tools">Free tools</a><a href="/#guides">Guides</a><a href="/#shop">Templates</a><a href="/about/">About</a></nav></div></header>
+
+<main class="wrap narrow">
+<p class="crumbs"><a href="/">Home</a> › Free tools</p>
+<h1>Recipe Scaler and Cups to Grams</h1>
+<p class="lead">Make 60 cookies from a recipe for 24, and see every ingredient in grams. Free, works on your phone.</p>
+
+<section class="calc" aria-label="Recipe scaler">
+  <div class="fields">
+    <div class="field">
+      <label for="from">Recipe makes</label>
+      <input id="from" type="number" inputmode="decimal" min="0.01" step="1" value="24">
+    </div>
+    <div class="field">
+      <label for="to">I want to make</label>
+      <input id="to" type="number" inputmode="decimal" min="0.01" step="1" value="60">
+    </div>
+  </div>
+  <p id="factor" style="margin:14px 0 0;color:var(--muted)"></p>
+
+  <div class="table-scroll">
+  <table class="rows" id="rows">
+    <thead><tr><th style="min-width:130px">Ingredient</th><th style="min-width:70px">Amount</th><th style="min-width:80px">Unit</th><th style="min-width:150px">Scaled</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table>
+  </div>
+  <p style="margin-top:12px"><button class="btn secondary" id="add" type="button">+ Add ingredient</button></p>
+  <div class="note">Cup weights are typical averages for spooned-and-levelled measuring. Flour packed into a cup can weigh 20% more. For the most consistent results, weigh.</div>
+</section>
+
+<h2>Grams per cup used here</h2>
+<div class="article">
+<table>
+<tr><th>Ingredient</th><th>1 cup</th><th>1 tbsp</th><th>1 tsp</th></tr>
+<tbody id="densityTable"></tbody>
+</table>
+<p>1 cup = 16 tablespoons = 48 teaspoons = 236.6 ml (US). Weights in the table are approximate.</p>
+</div>
+
+<div class="cta">
+  <h3>Want the cost of the scaled batch too?</h3>
+  <p>Our Recipe Cost Calculator lets you write recipes in cups, spoons or grams, converts them to cost from the packs you buy, and plans big orders with a shopping list. Google Sheets and Excel.</p>
+  <div class="btns">
+    <a class="btn" href="https://www.etsy.com/listing/4591782333">See the Recipe Cost Calculator on Etsy</a>
+  </div>
+</div>
+
+<h2>More free tools</h2>
+<div class="grid">
+  <a class="card" href="/tools/baking-price-calculator/" style="text-decoration:none;color:inherit"><h3>Baked goods price calculator</h3><p>True cost per piece with your time and overhead, plus a suggested price.</p><span class="more">Open →</span></a>
+  <a class="card" href="/tools/food-cost-calculator/" style="text-decoration:none;color:inherit"><h3>Food cost % calculator</h3><p>Food cost on the price without tax, and the menu price for your target.</p><span class="more">Open →</span></a>
+</div>
+</main>
+
+<footer class="site-footer"><div class="wrap"><span>© 2026 DoughMath Studio · Tools by a professional cook</span><span><a href="/privacy/">Privacy</a> · <a href="https://doughmathstudio.etsy.com">Etsy shop</a></span></div></footer>
+
+<script>
+(function () {
+  var CUP_ML = 236.588;
+  var D = [
+    ["All-purpose flour", 120], ["Bread flour", 127], ["Whole wheat flour", 120],
+    ["Granulated sugar", 200], ["Brown sugar, packed", 213], ["Powdered sugar", 120],
+    ["Butter", 227], ["Milk", 242], ["Water", 237], ["Heavy cream", 238],
+    ["Vegetable oil", 218], ["Honey", 340], ["Cocoa powder", 85], ["Rolled oats", 90],
+    ["Table salt", 288], ["Chocolate chips", 170], ["Eggs, large (without shell)", 0, 50], ["Other (no grams)", 0]
+  ];
+  var UNITS = ["cup","tbsp","tsp","ml","l","g","kg","oz","lb","piece"];
+  var tbody = document.querySelector("#rows tbody");
+  var fromEl = document.getElementById("from"), toEl = document.getElementById("to");
+  function num(v) { var x = parseFloat(String(v).replace(",", ".")); return isFinite(x) ? x : 0; }
+  function fmt(x) {
+    if (x === 0) return "0";
+    if (x >= 100) return Math.round(x).toString();
+    if (x >= 10) return (Math.round(x * 10) / 10).toString();
+    return (Math.round(x * 100) / 100).toString();
+  }
+  function toGrams(amount, unit, gPerCup, gPerPiece) {
+    if (unit === "g") return amount;
+    if (unit === "kg") return amount * 1000;
+    if (unit === "oz") return amount * 28.3495;
+    if (unit === "lb") return amount * 453.592;
+    if (unit === "piece") return gPerPiece ? amount * gPerPiece : null;
+    if (!gPerCup) return null;
+    var cups = unit === "cup" ? amount : unit === "tbsp" ? amount / 16 : unit === "tsp" ? amount / 48 :
+               unit === "ml" ? amount / CUP_ML : unit === "l" ? amount * 1000 / CUP_ML : null;
+    return cups === null ? null : cups * gPerCup;
+  }
+  function row(name, amount, unit) {
+    var tr = document.createElement("tr");
+    var sel = '<select class="ing">' + D.map(function (d, i) { return '<option value="' + i + '"' + (d[0] === name ? " selected" : "") + ">" + d[0] + "</option>"; }).join("") + "</select>";
+    var us = '<select class="unit">' + UNITS.map(function (u) { return '<option' + (u === unit ? " selected" : "") + ">" + u + "</option>"; }).join("") + "</select>";
+    tr.innerHTML = "<td>" + sel + '</td><td><input class="amt" type="number" inputmode="decimal" min="0" step="0.25" value="' + amount + '"></td><td>' + us + '</td><td class="out"></td><td><button class="rm" type="button" aria-label="Remove">×</button></td>';
+    tr.querySelector(".rm").addEventListener("click", function () { tr.remove(); calc(); });
+    tr.querySelectorAll("input,select").forEach(function (e) { e.addEventListener("input", calc); e.addEventListener("change", calc); });
+    tbody.appendChild(tr);
+  }
+  function calc() {
+    var from = num(fromEl.value), to = num(toEl.value);
+    var f = from > 0 ? to / from : 0;
+    document.getElementById("factor").textContent = from > 0 ? "Multiply everything by " + fmt(f) : "Enter how many the recipe makes.";
+    tbody.querySelectorAll("tr").forEach(function (tr) {
+      var d = D[+tr.querySelector(".ing").value], unit = tr.querySelector(".unit").value;
+      var amt = num(tr.querySelector(".amt").value) * f;
+      var g = toGrams(amt, unit, d[1], d[2]);
+      var txt = fmt(amt) + " " + unit;
+      if (g !== null && unit !== "g") txt += " ≈ " + fmt(g) + " g";
+      tr.querySelector(".out").textContent = txt;
+    });
+  }
+  [["All-purpose flour", 2.25, "cup"], ["Butter", 1, "cup"], ["Granulated sugar", 0.75, "cup"],
+   ["Brown sugar, packed", 0.75, "cup"], ["Eggs, large (without shell)", 2, "piece"], ["Table salt", 1, "tsp"],
+   ["Chocolate chips", 2, "cup"]].forEach(function (r) { row(r[0], r[1], r[2]); });
+  document.getElementById("add").addEventListener("click", function () { row("All-purpose flour", 1, "cup"); calc(); });
+  fromEl.addEventListener("input", calc); toEl.addEventListener("input", calc);
+  var dt = document.getElementById("densityTable");
+  D.forEach(function (d) { if (!d[1]) return; var tr = document.createElement("tr"); tr.innerHTML = "<td>" + d[0] + "</td><td>" + d[1] + " g</td><td>" + fmt(d[1] / 16) + " g</td><td>" + fmt(d[1] / 48) + " g</td>"; dt.appendChild(tr); });
+  calc();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://doughmath-studio.github.io/sitemap.xml

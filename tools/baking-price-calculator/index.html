@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baked Goods Price Calculator (Free) – Cost per Piece and Suggested Price | DoughMath Studio</title>
+<meta name="description" content="Free calculator for home bakers: add ingredients, packaging, your time and overhead to get your real cost per cookie, cupcake or slice and a suggested price at your target margin.">
+<link rel="canonical" href="https://doughmath-studio.github.io/tools/baking-price-calculator/">
+<meta property="og:title" content="Free Baked Goods Price Calculator">
+<meta property="og:description" content="Real cost per piece and a suggested price at your target margin, in one minute.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://doughmath-studio.github.io/tools/baking-price-calculator/">
+<meta property="og:image" content="https://doughmath-studio.github.io/assets/pins/pin-price-calculator.png">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Baked Goods Price Calculator","applicationCategory":"BusinessApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://doughmath-studio.github.io/tools/baking-price-calculator/","publisher":{"@type":"Organization","name":"DoughMath Studio"}}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="wrap"><a class="brand" href="/">Dough<span>Math</span> Studio</a><nav class="nav"><a href="/#tools">Free tools</a><a href="/#guides">Guides</a><a href="/#shop">Templates</a><a href="/about/">About</a></nav></div></header>
+
+<main class="wrap narrow">
+<p class="crumbs"><a href="/">Home</a> › Free tools</p>
+<h1>Baked Goods Price Calculator</h1>
+<p class="lead">Find out what one cookie, cupcake or slice really costs you, including your time, and get a price that leaves the profit you want. Free, no sign-up.</p>
+
+<section class="calc" aria-label="Price calculator">
+  <div class="fields">
+    <div class="field">
+      <label for="cur">Currency</label>
+      <select id="cur"><option value="$">$ US dollar</option><option value="€">€ Euro</option><option value="£">£ Pound</option><option value="C$">C$ Canadian dollar</option><option value="A$">A$ Australian dollar</option><option value="zł">zł Złoty</option></select>
+    </div>
+    <div class="field">
+      <label for="ing">Ingredients for one batch</label>
+      <input id="ing" type="number" inputmode="decimal" min="0" step="0.01" value="9.00">
+      <span class="hint">What you paid for everything that goes into the batch.</span>
+    </div>
+    <div class="field">
+      <label for="pcs">Pieces the recipe makes</label>
+      <input id="pcs" type="number" inputmode="numeric" min="1" step="1" value="24">
+    </div>
+    <div class="field">
+      <label for="loss">Pieces you can't sell, %</label>
+      <input id="loss" type="number" inputmode="decimal" min="0" max="90" step="1" value="5">
+      <span class="hint">Broken, burnt, samples, tasting.</span>
+    </div>
+    <div class="field">
+      <label for="pack">Packaging per piece</label>
+      <input id="pack" type="number" inputmode="decimal" min="0" step="0.01" value="0.15">
+      <span class="hint">Bag, box share, label, ribbon.</span>
+    </div>
+    <div class="field">
+      <label for="mins">Your time per batch, minutes</label>
+      <input id="mins" type="number" inputmode="numeric" min="0" step="5" value="60">
+      <span class="hint">Mixing, baking, decorating, packing, clean-up.</span>
+    </div>
+    <div class="field">
+      <label for="rate">Your hourly rate</label>
+      <input id="rate" type="number" inputmode="decimal" min="0" step="0.5" value="18">
+    </div>
+    <div class="field">
+      <label for="ovh">Overhead per batch</label>
+      <input id="ovh" type="number" inputmode="decimal" min="0" step="0.05" value="1.50">
+      <span class="hint">Oven energy, a share of permits, fees, insurance.</span>
+    </div>
+    <div class="field">
+      <label for="margin">Target profit margin, %</label>
+      <input id="margin" type="number" inputmode="decimal" min="0" max="90" step="1" value="35">
+      <span class="hint">Share of the price you keep as profit.</span>
+    </div>
+  </div>
+
+  <div class="results" aria-live="polite">
+    <div class="result-main">
+      <div class="label">Suggested price per piece</div>
+      <div class="value" id="price">–</div>
+      <div class="sub" id="priceSub"></div>
+    </div>
+    <table class="result-table">
+      <tr><td>Pieces you can sell</td><td id="sell">–</td></tr>
+      <tr><td>Ingredients per piece</td><td id="cIng">–</td></tr>
+      <tr><td>Packaging per piece</td><td id="cPack">–</td></tr>
+      <tr><td>Your time per piece</td><td id="cTime">–</td></tr>
+      <tr><td>Overhead per piece</td><td id="cOvh">–</td></tr>
+      <tr><td><strong>True cost per piece</strong></td><td id="cost">–</td></tr>
+      <tr><td>Profit per piece at suggested price</td><td id="profit">–</td></tr>
+      <tr><td>Price for a dozen</td><td id="dozen">–</td></tr>
+      <tr><td>Profit per batch (plus your paid time)</td><td id="batchProfit">–</td></tr>
+    </table>
+    <div class="note" id="note" hidden></div>
+  </div>
+</section>
+
+<h2>How the price is worked out</h2>
+<p>The calculator spreads every batch cost over the pieces you can actually sell, then adds your margin on top:</p>
+<p class="formula">Price = true cost per piece ÷ (1 − margin)</p>
+<p>With a 35% margin, a cookie that costs you 1.45 sells for 1.45 ÷ 0.65 = 2.23. Margin is not the same as markup: a 35% markup on the same cookie would give only 1.96, and your real margin would be 26%.</p>
+<p>The step most people skip is their own time. If your hours are not in the cost, a price that looks profitable can still mean working for free. Read the full method in <a href="/guides/how-to-price-baked-goods/">How to price baked goods: a 6-step formula</a>.</p>
+
+<div class="cta">
+  <h3>Price every recipe, not just one</h3>
+  <p>This calculator works with one batch total. Our spreadsheet costs each recipe from your real pack prices, handles cups and spoons, frostings as sub-recipes and big orders with a shopping list. Google Sheets and Excel.</p>
+  <div class="btns">
+    <a class="btn" href="https://www.etsy.com/listing/4591782333">See the Recipe Cost Calculator on Etsy</a>
+    <a class="btn secondary" href="https://www.etsy.com/listing/4591860096">Full Home Bakery Planner</a>
+  </div>
+</div>
+
+<h2>More free tools</h2>
+<div class="grid">
+  <a class="card" href="/tools/food-cost-calculator/" style="text-decoration:none;color:inherit"><h3>Food cost % calculator</h3><p>For cafes and food trucks: food cost on the price without tax, and the menu price for your target.</p><span class="more">Open →</span></a>
+  <a class="card" href="/tools/recipe-scaler/" style="text-decoration:none;color:inherit"><h3>Recipe scaler and cups to grams</h3><p>Scale a recipe to any yield and convert cups and spoons to grams.</p><span class="more">Open →</span></a>
+</div>
+</main>
+
+<footer class="site-footer"><div class="wrap"><span>© 2026 DoughMath Studio · Tools by a professional cook</span><span><a href="/privacy/">Privacy</a> · <a href="https://doughmathstudio.etsy.com">Etsy shop</a></span></div></footer>
+
+<script>
+(function () {
+  var ids = ["cur","ing","pcs","loss","pack","mins","rate","ovh","margin"];
+  var el = {};
+  ids.forEach(function (id) { el[id] = document.getElementById(id); });
+  function num(id) { var v = parseFloat(String(el[id].value).replace(",", ".")); return isFinite(v) ? v : 0; }
+  function money(v) {
+    var c = el.cur.value;
+    var s = v.toFixed(2);
+    return c === "zł" ? s + " zł" : c + s;
+  }
+  function set(id, txt) { document.getElementById(id).textContent = txt; }
+  function calc() {
+    var ing = Math.max(0, num("ing")), pcs = Math.floor(num("pcs")), loss = num("loss"),
+        pack = Math.max(0, num("pack")), mins = Math.max(0, num("mins")), rate = Math.max(0, num("rate")),
+        ovh = Math.max(0, num("ovh")), margin = num("margin");
+    var note = document.getElementById("note");
+    note.hidden = true;
+    if (pcs < 1) { set("price", "–"); set("priceSub", "Enter how many pieces the recipe makes."); return; }
+    if (margin < 0 || margin >= 95) { set("price", "–"); set("priceSub", "Margin must be between 0 and 94%."); return; }
+    loss = Math.min(Math.max(loss, 0), 90);
+    var sell = Math.max(1, Math.floor(pcs * (1 - loss / 100)));
+    var cIng = ing / sell, cTime = (mins / 60 * rate) / sell, cOvh = ovh / sell;
+    var cost = cIng + pack + cTime + cOvh;
+    var price = cost / (1 - margin / 100);
+    var rounded = Math.ceil(price * 20 - 1e-9) / 20;
+    set("price", money(price));
+    set("priceSub", "Rounded up to 0.05: " + money(rounded) + " · true cost " + money(cost));
+    set("sell", sell + " of " + pcs);
+    set("cIng", money(cIng)); set("cPack", money(pack)); set("cTime", money(cTime)); set("cOvh", money(cOvh));
+    set("cost", money(cost)); set("profit", money(price - cost));
+    set("dozen", money(price * 12));
+    set("batchProfit", money((price - cost) * sell));
+    if (rate === 0) { note.textContent = "Your hourly rate is 0, so your time is not paid. Add a rate to see a price that pays you."; note.hidden = false; }
+  }
+  ids.forEach(function (id) { el[id].addEventListener("input", calc); el[id].addEventListener("change", calc); });
+  calc();
+})();
+</script>
+</body>
+</html>
