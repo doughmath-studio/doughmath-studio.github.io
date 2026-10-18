@@ -73,7 +73,7 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 .install .icon-btn{background:transparent;color:var(--mint-ink);width:36px;height:36px}
 .foot{font-size:13px;color:var(--muted);text-align:center;padding:8px 8px 16px}
 section[hidden]{display:none}
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
 .tabbar button{background:none;border:0;font:inherit;font-size:12px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-radius:14px;cursor:pointer;min-height:52px}
 .tabbar svg{width:24px;height:24px}
 .tabbar button[aria-selected="true"]{color:var(--berry);background:var(--soft)}
@@ -84,3 +84,113 @@ section[hidden]{display:none}
 .mascot.hop{animation:hop .45s ease}
 @media (prefers-reduced-motion:reduce){.mascot.hop{animation:none}}
 @media (min-width:600px){.mascot{width:120px;height:111px}}
+
+/* ---------- Talk to Bento ---------- */
+body[data-tab="talk"] .hero{display:none}
+.talk{position:relative;text-align:center}
+.talk[hidden],.talk-main[hidden],.chat[hidden],.ask-form[hidden]{display:none}
+.speaker{position:absolute;top:0;right:0;z-index:3;display:flex;align-items:center;justify-content:center;color:var(--berry)}
+.speaker svg{width:24px;height:24px}
+.speaker .spk-off,.speaker.off .spk-on{display:none}
+.speaker.off .spk-off{display:block}
+.speaker.off{color:var(--muted)}
+.stage{position:relative;width:min(52vw,214px);aspect-ratio:1/1;margin:0 auto}
+.ring{position:absolute;left:4%;right:4%;top:8%;bottom:2%;border-radius:50%;border:3px solid var(--pink-deep);opacity:0;pointer-events:none}
+.bento-tap{display:block;width:100%;height:100%;padding:0;margin:0;border:0;background:none;border-radius:28px;cursor:pointer;-webkit-tap-highlight-color:transparent;position:relative}
+.tb-hop{display:block;width:100%;height:100%}
+.tb{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 100%;animation:tbBreathe 3.6s ease-in-out infinite}
+.heard{min-height:20px;margin:2px 0 6px;font-size:14px;color:var(--muted);overflow-wrap:anywhere}
+.talk-bubble{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin:0 0 12px;text-align:left}
+.talk-bubble::before{content:"";position:absolute;top:-8px;left:50%;width:14px;height:14px;margin-left:-7px;background:var(--card);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+#talkSay{margin:0;font-size:16px;white-space:pre-line;overflow-wrap:anywhere;position:relative}
+.talk-actions:empty{display:none}
+.talk-actions,.cm-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.talk-actions .btn,.cm-actions .btn{min-height:44px}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 14px}
+.chip{min-height:44px;padding:8px 14px;border-radius:999px;border:1px solid var(--pink);background:var(--soft);color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer;max-width:100%}
+.ask-form,.chat-form{display:flex;gap:8px;align-items:center;margin:0 0 8px}
+.ask-form input,.chat-form input{flex:1;min-width:0}
+.ask-form .btn,.chat-form .btn{flex:none;min-height:46px}
+.tip{margin:0 0 12px}
+.mic-wrap{display:flex;flex-direction:column;align-items:center;margin:4px 0 10px}
+.mic{position:relative;width:84px;height:84px;border-radius:50%;border:0;background:var(--berry);color:var(--berry-ink);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(196,64,92,.28)}
+.mic svg{width:38px;height:38px}
+.mic::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:3px solid var(--berry);opacity:0;pointer-events:none}
+.mic.listening{background:var(--mint-ink);color:var(--card)}
+.mic.listening::after{border-color:var(--mint-ink);animation:tbPulse 1.3s ease-out infinite}
+.mic:focus-visible{outline:3px solid var(--pink-deep);outline-offset:4px}
+.mic-label{font-weight:700;margin-top:6px}
+.honest{margin:0 auto 12px;max-width:34em}
+.chat-head{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding-right:52px;text-align:left}
+.chat-head .mini{width:38px;height:36px;flex:none}
+.chat-head h2{flex:1;margin:0;font-size:17px}
+.talk-back{min-height:44px;padding:8px 14px;font-size:14px}
+.talk-back svg{width:18px;height:18px}
+.chat-log{display:flex;flex-direction:column;gap:8px;min-height:38vh;padding:4px 0 10px}
+.cm{max-width:88%;padding:10px 13px;font-size:15px;text-align:left;overflow-wrap:anywhere}
+.cm p{margin:0;white-space:pre-line}
+.cm-b{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-radius:18px 18px 18px 4px}
+.cm-u{align-self:flex-end;background:var(--berry);color:var(--berry-ink);border-radius:18px 18px 4px 18px}
+.cm-typing{display:flex;gap:5px;padding:14px 16px}
+.cm-typing span{width:7px;height:7px;border-radius:50%;background:var(--pink-deep);animation:tbDot 1s ease-in-out infinite}
+.cm-typing span:nth-child(2){animation-delay:.15s}.cm-typing span:nth-child(3){animation-delay:.3s}
+.chat-form{position:sticky;bottom:calc(66px + env(safe-area-inset-bottom));background:var(--bg);padding:8px 0;z-index:2}
+
+/* Bento's face: every mood is a static pose; motion is added on top (so reduced motion keeps the faces) */
+.tb .m-worry,.tb .m-open,.tb .m-o,.tb .m-talk,.tb .br,.tb .tb-drop,.tb .tb-dots,.tb .tb-z,.tb .tb-sparkles{display:none}
+.tb.mood-thinking .m-happy,.tb.mood-excited .m-happy,.tb.mood-worried .m-happy,.tb.mood-sleepy .m-happy{display:none}
+.tb.mood-thinking .m-o,.tb.mood-thinking .br-think,.tb.mood-thinking .tb-dots{display:inline}
+.tb.mood-excited .m-open,.tb.mood-excited .tb-sparkles{display:inline}
+.tb.mood-worried .m-worry,.tb.mood-worried .br-worry,.tb.mood-worried .tb-drop{display:inline}
+.tb.mood-sleepy .m-o,.tb.mood-sleepy .tb-z{display:inline}
+.tb.speaking .m-happy,.tb.speaking .m-worry,.tb.speaking .m-open,.tb.speaking .m-o{display:none}
+.tb.speaking .m-talk{display:inline}
+.tb .eye,.tb .eye-hi,.tb .m-talk,.tb .cheek,.tb .spk,.tb-leaf,.tb-berry{transform-box:fill-box}
+.tb .eye,.tb .eye-hi{transform-origin:50% 50%;transition:transform .08s ease}
+.tb.mood-listening .eye{transform:scale(1.12)}
+.tb.mood-sleepy .eye,.tb.mood-sleepy .eye-hi{transform:scaleY(.3);animation:tbSlowBlink 4s ease-in-out infinite}
+.tb.blink .eye,.tb.blink .eye-hi{transform:scaleY(.1)}
+.tb-gaze{transition:transform .25s ease}
+.tb.mood-thinking .tb-gaze{transform:translate(1.5px,-2.6px)}
+.tb.mood-worried .tb-gaze{transform:translateY(.8px)}
+.tb-look{transition:transform .12s linear}
+.tb-leaf{transform-origin:0% 100%;transition:transform .25s ease}
+.tb.mood-listening .tb-leaf{transform:rotate(-24deg) scale(1.18)}
+.tb-berry{transform-origin:50% 100%}
+.tb-berry.wobble{animation:tbWobble .8s ease}
+.tb .cheek{transform-origin:50% 50%}
+.tb.blush .cheek{animation:tbBlush .8s ease-in-out 2}
+.tb .m-talk{transform-origin:50% 0;transform:scaleY(.3);transition:transform .06s ease}
+.tb.mouth-open .m-talk{transform:scaleY(1)}
+.tb.talk-loop .m-talk{animation:tbTalk .24s ease-in-out infinite alternate}
+.tb .spk{transform-origin:50% 50%;animation:tbTwinkle 1.1s ease-in-out infinite}
+.tb .spk:nth-child(2){animation-delay:.35s}.tb .spk:nth-child(3){animation-delay:.7s}
+.tb .dot{animation:tbDot 1s ease-in-out infinite}
+.tb .dot:nth-of-type(2){animation-delay:.15s}.tb .dot:nth-of-type(3){animation-delay:.3s}
+.tb .tb-z text{animation:tbZ 2.4s ease-in-out infinite}
+.tb .tb-z .z2{animation-delay:1.2s}
+.tb.mood-thinking{animation:tbSway 1.2s ease-in-out infinite}
+.tb.mood-sleepy{animation-duration:6s}
+.tb-hop.hop{animation:tbHop .5s cubic-bezier(.3,1.5,.5,1)}
+.bento-tap.squish{animation:tbSquish .45s ease}
+.stage[data-mood="listening"] .ring{opacity:1;animation:tbPulse 1.4s ease-out infinite}
+.paused,.paused *,.paused *::after{animation-play-state:paused !important}
+@keyframes tbBreathe{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-4px) scale(1.012,1.025)}}
+@keyframes tbSway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes tbHop{0%{transform:translateY(0)}35%{transform:translateY(-14px)}70%{transform:translateY(0) scale(1.04,.96)}100%{transform:none}}
+@keyframes tbSquish{0%{transform:scale(1)}30%{transform:scale(1.1,.86)}60%{transform:scale(.95,1.06)}100%{transform:scale(1)}}
+@keyframes tbSlowBlink{0%,55%,100%{transform:scaleY(.3)}70%,85%{transform:scaleY(.08)}}
+@keyframes tbWobble{0%,100%{transform:rotate(0)}20%{transform:rotate(-10deg)}45%{transform:rotate(8deg)}70%{transform:rotate(-4deg)}}
+@keyframes tbBlush{50%{transform:scale(1.35);opacity:1}}
+@keyframes tbTalk{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+@keyframes tbTwinkle{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.45);opacity:.35}}
+@keyframes tbDot{0%,100%{opacity:.3}50%{opacity:1}}
+@keyframes tbZ{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-6px);opacity:0}}
+@keyframes tbPulse{0%{transform:scale(.88);opacity:.75}100%{transform:scale(1.22);opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  .tb,.tb.mood-thinking,.tb-hop.hop,.bento-tap.squish,.tb-berry.wobble,.tb.blush .cheek,.tb .spk,.tb .dot,.tb .tb-z text,.stage .ring,.mic.listening::after,.cm-typing span{animation:none !important}
+  .stage[data-mood="listening"] .ring{opacity:.7}
+  .mic.listening::after{opacity:.6}
+  .tb-gaze,.tb-look,.tb-leaf{transition:none}
+}
+@media (min-width:600px){.stage{width:230px}}
