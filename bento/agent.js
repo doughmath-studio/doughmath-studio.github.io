@@ -754,7 +754,11 @@
     function unlockSpeech() {
       if (unlocked || !synth || !win.SpeechSynthesisUtterance) return;
       unlocked = true;
-      try { var u = new win.SpeechSynthesisUtterance(" "); u.volume = 0; synth.speak(u); } catch (e) { /* ignore */ }
+      try {
+        if (synth.resume) synth.resume();
+        var u = new win.SpeechSynthesisUtterance("ok"); u.lang = "en-US"; u.volume = 0; u.rate = 2;
+        synth.speak(u);
+      } catch (e) { /* ignore */ }
     }
     function mouthOpen() {
       sawBoundary = true;
@@ -770,8 +774,9 @@
       if (mood === "excited") calmDown(2500);
       resetIdle();
     }
+    function busy() { try { return !!(synth && (synth.speaking || synth.pending)); } catch (e) { return false; } }
     function cancelSpeech() {
-      if (synth) { try { synth.cancel(); } catch (e) { /* ignore */ } }
+      if (synth && busy()) { try { synth.cancel(); } catch (e) { /* ignore */ } }
       stopTalking();
     }
     function chunks(text) {
@@ -781,9 +786,11 @@
       return out;
     }
     function speakOut(text) {
-      if (synth) { try { synth.cancel(); } catch (e) { /* ignore */ } }
+      var wasBusy = busy();
+      if (synth && wasBusy) { try { synth.cancel(); } catch (e) { /* ignore */ } }
       stopTalking();
       if (!voiceOn || !synth || !unlocked || !win.SpeechSynthesisUtterance || !text) return false;
+      try { if (synth.resume) synth.resume(); } catch (e) { /* ignore */ }
       var id = ++speakId, list = chunks(text);
       speaking = true; sawBoundary = false;
       svg.classList.add("speaking");
@@ -797,9 +804,19 @@
         u.onboundary = function (e) { if (id === speakId && (!e || !e.name || e.name === "word")) mouthOpen(); };
         u.onend = function () { if (id === speakId && i === list.length - 1) stopTalking(); };
         u.onerror = function () { if (id === speakId) stopTalking(); };
-        try { synth.speak(u); } catch (e) { stopTalking(); }
+        var go = function () { if (id === speakId) { try { synth.speak(u); } catch (e) { stopTalking(); } } };
+        if (wasBusy) win.setTimeout(go, 120); else go();
       });
+      showSoundHint();
       return true;
+    }
+    var IOS = /iphone|ipad|ipod/i.test(win.navigator.userAgent || "") || (win.navigator.platform === "MacIntel" && win.navigator.maxTouchPoints > 1);
+    var hintShown = false;
+    function showSoundHint() {
+      if (!IOS || hintShown) return;
+      hintShown = true;
+      var h = doc.getElementById("soundHint");
+      if (h) h.hidden = false;
     }
     function renderSpeaker() {
       speakerBtn.setAttribute("aria-pressed", voiceOn ? "true" : "false");
@@ -877,7 +894,7 @@
       resetIdle();
     }
     var lastReply = null;
-    function ask(text) {
+    function ask(text, fromTap) {
       text = String(text || "").replace(/\s+/g, " ").trim();
       if (!text) return;
       activity();
@@ -892,10 +909,13 @@
       if (mode === "chat") scrollChat();
       var rep = agent.ask(text);
       lastReply = rep;
-      later("think", 400, function () { showReply(rep); });
+      if (fromTap) showReply(rep);
+      else later("think", 400, function () { showReply(rep); });
     }
     // every call from a tap/Enter goes through here, so speech can start (iOS needs a user gesture)
-    function userAsk(text) { unlockSpeech(); ask(text); }
+    // the answer itself is spoken inside the tap, which is what unlocks speech on iOS
+    function markUnlocked() { if (synth) unlocked = true; }
+    function userAsk(text) { markUnlocked(); ask(text, true); }
 
     // ---------- voice in (Web Speech API) ----------
     var SR = win.SpeechRecognition || win.webkitSpeechRecognition || null, rec = null, handled = false, transcript = "", fallback = false, quiet = 0, userStopped = false;
@@ -1014,7 +1034,7 @@
     backBtn.addEventListener("click", function () { setMode("talk"); });
     var lastTip = -1;
     tapBtn.addEventListener("click", function () {
-      unlockSpeech();
+      markUnlocked();
       cancelSpeech();
       tapBtn.classList.remove("squish"); void tapBtn.offsetWidth; tapBtn.classList.add("squish");
       later("unsquish", 500, function () { tapBtn.classList.remove("squish"); });
