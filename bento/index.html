@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bento: Free Bakery Pricing App for Home Bakers | DoughMath Studio</title>
+<meta name="description" content="Bento is a free pricing helper for home bakers: price per piece with your time and margin, recipe cost from pack prices, and a recipe scaler with cups to grams. Works offline on your phone.">
+<link rel="canonical" href="https://doughmath-studio.github.io/bento/">
+<meta name="theme-color" content="#FFF9FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1E1A1F" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bento">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta property="og:title" content="Bento: a free pricing helper for home bakers">
+<meta property="og:description" content="Price per piece, recipe cost and a recipe scaler. Free, works offline, and your recipes stay on your phone.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://doughmath-studio.github.io/bento/">
+<meta property="og:image" content="https://doughmath-studio.github.io/bento/icons/icon-512.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<symbol id="bento" viewBox="6 26 140 130">
+<path d="M20 105 L130 105 L140 30 L10 30 Z" fill="#E3F4EB" stroke="#7FB79B" stroke-width="2" stroke-linejoin="round"/>
+<path d="M10 120 L140 120 L132 105 L18 105 Z" fill="#B5DCC8" stroke="#7FB79B" stroke-width="2" stroke-linejoin="round"/>
+<rect x="35" y="75" width="80" height="48" fill="#F6C9D3"/>
+<path d="M35 75 L35 123 M115 75 L115 123" fill="none" stroke="#E39AAE" stroke-width="2"/>
+<ellipse cx="75" cy="75" rx="40" ry="10" fill="#FBDDE4" stroke="#E39AAE" stroke-width="2"/>
+<g fill="#FFFFFF" stroke="#F0B9C7" stroke-width="1.5"><circle cx="38" cy="71" r="3.5"/><circle cx="47" cy="68" r="3.5"/><circle cx="60" cy="66" r="3.5"/><circle cx="90" cy="66" r="3.5"/><circle cx="103" cy="68" r="3.5"/><circle cx="112" cy="71" r="3.5"/><circle cx="35" cy="75" r="3.5"/><circle cx="115" cy="75" r="3.5"/><circle cx="38" cy="79" r="3.5"/><circle cx="47" cy="82" r="3.5"/><circle cx="60" cy="84" r="3.5"/><circle cx="75" cy="85" r="3.5"/><circle cx="90" cy="84" r="3.5"/><circle cx="103" cy="82" r="3.5"/><circle cx="112" cy="79" r="3.5"/></g>
+<path d="M75 57 Q78 49 84 46" fill="none" stroke="#5E7A3A" stroke-width="2" stroke-linecap="round"/>
+<circle cx="75" cy="62" r="6" fill="#E2475B" stroke="#A82B3D" stroke-width="1.5"/>
+<ellipse cx="64" cy="98" rx="3.2" ry="4.2" fill="#2E2A33"/><ellipse cx="86" cy="98" rx="3.2" ry="4.2" fill="#2E2A33"/>
+<ellipse cx="54" cy="106" rx="5" ry="3" fill="#EE93AA" opacity=".85"/><ellipse cx="96" cy="106" rx="5" ry="3" fill="#EE93AA" opacity=".85"/>
+<path d="M70 105 Q75 110 80 105" fill="none" stroke="#2E2A33" stroke-width="2" stroke-linecap="round"/>
+<path d="M10 120 L140 120 L134 152 L16 152 Z" fill="#CFEBDD" stroke="#7FB79B" stroke-width="2" stroke-linejoin="round"/>
+</symbol>
+</svg>
+
+<header class="top">
+  <svg class="mini" aria-hidden="true"><use href="#bento"/></svg>
+  <div class="brand"><b>Bento</b><small>Pricing helper for home bakers</small></div>
+  <label><span class="sr">Currency</span>
+    <select id="cur" class="cur"><option>$</option><option>€</option><option>£</option><option>C$</option><option>A$</option><option>zł</option></select>
+  </label>
+</header>
+
+<main>
+  <div id="install" class="install" hidden>
+    <p id="installText"></p>
+    <button id="installBtn" class="btn small" type="button" hidden>Install</button>
+    <button id="installClose" class="icon-btn" type="button" aria-label="Close">×</button>
+  </div>
+
+  <div class="hero">
+    <svg id="mascot" class="mascot" viewBox="6 26 140 130" role="img" aria-label="Bento, a small cake in a mint box" data-mood="happy">
+      <path d="M20 105 L130 105 L140 30 L10 30 Z" fill="#E3F4EB" stroke="#7FB79B" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M10 120 L140 120 L132 105 L18 105 Z" fill="#B5DCC8" stroke="#7FB79B" stroke-width="2" stroke-linejoin="round"/>
+      <rect x="35" y="75" width="80" height="48" fill="#F6C9D3"/>
+      <path d="M35 75 L35 123 M115 75 L115 123" fill="none" stroke="#E39AAE" stroke-width="2"/>
+      <ellipse cx="75" cy="75" rx="40" ry="10" fill="#FBDDE4" stroke="#E39AAE" stroke-width="2"/>
+      <g fill="#FFFFFF" stroke="#F0B9C7" stroke-width="1.5"><circle cx="38" cy="71" r="3.5"/><circle cx="47" cy="68" r="3.5"/><circle cx="60" cy="66" r="3.5"/><circle cx="90" cy="66" r="3.5"/><circle cx="103" cy="68" r="3.5"/><circle cx="112" cy="71" r="3.5"/><circle cx="35" cy="75" r="3.5"/><circle cx="115" cy="75" r="3.5"/><circle cx="38" cy="79" r="3.5"/><circle cx="47" cy="82" r="3.5"/><circle cx="60" cy="84" r="3.5"/><circle cx="75" cy="85" r="3.5"/><circle cx="90" cy="84" r="3.5"/><circle cx="103" cy="82" r="3.5"/><circle cx="112" cy="79" r="3.5"/></g>
+      <path d="M75 57 Q78 49 84 46" fill="none" stroke="#5E7A3A" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="75" cy="62" r="6" fill="#E2475B" stroke="#A82B3D" stroke-width="1.5"/>
+      <circle cx="73" cy="60" r="1.6" fill="#FFFFFF" opacity=".8"/>
+      <ellipse cx="64" cy="98" rx="3.2" ry="4.2" fill="#2E2A33"/><ellipse cx="86" cy="98" rx="3.2" ry="4.2" fill="#2E2A33"/>
+      <circle cx="65.2" cy="96.4" r="1" fill="#FFFFFF"/><circle cx="87.2" cy="96.4" r="1" fill="#FFFFFF"/>
+      <ellipse cx="54" cy="106" rx="5" ry="3" fill="#EE93AA" opacity=".85"/><ellipse cx="96" cy="106" rx="5" ry="3" fill="#EE93AA" opacity=".85"/>
+      <path class="m-happy" d="M70 105 Q75 110 80 105" fill="none" stroke="#2E2A33" stroke-width="2" stroke-linecap="round"/>
+      <path class="m-flat" d="M70.5 107 L79.5 107" fill="none" stroke="#2E2A33" stroke-width="2" stroke-linecap="round"/>
+      <path class="m-sad" d="M70 109 Q75 104 80 109" fill="none" stroke="#2E2A33" stroke-width="2" stroke-linecap="round"/>
+      <path class="drop" d="M122 82 C119 88 119 91 122 92 C125 91 125 88 122 82 Z" fill="#9CC9E8" stroke="#6FA6CC" stroke-width="1"/>
+      <path d="M10 120 L140 120 L134 152 L16 152 Z" fill="#CFEBDD" stroke="#7FB79B" stroke-width="2" stroke-linejoin="round"/>
+    </svg>
+    <p id="say" class="bubble" aria-live="polite"></p>
+  </div>
+
+  <section id="tab-price" role="tabpanel" aria-labelledby="t-price">
+    <div class="card">
+      <h1>Price per piece</h1>
+      <p class="note">Ingredients, packaging, your time and overhead, then the margin you want to keep.</p>
+      <div class="grid">
+        <div><label for="pIng">Ingredients for one batch</label><input id="pIng" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pPcs">Pieces the recipe makes</label><input id="pPcs" inputmode="numeric" autocomplete="off"></div>
+        <div><label for="pLoss">Pieces you lose (%)</label><input id="pLoss" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pPack">Packaging per piece</label><input id="pPack" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pMins">Your time per batch (min)</label><input id="pMins" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pRate">Your hourly rate</label><input id="pRate" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pOvh">Overhead per batch</label><input id="pOvh" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pMargin">Margin you want (%)</label><input id="pMargin" inputmode="decimal" autocomplete="off"></div>
+      </div>
+      <div class="btn-row"><button id="fromRecipe" class="btn ghost small" type="button">Use my recipe cost</button></div>
+    </div>
+
+    <div class="card result">
+      <div class="note" style="margin:0">Charge at least</div>
+      <div class="big" id="pPrice">–</div>
+      <div class="note" id="pSub" style="margin:0"></div>
+      <ul class="rows">
+        <li><span>Pieces you can sell</span><span id="rSell">–</span></li>
+        <li><span>Ingredients per piece</span><span id="rIng">–</span></li>
+        <li><span>Packaging</span><span id="rPack">–</span></li>
+        <li><span>Your time</span><span id="rTime">–</span></li>
+        <li><span>Overhead</span><span id="rOvh">–</span></li>
+        <li class="strong"><span>True cost per piece</span><span id="rCost">–</span></li>
+        <li><span>Profit per piece</span><span id="rProfit">–</span></li>
+        <li><span>Price per dozen</span><span id="rDozen">–</span></li>
+        <li class="strong"><span>Profit per batch</span><span id="rBatch">–</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Check your current price</h2>
+      <label for="pNow">What you charge now, per piece</label>
+      <input id="pNow" inputmode="decimal" autocomplete="off" placeholder="e.g. 1.50">
+      <div id="nowOut" class="msg"></div>
+    </div>
+  </section>
+
+  <section id="tab-recipe" role="tabpanel" aria-labelledby="t-recipe" hidden>
+    <div class="card">
+      <h1>Recipe cost</h1>
+      <p class="note">Type what you paid for each pack. Bento works out the cost of what you actually use, even cups from a 5 lb bag.</p>
+      <div class="grid">
+        <div class="full"><label for="rName">Recipe name</label><input id="rName" autocomplete="off"></div>
+        <div><label for="rMakes">Recipe makes (pieces)</label><input id="rMakes" inputmode="numeric" autocomplete="off"></div>
+      </div>
+    </div>
+    <div id="items"></div>
+    <button id="addItem" class="btn ghost block" type="button">+ Add ingredient</button>
+    <div class="card result" style="margin-top:14px">
+      <div class="note" style="margin:0">Ingredients for one batch</div>
+      <div class="big" id="rTotal">–</div>
+      <div class="note" id="rPer" style="margin:0"></div>
+      <div id="rWarn" class="msg warn"></div>
+      <div class="btn-row">
+        <button id="toPrice" class="btn" type="button">Price it</button>
+        <button id="saveRecipe" class="btn ghost" type="button">Save recipe</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>My recipes</h2>
+      <ul id="savedList" class="saved"></ul>
+      <p id="savedEmpty" class="note">Saved recipes appear here. They stay on this device.</p>
+      <button id="newRecipe" class="btn ghost small" type="button">New recipe</button>
+    </div>
+    <datalist id="ingList"></datalist>
+  </section>
+
+  <section id="tab-scale" role="tabpanel" aria-labelledby="t-scale" hidden>
+    <div class="card">
+      <h1>Scale a recipe</h1>
+      <p class="note" id="sName"></p>
+      <div class="grid">
+        <div><label for="sMakes">Recipe makes</label><input id="sMakes" inputmode="numeric" autocomplete="off"></div>
+        <div><label for="sTo">I need</label><input id="sTo" inputmode="numeric" autocomplete="off"></div>
+      </div>
+      <div id="sFactor" class="msg ok"></div>
+    </div>
+    <div class="card">
+      <ul class="rows" id="scaled"></ul>
+      <ul class="rows"><li class="strong"><span>Ingredient cost for this amount</span><span id="sCost">–</span></li></ul>
+    </div>
+    <p class="note">Cup and spoon weights are typical values. Weigh for the most consistent results.</p>
+  </section>
+
+  <section id="tab-pro" role="tabpanel" aria-labelledby="t-pro" hidden>
+    <div class="card pro">
+      <span class="pill">Coming soon</span>
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Photo to recipe</h2>
+      <p>Snap a cake you love and Bento suggests a similar recipe with amounts in grams, ready to cost and price.</p>
+      <p class="note">It will be an estimate from a photo, not the original recipe. Bento will never guess allergens from a photo.</p>
+    </div>
+    <div class="card pro">
+      <span class="pill">Coming soon</span>
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6"/></svg>Orders and bookkeeping</h2>
+      <p>Orders, deposits and pickup dates, linked to your recipe costs, with your profit for the month.</p>
+    </div>
+    <div class="card">
+      <h2>Be the first to try Bento Pro</h2>
+      <p>Join the free list. You get one email when Pro is ready and at most one tips email a month. Unsubscribe anytime.</p>
+      <a class="btn block" href="https://docs.google.com/forms/d/e/1FAIpQLSdGNhBHjq77XRkeylev6x1t_Ee0TYMZSW57gnel0fp2LGDk5w/viewform" target="_blank" rel="noopener">Join the waitlist</a>
+      <p class="note" style="margin:10px 0 0">The signup is a Google Form. <a href="/privacy/">Privacy</a></p>
+    </div>
+    <div class="card">
+      <h2>Need it today?</h2>
+      <p class="note">Bento's big siblings are full spreadsheets for Google Sheets and Excel.</p>
+      <ul class="links">
+        <li><a href="https://www.etsy.com/listing/4591860096" target="_blank" rel="noopener">Home Bakery Business Planner →</a><small>Orders, customers, expenses and monthly profit.</small></li>
+        <li><a href="https://www.etsy.com/listing/4597807858" target="_blank" rel="noopener">Cookie Box Pricing &amp; Order Planner →</a><small>Gift box prices, bake plan by pickup date, packaging list.</small></li>
+        <li><a href="https://www.etsy.com/listing/4591782333" target="_blank" rel="noopener">Recipe Cost Calculator →</a><small>All your recipes, sub-recipes and a big order planner.</small></li>
+      </ul>
+    </div>
+  </section>
+
+  <p class="foot">Bento is free and runs in your browser. Your recipes are saved only on this device.<br>Made by Ivan, a professional cook · <a href="/">DoughMath Studio</a> · <a href="/privacy/">Privacy</a></p>
+</main>
+
+<nav class="tabbar" role="tablist" aria-label="Bento tools">
+  <button id="t-price" role="tab" data-tab="price" aria-controls="tab-price" aria-selected="true" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8.5 8.5-9 9z"/><circle cx="8" cy="8" r="1.6"/></svg>Price</button>
+  <button id="t-recipe" role="tab" data-tab="recipe" aria-controls="tab-recipe" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h4"/></svg>Recipe</button>
+  <button id="t-scale" role="tab" data-tab="scale" aria-controls="tab-scale" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v6h6M20 10V4h-6M4 20l7-7M20 4l-7 7"/></svg>Scale</button>
+  <button id="t-pro" role="tab" data-tab="pro" aria-controls="tab-pro" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.3L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.7z"/></svg>Pro</button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>

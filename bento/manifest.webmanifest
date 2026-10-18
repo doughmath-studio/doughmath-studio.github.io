@@ -1,0 +1,17 @@
+{
+  "name": "Bento: pricing helper for home bakers",
+  "short_name": "Bento",
+  "description": "Price per piece, recipe cost and a recipe scaler for home bakers. Free, works offline, and your recipes stay on your device.",
+  "id": "/bento/",
+  "start_url": "/bento/",
+  "scope": "/bento/",
+  "display": "standalone",
+  "background_color": "#FFF9FA",
+  "theme_color": "#FFF9FA",
+  "categories": ["food", "business", "productivity"],
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
