@@ -189,3 +189,38 @@
     scaleRecipe: scaleRecipe
   };
 });
+
+// Bento's voice: use the softest natural English voice on the device (Premium/Enhanced first, never novelty voices), calmer pace.
+(function (w) {
+  var s = w && w.speechSynthesis;
+  if (!s || !s.speak || !s.getVoices) return;
+  var BAD = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|kathy|grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley)\b/i;
+  var WARM = ["ava", "zoe", "samantha", "allison", "susan", "nicky", "serena", "kate", "karen", "moira", "tessa", "aria", "jenny", "libby", "sonia", "google us english", "google uk english female"];
+  function score(v) {
+    var n = (v.name || "").toLowerCase(), l = v.lang || "", sc = 10, i;
+    if (!/^en/i.test(l)) return -1;
+    if (BAD.test(n)) return 0;
+    if (/premium/.test(n)) sc += 60; else if (/enhanced|natural|neural/.test(n)) sc += 45;
+    for (i = 0; i < WARM.length; i++) if (n.indexOf(WARM[i]) !== -1) { sc += 30 - i; break; }
+    if (/^en[-_](us|gb)/i.test(l)) sc += 5;
+    if (v.localService) sc += 2;
+    return sc;
+  }
+  function best() {
+    var vs = [], b = null, bs = 0;
+    try { vs = s.getVoices() || []; } catch (e) { vs = []; }
+    vs.forEach(function (v) { var x = score(v); if (x > bs) { bs = x; b = v; } });
+    return b;
+  }
+  var speak = s.speak.bind(s);
+  s.speak = function (u) {
+    try {
+      if (u && u.volume !== 0) {
+        var v = best();
+        if (v) { u.voice = v; u.lang = v.lang; }
+        u.rate = 0.92; u.pitch = 1.05;
+      }
+    } catch (e) { /* keep defaults */ }
+    return speak(u);
+  };
+})(typeof window !== "undefined" ? window : null);
