@@ -1,4 +1,4 @@
-var CACHE = "bento-v2";
+var CACHE = "bento-v3";
 var ASSETS = ["./", "app.css", "core.js", "agent.js", "app.js", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", function (e) {
