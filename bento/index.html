@@ -42,21 +42,29 @@
 
 <header class="top">
   <svg class="mini" aria-hidden="true"><use href="#bento"/></svg>
-  <div class="brand"><b>Bento</b><small>Pricing helper for home bakers</small></div>
-  <label><span class="sr">Currency</span>
+  <div class="brand"><b>Bento</b><small data-i18n="app.tagline">Pricing helper for home bakers</small></div>
+  <label><span class="sr" data-i18n="app.currency">Currency</span>
     <select id="cur" class="cur"><option>$</option><option>€</option><option>£</option><option>C$</option><option>A$</option><option>zł</option></select>
+  </label>
+  <label class="lang-pick"><span class="sr" data-i18n="app.language">Language</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.4 5.3 3.4 8.5s-1 6.1-3.4 8.5M12 3.5C9.6 5.9 8.6 8.8 8.6 12s1 6.1 3.4 8.5"/></svg>
+    <span id="langShort" aria-hidden="true">Eng</span>
+    <select id="lang" class="lang-sel">
+      <option value="en" lang="en">English</option><option value="es" lang="es">Español</option><option value="pt" lang="pt-BR">Português</option><option value="fr" lang="fr">Français</option>
+      <option value="de" lang="de">Deutsch</option><option value="pl" lang="pl">Polski</option><option value="uk" lang="uk">Українська</option><option value="ru" lang="ru">Русский</option>
+    </select>
   </label>
 </header>
 
 <main>
   <div id="install" class="install" hidden>
     <p id="installText"></p>
-    <button id="installBtn" class="btn small" type="button" hidden>Install</button>
-    <button id="installClose" class="icon-btn" type="button" aria-label="Close">×</button>
+    <button id="installBtn" class="btn small" type="button" hidden data-i18n="install.btn">Install</button>
+    <button id="installClose" class="icon-btn" type="button" aria-label="Close" data-i18n-aria="install.close">×</button>
   </div>
 
   <div class="hero">
-    <svg id="mascot" class="mascot" viewBox="6 26 140 130" role="img" aria-label="Bento, a small cake in a mint box" data-mood="happy">
+    <svg id="mascot" class="mascot" viewBox="6 26 140 130" role="img" aria-label="Bento, a small cake in a mint box" data-i18n-aria="app.mascot" data-mood="happy">
       <path d="M20 105 L130 105 L140 30 L10 30 Z" fill="#E3F4EB" stroke="#7FB79B" stroke-width="2" stroke-linejoin="round"/>
       <path d="M10 120 L140 120 L132 105 L18 105 Z" fill="#B5DCC8" stroke="#7FB79B" stroke-width="2" stroke-linejoin="round"/>
       <rect x="35" y="75" width="80" height="48" fill="#F6C9D3"/>
@@ -79,7 +87,7 @@
   </div>
 
   <section id="tab-talk" class="talk" role="tabpanel" aria-labelledby="t-talk" hidden>
-    <h1 class="sr">Talk to Bento</h1>
+    <h1 class="sr" data-i18n="talk.h1">Talk to Bento</h1>
     <button id="speakerBtn" class="icon-btn speaker" type="button" aria-pressed="true" aria-label="Bento's voice is on">
       <svg class="spk-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>
       <svg class="spk-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
@@ -87,7 +95,7 @@
     <div id="talkMain" class="talk-main">
       <div id="talkStage" class="stage" data-mood="happy">
         <span class="ring" aria-hidden="true"></span>
-        <button id="bentoTap" class="bento-tap" type="button" aria-label="Tap Bento for a baking tip">
+        <button id="bentoTap" class="bento-tap" type="button" aria-label="Tap Bento for a baking tip" data-i18n-aria="talk.tapTip">
           <span id="talkHop" class="tb-hop">
             <svg id="talkBento" class="tb mood-happy" data-mood="happy" viewBox="6 16 140 140" aria-hidden="true" focusable="false">
               <g class="tb-body">
@@ -133,166 +141,168 @@
         <p id="talkSay" aria-live="polite"></p>
         <div id="talkActions" class="talk-actions"></div>
       </div>
-      <div id="talkChips" class="chips" role="group" aria-label="Suggestions"></div>
+      <div id="talkChips" class="chips" role="group" aria-label="Suggestions" data-i18n-aria="talk.suggestions"></div>
       <form id="talkForm" class="ask-form" hidden>
-        <label class="sr" for="talkInput">Your question for Bento</label>
-        <input id="talkInput" type="text" autocomplete="off" enterkeyhint="send" placeholder="Ask Bento…">
-        <button class="btn" type="submit">Send</button>
+        <label class="sr" for="talkInput" data-i18n="talk.inputLabel">Your question for Bento</label>
+        <input id="talkInput" type="text" autocomplete="off" enterkeyhint="send" placeholder="Ask Bento…" data-i18n-ph="talk.placeholder">
+        <button class="btn" type="submit" data-i18n="talk.send">Send</button>
       </form>
-      <p id="talkTip" class="note tip" hidden>Tip: tap the microphone on your keyboard to speak</p>
+      <p id="talkTip" class="note tip" hidden data-i18n="talk.kbTip">Tip: tap the microphone on your keyboard to speak</p>
       <div class="mic-wrap">
         <button id="micBtn" class="mic" type="button" aria-pressed="false" aria-label="Ask Bento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button>
         <span id="micLabel" class="mic-label" aria-hidden="true">Ask Bento</span>
       </div>
-      <p id="soundHint" class="note" hidden>No sound? On iPhone, turn off silent mode (the switch or Action button on the side) and turn the volume up.</p>
-      <p class="note honest">Bento runs on your phone. Voice input uses your browser's speech service (Apple or Google) to turn speech into text.</p>
-      <button id="typeBtn" class="btn ghost block" type="button">Type instead</button>
+      <p id="voiceNote" class="note voice-note" hidden>No voice for this language on this device — reading is text only.</p>
+      <p id="soundHint" class="note" hidden data-i18n="talk.soundHint">No sound? On iPhone, turn off silent mode (the switch or Action button on the side) and turn the volume up.</p>
+      <p class="note honest" data-i18n="talk.honest">Bento runs on your phone. Voice input uses your browser's speech service (Apple or Google) to turn speech into text.</p>
+      <button id="typeBtn" class="btn ghost block" type="button" data-i18n="talk.typeInstead">Type instead</button>
     </div>
     <div id="talkChat" class="chat" hidden>
       <div class="chat-head">
         <svg class="mini" aria-hidden="true"><use href="#bento"/></svg>
-        <h2>Chat with Bento</h2>
-        <button id="backTalk" class="btn ghost talk-back" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>Talk</button>
+        <h2 data-i18n="talk.chatTitle">Chat with Bento</h2>
+        <button id="backTalk" class="btn ghost talk-back" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><span data-i18n="talk.back">Talk</span></button>
       </div>
-      <div id="chatLog" class="chat-log" role="log" aria-live="polite" aria-label="Conversation with Bento"></div>
-      <div id="chatChips" class="chips" role="group" aria-label="Suggestions"></div>
+      <div id="chatLog" class="chat-log" role="log" aria-live="polite" aria-label="Conversation with Bento" data-i18n-aria="talk.log"></div>
+      <div id="chatChips" class="chips" role="group" aria-label="Suggestions" data-i18n-aria="talk.suggestions"></div>
       <form id="chatForm" class="chat-form">
-        <label class="sr" for="chatInput">Message to Bento</label>
-        <input id="chatInput" type="text" autocomplete="off" enterkeyhint="send" placeholder="Ask Bento…">
-        <button class="btn" type="submit">Send</button>
+        <label class="sr" for="chatInput" data-i18n="talk.chatLabel">Message to Bento</label>
+        <input id="chatInput" type="text" autocomplete="off" enterkeyhint="send" placeholder="Ask Bento…" data-i18n-ph="talk.placeholder">
+        <button class="btn" type="submit" data-i18n="talk.send">Send</button>
       </form>
     </div>
   </section>
 
   <section id="tab-price" role="tabpanel" aria-labelledby="t-price">
     <div class="card">
-      <h1>Price per piece</h1>
-      <p class="note">Ingredients, packaging, your time and overhead, then the margin you want to keep.</p>
+      <h1 data-i18n="price.h1">Price per piece</h1>
+      <p class="note" data-i18n="price.note">Ingredients, packaging, your time and overhead, then the margin you want to keep.</p>
       <div class="grid">
-        <div><label for="pIng">Ingredients for one batch</label><input id="pIng" inputmode="decimal" autocomplete="off"></div>
-        <div><label for="pPcs">Pieces the recipe makes</label><input id="pPcs" inputmode="numeric" autocomplete="off"></div>
-        <div><label for="pLoss">Pieces you lose (%)</label><input id="pLoss" inputmode="decimal" autocomplete="off"></div>
-        <div><label for="pPack">Packaging per piece</label><input id="pPack" inputmode="decimal" autocomplete="off"></div>
-        <div><label for="pMins">Your time per batch (min)</label><input id="pMins" inputmode="decimal" autocomplete="off"></div>
-        <div><label for="pRate">Your hourly rate</label><input id="pRate" inputmode="decimal" autocomplete="off"></div>
-        <div><label for="pOvh">Overhead per batch</label><input id="pOvh" inputmode="decimal" autocomplete="off"></div>
-        <div><label for="pMargin">Margin you want (%)</label><input id="pMargin" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pIng" data-i18n="price.ing">Ingredients for one batch</label><input id="pIng" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pPcs" data-i18n="price.pcs">Pieces the recipe makes</label><input id="pPcs" inputmode="numeric" autocomplete="off"></div>
+        <div><label for="pLoss" data-i18n="price.loss">Pieces you lose (%)</label><input id="pLoss" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pPack" data-i18n="price.pack">Packaging per piece</label><input id="pPack" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pMins" data-i18n="price.mins">Your time per batch (min)</label><input id="pMins" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pRate" data-i18n="price.rate">Your hourly rate</label><input id="pRate" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pOvh" data-i18n="price.ovh">Overhead per batch</label><input id="pOvh" inputmode="decimal" autocomplete="off"></div>
+        <div><label for="pMargin" data-i18n="price.margin">Margin you want (%)</label><input id="pMargin" inputmode="decimal" autocomplete="off"></div>
       </div>
-      <div class="btn-row"><button id="fromRecipe" class="btn ghost small" type="button">Use my recipe cost</button></div>
+      <div class="btn-row"><button id="fromRecipe" class="btn ghost small" type="button" data-i18n="price.fromRecipe">Use my recipe cost</button></div>
     </div>
 
     <div class="card result">
-      <div class="note" style="margin:0">Charge at least</div>
+      <div class="note" style="margin:0" data-i18n="price.atLeast">Charge at least</div>
       <div class="big" id="pPrice">–</div>
       <div class="note" id="pSub" style="margin:0"></div>
       <ul class="rows">
-        <li><span>Pieces you can sell</span><span id="rSell">–</span></li>
-        <li><span>Ingredients per piece</span><span id="rIng">–</span></li>
-        <li><span>Packaging</span><span id="rPack">–</span></li>
-        <li><span>Your time</span><span id="rTime">–</span></li>
-        <li><span>Overhead</span><span id="rOvh">–</span></li>
-        <li class="strong"><span>True cost per piece</span><span id="rCost">–</span></li>
-        <li><span>Profit per piece</span><span id="rProfit">–</span></li>
-        <li><span>Price per dozen</span><span id="rDozen">–</span></li>
-        <li class="strong"><span>Profit per batch</span><span id="rBatch">–</span></li>
+        <li><span data-i18n="row.sell">Pieces you can sell</span><span id="rSell">–</span></li>
+        <li><span data-i18n="row.ing">Ingredients per piece</span><span id="rIng">–</span></li>
+        <li><span data-i18n="row.pack">Packaging</span><span id="rPack">–</span></li>
+        <li><span data-i18n="row.time">Your time</span><span id="rTime">–</span></li>
+        <li><span data-i18n="row.ovh">Overhead</span><span id="rOvh">–</span></li>
+        <li class="strong"><span data-i18n="row.cost">True cost per piece</span><span id="rCost">–</span></li>
+        <li><span data-i18n="row.profit">Profit per piece</span><span id="rProfit">–</span></li>
+        <li><span data-i18n="row.dozen">Price per dozen</span><span id="rDozen">–</span></li>
+        <li class="strong"><span data-i18n="row.batch">Profit per batch</span><span id="rBatch">–</span></li>
       </ul>
     </div>
 
     <div class="card">
-      <h2>Check your current price</h2>
-      <label for="pNow">What you charge now, per piece</label>
-      <input id="pNow" inputmode="decimal" autocomplete="off" placeholder="e.g. 1.50">
+      <h2 data-i18n="now.h2">Check your current price</h2>
+      <label for="pNow" data-i18n="now.label">What you charge now, per piece</label>
+      <input id="pNow" inputmode="decimal" autocomplete="off" placeholder="e.g. 1.50" data-i18n-ph="now.ph">
       <div id="nowOut" class="msg"></div>
     </div>
   </section>
 
   <section id="tab-recipe" role="tabpanel" aria-labelledby="t-recipe" hidden>
     <div class="card">
-      <h1>Recipe cost</h1>
-      <p class="note">Type what you paid for each pack. Bento works out the cost of what you actually use, even cups from a 5 lb bag.</p>
+      <h1 data-i18n="recipe.h1">Recipe cost</h1>
+      <p class="note" data-i18n="recipe.note">Type what you paid for each pack. Bento works out the cost of what you actually use, even cups from a 5 lb bag.</p>
       <div class="grid">
-        <div class="full"><label for="rName">Recipe name</label><input id="rName" autocomplete="off"></div>
-        <div><label for="rMakes">Recipe makes (pieces)</label><input id="rMakes" inputmode="numeric" autocomplete="off"></div>
+        <div class="full"><label for="rName" data-i18n="recipe.name">Recipe name</label><input id="rName" autocomplete="off"></div>
+        <div><label for="rMakes" data-i18n="recipe.makes">Recipe makes (pieces)</label><input id="rMakes" inputmode="numeric" autocomplete="off"></div>
       </div>
     </div>
     <div id="items"></div>
-    <button id="addItem" class="btn ghost block" type="button">+ Add ingredient</button>
+    <button id="addItem" class="btn ghost block" type="button" data-i18n="recipe.add">+ Add ingredient</button>
     <div class="card result" style="margin-top:14px">
-      <div class="note" style="margin:0">Ingredients for one batch</div>
+      <div class="note" style="margin:0" data-i18n="recipe.total">Ingredients for one batch</div>
       <div class="big" id="rTotal">–</div>
       <div class="note" id="rPer" style="margin:0"></div>
       <div id="rWarn" class="msg warn"></div>
       <div class="btn-row">
-        <button id="toPrice" class="btn" type="button">Price it</button>
-        <button id="saveRecipe" class="btn ghost" type="button">Save recipe</button>
+        <button id="toPrice" class="btn" type="button" data-i18n="recipe.priceIt">Price it</button>
+        <button id="saveRecipe" class="btn ghost" type="button" data-i18n="recipe.save">Save recipe</button>
       </div>
     </div>
     <div class="card">
-      <h2>My recipes</h2>
+      <h2 data-i18n="recipe.mine">My recipes</h2>
       <ul id="savedList" class="saved"></ul>
-      <p id="savedEmpty" class="note">Saved recipes appear here. They stay on this device.</p>
-      <button id="newRecipe" class="btn ghost small" type="button">New recipe</button>
+      <p id="savedEmpty" class="note" data-i18n="recipe.empty">Saved recipes appear here. They stay on this device.</p>
+      <button id="newRecipe" class="btn ghost small" type="button" data-i18n="recipe.new">New recipe</button>
     </div>
     <datalist id="ingList"></datalist>
   </section>
 
   <section id="tab-scale" role="tabpanel" aria-labelledby="t-scale" hidden>
     <div class="card">
-      <h1>Scale a recipe</h1>
+      <h1 data-i18n="scale.h1">Scale a recipe</h1>
       <p class="note" id="sName"></p>
       <div class="grid">
-        <div><label for="sMakes">Recipe makes</label><input id="sMakes" inputmode="numeric" autocomplete="off"></div>
-        <div><label for="sTo">I need</label><input id="sTo" inputmode="numeric" autocomplete="off"></div>
+        <div><label for="sMakes" data-i18n="scale.makes">Recipe makes</label><input id="sMakes" inputmode="numeric" autocomplete="off"></div>
+        <div><label for="sTo" data-i18n="scale.need">I need</label><input id="sTo" inputmode="numeric" autocomplete="off"></div>
       </div>
       <div id="sFactor" class="msg ok"></div>
     </div>
     <div class="card">
       <ul class="rows" id="scaled"></ul>
-      <ul class="rows"><li class="strong"><span>Ingredient cost for this amount</span><span id="sCost">–</span></li></ul>
+      <ul class="rows"><li class="strong"><span data-i18n="scale.cost">Ingredient cost for this amount</span><span id="sCost">–</span></li></ul>
     </div>
-    <p class="note">Cup and spoon weights are typical values. Weigh for the most consistent results.</p>
+    <p class="note" data-i18n="scale.note">Cup and spoon weights are typical values. Weigh for the most consistent results.</p>
   </section>
 
   <section id="tab-pro" role="tabpanel" aria-labelledby="t-pro" hidden>
     <div class="card pro">
-      <span class="pill">Coming soon</span>
-      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Photo to recipe</h2>
-      <p>Snap a cake you love and Bento suggests a similar recipe with amounts in grams, ready to cost and price.</p>
-      <p class="note">It will be an estimate from a photo, not the original recipe. Bento will never guess allergens from a photo.</p>
+      <span class="pill" data-i18n="pro.soon">Coming soon</span>
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-i18n="pro.photoH">Photo to recipe</span></h2>
+      <p data-i18n="pro.photoP">Snap a cake you love and Bento suggests a similar recipe with amounts in grams, ready to cost and price.</p>
+      <p class="note" data-i18n="pro.photoNote">It will be an estimate from a photo, not the original recipe. Bento will never guess allergens from a photo.</p>
     </div>
     <div class="card pro">
-      <span class="pill">Coming soon</span>
-      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6"/></svg>Orders and bookkeeping</h2>
-      <p>Orders, deposits and pickup dates, linked to your recipe costs, with your profit for the month.</p>
+      <span class="pill" data-i18n="pro.soon">Coming soon</span>
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6"/></svg><span data-i18n="pro.ordersH">Orders and bookkeeping</span></h2>
+      <p data-i18n="pro.ordersP">Orders, deposits and pickup dates, linked to your recipe costs, with your profit for the month.</p>
     </div>
     <div class="card">
-      <h2>Be the first to try Bento Pro</h2>
-      <p>Join the free list. You get one email when Pro is ready and at most one tips email a month. Unsubscribe anytime.</p>
-      <a class="btn block" href="https://docs.google.com/forms/d/e/1FAIpQLSdGNhBHjq77XRkeylev6x1t_Ee0TYMZSW57gnel0fp2LGDk5w/viewform" target="_blank" rel="noopener">Join the waitlist</a>
-      <p class="note" style="margin:10px 0 0">The signup is a Google Form. <a href="/privacy/">Privacy</a></p>
+      <h2 data-i18n="pro.firstH">Be the first to try Bento Pro</h2>
+      <p data-i18n="pro.firstP">Join the free list. You get one email when Pro is ready and at most one tips email a month. Unsubscribe anytime.</p>
+      <a class="btn block" href="https://docs.google.com/forms/d/e/1FAIpQLSdGNhBHjq77XRkeylev6x1t_Ee0TYMZSW57gnel0fp2LGDk5w/viewform" target="_blank" rel="noopener" data-i18n="pro.join">Join the waitlist</a>
+      <p class="note" style="margin:10px 0 0"><span data-i18n="pro.form">The signup is a Google Form.</span> <a href="/privacy/" data-i18n="privacy">Privacy</a></p>
     </div>
     <div class="card">
-      <h2>Need it today?</h2>
-      <p class="note">Bento's big siblings are full spreadsheets for Google Sheets and Excel.</p>
+      <h2 data-i18n="pro.todayH">Need it today?</h2>
+      <p class="note" data-i18n="pro.todayNote">Bento's big siblings are full spreadsheets for Google Sheets and Excel.</p>
       <ul class="links">
-        <li><a href="https://www.etsy.com/listing/4591860096" target="_blank" rel="noopener">Home Bakery Business Planner →</a><small>Orders, customers, expenses and monthly profit.</small></li>
-        <li><a href="https://www.etsy.com/listing/4597807858" target="_blank" rel="noopener">Cookie Box Pricing &amp; Order Planner →</a><small>Gift box prices, bake plan by pickup date, packaging list.</small></li>
-        <li><a href="https://www.etsy.com/listing/4591782333" target="_blank" rel="noopener">Recipe Cost Calculator →</a><small>All your recipes, sub-recipes and a big order planner.</small></li>
+        <li><a href="https://www.etsy.com/listing/4591860096" target="_blank" rel="noopener" data-i18n="pro.l1">Home Bakery Business Planner →</a><small data-i18n="pro.l1s">Orders, customers, expenses and monthly profit.</small></li>
+        <li><a href="https://www.etsy.com/listing/4597807858" target="_blank" rel="noopener" data-i18n="pro.l2">Cookie Box Pricing &amp; Order Planner →</a><small data-i18n="pro.l2s">Gift box prices, bake plan by pickup date, packaging list.</small></li>
+        <li><a href="https://www.etsy.com/listing/4591782333" target="_blank" rel="noopener" data-i18n="pro.l3">Recipe Cost Calculator →</a><small data-i18n="pro.l3s">All your recipes, sub-recipes and a big order planner.</small></li>
       </ul>
     </div>
   </section>
 
-  <p class="foot">Bento is free and runs in your browser. Your recipes are saved only on this device.<br>Made by Ivan, a professional cook · <a href="/">DoughMath Studio</a> · <a href="/privacy/">Privacy</a></p>
+  <p class="foot"><span data-i18n="foot.free">Bento is free and runs in your browser. Your recipes are saved only on this device.</span><br><span data-i18n="foot.made">Made by Ivan, a professional cook</span> · <a href="/">DoughMath Studio</a> · <a href="/privacy/" data-i18n="privacy">Privacy</a></p>
 </main>
 
-<nav class="tabbar" role="tablist" aria-label="Bento tools">
-  <button id="t-talk" role="tab" data-tab="talk" aria-controls="tab-talk" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2z"/><path d="M8 10.5h.01M12 10.5h.01M16 10.5h.01"/></svg>Talk</button>
-  <button id="t-price" role="tab" data-tab="price" aria-controls="tab-price" aria-selected="true" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8.5 8.5-9 9z"/><circle cx="8" cy="8" r="1.6"/></svg>Price</button>
-  <button id="t-recipe" role="tab" data-tab="recipe" aria-controls="tab-recipe" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h4"/></svg>Recipe</button>
-  <button id="t-scale" role="tab" data-tab="scale" aria-controls="tab-scale" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v6h6M20 10V4h-6M4 20l7-7M20 4l-7 7"/></svg>Scale</button>
-  <button id="t-pro" role="tab" data-tab="pro" aria-controls="tab-pro" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.3L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.7z"/></svg>Pro</button>
+<nav class="tabbar" role="tablist" aria-label="Bento tools" data-i18n-aria="app.tools">
+  <button id="t-talk" role="tab" data-tab="talk" aria-controls="tab-talk" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2z"/><path d="M8 10.5h.01M12 10.5h.01M16 10.5h.01"/></svg><span data-i18n="tab.talk">Talk</span></button>
+  <button id="t-price" role="tab" data-tab="price" aria-controls="tab-price" aria-selected="true" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8.5 8.5-9 9z"/><circle cx="8" cy="8" r="1.6"/></svg><span data-i18n="tab.price">Price</span></button>
+  <button id="t-recipe" role="tab" data-tab="recipe" aria-controls="tab-recipe" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h4"/></svg><span data-i18n="tab.recipe">Recipe</span></button>
+  <button id="t-scale" role="tab" data-tab="scale" aria-controls="tab-scale" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v6h6M20 10V4h-6M4 20l7-7M20 4l-7 7"/></svg><span data-i18n="tab.scale">Scale</span></button>
+  <button id="t-pro" role="tab" data-tab="pro" aria-controls="tab-pro" aria-selected="false" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.3L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.7z"/></svg><span data-i18n="tab.pro">Pro</span></button>
 </nav>
 
+<script src="i18n.js"></script>
 <script src="core.js"></script>
 <script src="agent.js"></script>
 <script src="app.js"></script>

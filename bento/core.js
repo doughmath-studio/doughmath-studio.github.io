@@ -1,11 +1,13 @@
 /* Bento core: the app's math as pure functions (no DOM).
    Used by the tabs (app.js) and by the talking helper (agent.js), so both always give the same numbers.
-   Works in the browser (window.BentoCore) and in Node (require) for tests. */
+   Numbers are the same in every language; only how they are written changes (Intl.NumberFormat for the language).
+   Works in the browser (window.BentoCore, after i18n.js) and in Node (require) for tests. */
 (function (root, factory) {
-  var api = factory();
+  var I = typeof module === "object" && module.exports ? require("./i18n.js") : root.BentoI18n;
+  var api = factory(I || null);
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.BentoCore = api;
-})(typeof self !== "undefined" ? self : this, function () {
+})(typeof self !== "undefined" ? self : this, function (I) {
   "use strict";
 
   var CUP_ML = 236.588;
@@ -55,51 +57,163 @@
   ];
   var DEFAULT_PRICE = { ing: "9", pcs: "24", loss: "5", pack: "0.15", mins: "60", rate: "18", ovh: "1.5", margin: "35", now: "" };
 
-  function num(v) { var x = parseFloat(String(v == null ? "" : v).replace(",", ".")); return isFinite(x) ? x : 0; }
-  function fmt(x) {
+  // ---------- language ----------
+  var LANGS = I ? I.LANGS : ["en"];
+  var active = "en";
+  function L(lang) { return lang && I && I.has(lang) ? lang : active; }
+  function setLang(lang) { if (I && I.has(lang)) active = lang; return active; }
+  function getLang() { return active; }
+  function tr(lang, key, vars, n) { return I ? I.t(L(lang), key, vars, n) : key; }
+
+  // ---------- numbers: reading what people type ----------
+  // Rules (same for the tabs and for Bento):
+  //  - "9.50" and "9,50" are both 9.5 in every language.
+  //  - With both "." and "," the last one is the decimal mark: "1,234.50" and "1.234,50" are 1234.5.
+  //  - A single separator followed by exactly 3 digits after 1-3 leading digits is a thousands group only
+  //    when it is the language's group mark: in English "1,500" is 1500 (and "1.500" is 1.5);
+  //    in the comma languages "1.500" is 1500 (and "1,500" is 1.5). "0,500" and "0.500" are always 0.5.
+  //  - The same mark repeated in groups of 3 is a thousands group ("1,234,567"); a space between groups too ("1 500").
+  function parseNum(v, lang) {
+    if (typeof v === "number") return isFinite(v) ? v : 0;
+    lang = L(lang);
+    var s = String(v == null ? "" : v).trim().replace(/(\d)[\u00a0\u202f\u2009 ](?=\d{3}(?!\d))/g, "$1");
+    var m = s.match(/^[+-]?[\d.,]+/);
+    if (!m) return 0;
+    var tok = m[0], sign = 1;
+    if (tok.charAt(0) === "-") { sign = -1; tok = tok.slice(1); } else if (tok.charAt(0) === "+") tok = tok.slice(1);
+    var nd = tok.split(".").length - 1, nc = tok.split(",").length - 1, dec;
+    if (nd && nc) dec = tok.lastIndexOf(".") > tok.lastIndexOf(",") ? "." : ",";
+    else if (nd + nc === 1) {
+      var sep = nd ? "." : ",", p = tok.split(sep), group = lang === "en" ? "," : ".";
+      dec = sep === group && /^[1-9]\d{0,2}$/.test(p[0]) && /^\d{3}$/.test(p[1]) ? null : sep;
+    } else if (nd + nc > 1) dec = /^\d{1,3}(?:[.,]\d{3})+$/.test(tok) ? null : (nd ? "." : ",");
+    else dec = null;
+    var clean;
+    if (dec === null) clean = tok.replace(/[.,]/g, "");
+    else {
+      clean = tok.split(dec === "." ? "," : ".").join("");
+      var i = clean.indexOf(dec);
+      clean = clean.slice(0, i) + "." + clean.slice(i + 1).replace(/[.,].*$/, "");
+    }
+    var x = parseFloat(clean) * sign;
+    return isFinite(x) ? x : 0;
+  }
+  function num(v, lang) { return parseNum(v, lang); }
+
+  // ---------- numbers: writing them ----------
+  var NF = {};
+  function nf(lang, minF, maxF) {
+    var k = lang + minF + maxF;
+    if (!NF[k]) {
+      try { NF[k] = new Intl.NumberFormat(I.META[lang].locale, { useGrouping: false, minimumFractionDigits: minF, maximumFractionDigits: maxF }); }
+      catch (e) { NF[k] = { format: function (x) { return String(x).replace(".", ","); } }; }
+    }
+    return NF[k];
+  }
+  // s is the number as English writes it ("2.25"); the same digits in the language's style ("2,25")
+  function localNum(s, lang) {
+    if (lang === "en") return s;
+    var n = Number(s);
+    if (!isFinite(n)) return s;
+    var dp = (String(s).split(".")[1] || "").length;
+    return nf(lang, dp, dp).format(n);
+  }
+  function fmtEn(x) {
     if (!isFinite(x)) return "–";
     if (x === 0) return "0";
     if (x >= 100) return String(Math.round(x));
     if (x >= 10) return String(Math.round(x * 10) / 10);
     return String(Math.round(x * 100) / 100);
   }
-  function money(v, cur) {
+  function fmt(x, lang) { var s = fmtEn(x); return isFinite(x) ? localNum(s, L(lang)) : s; }
+  function money(v, cur, lang) {
     if (v == null || !isFinite(v)) return "–";
-    var neg = v < 0, s = Math.abs(v).toFixed(2), c = cur || "$";
-    var out = c === "zł" ? s + " zł" : c + s;
+    lang = L(lang);
+    var neg = v < 0, s = Math.abs(v).toFixed(2), c = cur || "$", out;
+    if (lang === "en") out = c === "zł" ? s + " zł" : c + s;
+    else out = lang === "pt" ? c + "\u00a0" + localNum(s, lang) : localNum(s, lang) + "\u00a0" + c;
     return neg ? "−" + out : out;
   }
+  var PCT = {};
+  function pctSuffix(lang) {
+    if (PCT[lang] == null) {
+      var s = "%";
+      try { var f = new Intl.NumberFormat(I.META[lang].locale, { style: "percent" }).format(0.35); if (/^35/.test(f)) s = f.slice(2); } catch (e) { /* keep % */ }
+      PCT[lang] = s;
+    }
+    return PCT[lang];
+  }
+  function pct(x, lang) {
+    lang = L(lang);
+    var s = (Math.round(x * 10) / 10).toString().replace(/\.0$/, "");
+    return lang === "en" ? s + "%" : localNum(s, lang) + pctSuffix(lang);
+  }
+  // A stored value like "0.15" shown in an input in the language's style ("0,15"); anything typed stays as typed.
+  function inputStr(v, lang) {
+    lang = L(lang);
+    var s = String(v == null ? "" : v);
+    return lang !== "en" && /^-?\d+\.\d+$/.test(s) ? s.replace(".", ",") : s;
+  }
   function ceil05(x) { return Math.ceil(x * 20 - 1e-9) / 20; }
-  function pct(x) { return (Math.round(x * 10) / 10).toString().replace(/\.0$/, "") + "%"; }
+
+  // ---------- units and ingredient names in the language ----------
+  function unitLabel(unit, n, lang, spoken) {
+    lang = L(lang);
+    var d = I && I.D[lang] ? I.D[lang][spoken ? "unitsSp" : "units"] : null;
+    var v = d && d[unit] != null ? d[unit] : unit;
+    return I ? I.pick(v, lang, n) : v;
+  }
+  function ingName(row, lang) {
+    lang = L(lang);
+    var d = I && I.D[lang] && I.D[lang].ingNames;
+    return d && d[row[0]] ? d[row[0]] : row[0];
+  }
+  var ROW = {};
+  DENS.forEach(function (d) { ROW[d[0]] = d; });
 
   function item(name, amt, unit, size, punit, price) {
     return { name: name, amt: String(amt), unit: unit, size: String(size), punit: punit, price: String(price) };
   }
-  function sampleRecipe() {
+  // The sample recipe, written in the language (names from the app's ingredient table).
+  function sampleRecipe(lang) {
+    lang = L(lang);
+    var n = function (en) { return ingName(ROW[en], lang); };
     return {
-      id: null, name: "Chocolate chip cookies", makes: "24",
+      id: null, name: tr(lang, "sample.name"), makes: "24",
       items: [
-        item("All-purpose flour", 2.25, "cup", 5, "lb", 4.50),
-        item("Butter", 1, "cup", 1, "lb", 5.00),
-        item("Granulated sugar", 0.75, "cup", 4, "lb", 3.80),
-        item("Brown sugar, packed", 0.75, "cup", 2, "lb", 2.60),
-        item("Eggs, large", 2, "piece", 12, "piece", 4.20),
-        item("Vanilla extract", 2, "tsp", 2, "fl oz", 6.00),
-        item("Baking soda", 1, "tsp", 1, "lb", 1.20),
-        item("Table salt", 1, "tsp", 26, "oz", 1.50),
-        item("Chocolate chips", 2, "cup", 12, "oz", 3.50)
+        item(n("All-purpose flour"), 2.25, "cup", 5, "lb", 4.50),
+        item(n("Butter"), 1, "cup", 1, "lb", 5.00),
+        item(n("Granulated sugar"), 0.75, "cup", 4, "lb", 3.80),
+        item(n("Brown sugar, packed"), 0.75, "cup", 2, "lb", 2.60),
+        item(n("Eggs, large"), 2, "piece", 12, "piece", 4.20),
+        item(n("Vanilla extract"), 2, "tsp", 2, "fl oz", 6.00),
+        item(n("Baking soda"), 1, "tsp", 1, "lb", 1.20),
+        item(n("Table salt"), 1, "tsp", 26, "oz", 1.50),
+        item(n("Chocolate chips"), 2, "cup", 12, "oz", 3.50)
       ]
     };
+  }
+  // true when rec is still the untouched sample recipe of some language (so it can follow a language change)
+  function isSample(rec) {
+    if (!rec) return null;
+    var a = JSON.stringify({ n: rec.name, m: rec.makes, i: rec.items });
+    for (var i = 0; i < LANGS.length; i++) {
+      var s = sampleRecipe(LANGS[i]);
+      if (a === JSON.stringify({ n: s.name, m: s.makes, i: s.items })) return LANGS[i];
+    }
+    return null;
   }
 
   // ---------- Price per piece (the Price tab) ----------
   // p: { ing, pcs, loss, pack, mins, rate, ovh, margin } as typed (strings or numbers).
-  function priceCalc(p) {
+  // lang: how to read typed strings (default: the app's language). Bento passes "en" for its own values ("9.5").
+  function priceCalc(p, lang) {
     p = p || {};
+    var n = function (x) { return num(x, lang); };
     var r = {
-      ing: Math.max(0, num(p.ing)), pcs: Math.floor(num(p.pcs)), loss: Math.min(Math.max(num(p.loss), 0), 90),
-      pack: Math.max(0, num(p.pack)), mins: Math.max(0, num(p.mins)), rate: Math.max(0, num(p.rate)),
-      ovh: Math.max(0, num(p.ovh)), margin: num(p.margin), ok: false, error: null
+      ing: Math.max(0, n(p.ing)), pcs: Math.floor(n(p.pcs)), loss: Math.min(Math.max(n(p.loss), 0), 90),
+      pack: Math.max(0, n(p.pack)), mins: Math.max(0, n(p.mins)), rate: Math.max(0, n(p.rate)),
+      ovh: Math.max(0, n(p.ovh)), margin: n(p.margin), ok: false, error: null
     };
     if (r.pcs < 1) { r.error = "pcs"; return r; }
     if (r.margin < 0 || r.margin >= 95) { r.error = "margin"; return r; }
@@ -117,18 +231,30 @@
     return r;
   }
   // "What you charge now" check. Returns null when no current price is given.
-  function nowCheck(r, nowRaw) {
-    var raw = String(nowRaw == null ? "" : nowRaw).trim(), now = num(raw);
+  function nowCheck(r, nowRaw, lang) {
+    var raw = String(nowRaw == null ? "" : nowRaw).trim(), now = num(raw, lang);
     if (!r || !r.ok || raw === "" || !(now > 0)) return null;
     var m = (now - r.cost) / now * 100;
     return { now: now, m: m, perBatch: (now - r.cost) * r.sell, status: now < r.cost ? "bad" : (m < r.margin - 0.05 ? "warn" : "ok") };
   }
 
   // ---------- Recipe cost (the Recipe tab) ----------
-  function findDensity(name) {
-    var n = String(name || "").toLowerCase();
-    for (var i = 0; i < DENS.length; i++) {
-      for (var j = 0; j < DENS[i][1].length; j++) if (n.indexOf(DENS[i][1][j]) >= 0) return DENS[i];
+  // English names first for English (exactly as before); other languages: their own words first, then English, then the rest.
+  function findDensity(name, lang) {
+    lang = L(lang);
+    var raw = String(name || "").toLowerCase(), f = null, order = lang === "en" ? LANGS : [lang, "en"].concat(LANGS.filter(function (l) { return l !== lang && l !== "en"; }));
+    for (var o = 0; o < order.length; o++) {
+      var l = order[o];
+      if (l === "en") {
+        for (var i = 0; i < DENS.length; i++) {
+          for (var j = 0; j < DENS[i][1].length; j++) if (raw.indexOf(DENS[i][1][j]) >= 0) return DENS[i];
+        }
+      } else if (I && I.D[l] && I.D[l].ingKeys) {
+        // keys are matched on the folded name with a space on each side, so " sal " is the whole word only
+        if (f === null) f = " " + I.fold(raw).replace(/[^a-z0-9\u0400-\u04ff]+/g, " ") + " ";
+        var keys = I.D[l].ingKeys;
+        for (var k = 0; k < keys.length; k++) if (f.indexOf(I.fold(keys[k][0])) >= 0) return keys[k][1] ? ROW[keys[k][1]] || null : null;
+      }
     }
     return null;
   }
@@ -141,86 +267,55 @@
     if (b.dim === "v") return b.v / CUP_ML * d[2];
     return d[3] ? b.v * d[3] : null;
   }
-  function lineInfo(it) {
-    var amt = num(it.amt), size = num(it.size), pr = num(it.price);
+  function lineInfo(it, lang) {
+    lang = L(lang);
+    var amt = num(it.amt, lang), size = num(it.size, lang), pr = num(it.price, lang);
     if (!String(it.name || "").trim() && !amt && !pr) return { cost: 0, note: "" };
-    if (amt <= 0) return { cost: 0, note: "Add the amount you use." };
-    if (size <= 0 || pr <= 0) return { cost: 0, note: "Add the pack size and what you paid for it." };
+    if (amt <= 0) return { cost: 0, note: tr(lang, "note.amount") };
+    if (size <= 0 || pr <= 0) return { cost: 0, note: tr(lang, "note.pack") };
     var a = toBase(amt, it.unit), b = toBase(size, it.punit);
     if (a.dim === b.dim) return { cost: a.v / b.v * pr, note: "" };
-    var d = findDensity(it.name), ga = grams(amt, it.unit, d), gb = grams(size, it.punit, d);
+    var d = findDensity(it.name, lang), ga = grams(amt, it.unit, d), gb = grams(size, it.punit, d);
     if (ga != null && gb != null) {
-      var uses = (it.unit === "piece" || it.punit === "piece") && d[3] ? "1 piece ≈ " + d[3] + " g" : "1 cup ≈ " + d[2] + " g";
-      return { cost: ga / gb * pr, note: "Using " + uses + " (" + d[0] + ")." };
+      var uses = (it.unit === "piece" || it.punit === "piece") && d[3] ? tr(lang, "note.basisPiece", { g: fmt(d[3], lang) }) : tr(lang, "note.basisCup", { g: fmt(d[2], lang) });
+      return { cost: ga / gb * pr, note: tr(lang, "note.using", { basis: uses, name: ingName(d, lang) }) };
     }
-    return { cost: null, note: "I can't turn " + it.unit + " into " + it.punit + " for this one. Pick a name from the list, or use the same kind of unit for both." };
+    return { cost: null, note: tr(lang, "note.cant", { from: unitLabel(it.unit, 1, lang), to: unitLabel(it.punit, 1, lang) }) };
   }
-  function recipeTotal(rec) {
+  function recipeTotal(rec, lang) {
     var total = 0, bad = 0;
-    ((rec && rec.items) || []).forEach(function (it) { var li = lineInfo(it); if (li.cost == null) bad++; else total += li.cost; });
+    ((rec && rec.items) || []).forEach(function (it) { var li = lineInfo(it, lang); if (li.cost == null) bad++; else total += li.cost; });
     return { total: total, bad: bad };
   }
 
   // ---------- Scale (the Scale tab) ----------
-  function scaleRecipe(rec, to) {
+  function scaleRecipe(rec, to, lang) {
+    lang = L(lang);
     rec = rec || { items: [] };
-    var makes = num(rec.makes), t = num(to);
+    var makes = num(rec.makes, lang), t = num(to, lang);
     if (makes <= 0 || t <= 0) return { ok: false, makes: makes, to: t, lines: [] };
     var f = t / makes, batches = Math.ceil(t / makes - 1e-9), lines = [];
     (rec.items || []).forEach(function (it) {
-      var amt = num(it.amt); if (amt <= 0) return;
-      var s = amt * f, d = findDensity(it.name), g = grams(s, it.unit, d);
-      var unitLabel = it.unit === "piece" && fmt(s) !== "1" ? "pieces" : it.unit;
+      var amt = num(it.amt, lang); if (amt <= 0) return;
+      var s = amt * f, d = findDensity(it.name, lang), g = grams(s, it.unit, d);
+      var unitLbl = lang === "en" ? (it.unit === "piece" && fmt(s, lang) !== "1" ? "pieces" : it.unit) : unitLabel(it.unit, Number(fmtEn(s)), lang);
       var showG = g != null && it.unit !== "g";
       lines.push({
-        name: it.name || "Ingredient", amount: s, unit: it.unit, unitLabel: unitLabel, grams: showG ? g : null,
-        text: fmt(s) + " " + unitLabel + (showG ? " ≈ " + fmt(g) + " g" : "")
+        name: it.name || tr(lang, "scale.ingredient"), amount: s, unit: it.unit, unitLabel: unitLbl, grams: showG ? g : null,
+        text: fmt(s, lang) + " " + unitLbl + (showG ? " ≈ " + fmt(g, lang) + " " + unitLabel("g", 2, lang) : "")
       });
     });
-    return { ok: true, makes: makes, to: t, f: f, batches: batches, lines: lines, cost: recipeTotal(rec).total * f };
+    return { ok: true, makes: makes, to: t, f: f, batches: batches, lines: lines, cost: recipeTotal(rec, lang).total * f };
   }
 
   return {
-    CUP_ML: CUP_ML, UNITS: UNITS, BASE: BASE, DENS: DENS, DEFAULT_PRICE: DEFAULT_PRICE,
-    num: num, fmt: fmt, money: money, ceil05: ceil05, pct: pct,
-    item: item, sampleRecipe: sampleRecipe,
+    CUP_ML: CUP_ML, UNITS: UNITS, BASE: BASE, DENS: DENS, DEFAULT_PRICE: DEFAULT_PRICE, LANGS: LANGS,
+    setLang: setLang, getLang: getLang, parseNum: parseNum,
+    num: num, fmt: fmt, fmtEn: fmtEn, money: money, ceil05: ceil05, pct: pct, inputStr: inputStr, localNum: localNum,
+    unitLabel: unitLabel, ingName: ingName,
+    item: item, sampleRecipe: sampleRecipe, isSample: isSample,
     priceCalc: priceCalc, nowCheck: nowCheck,
     findDensity: findDensity, toBase: toBase, grams: grams, lineInfo: lineInfo, recipeTotal: recipeTotal,
     scaleRecipe: scaleRecipe
   };
 });
-
-// Bento's voice: use the softest natural English voice on the device (Premium/Enhanced first, never novelty voices), calmer pace.
-(function (w) {
-  var s = w && w.speechSynthesis;
-  if (!s || !s.speak || !s.getVoices) return;
-  var BAD = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|kathy|grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley)\b/i;
-  var WARM = ["ava", "zoe", "samantha", "allison", "susan", "nicky", "serena", "kate", "karen", "moira", "tessa", "aria", "jenny", "libby", "sonia", "google us english", "google uk english female"];
-  function score(v) {
-    var n = (v.name || "").toLowerCase(), l = v.lang || "", sc = 10, i;
-    if (!/^en/i.test(l)) return -1;
-    if (BAD.test(n)) return 0;
-    if (/premium/.test(n)) sc += 60; else if (/enhanced|natural|neural/.test(n)) sc += 45;
-    for (i = 0; i < WARM.length; i++) if (n.indexOf(WARM[i]) !== -1) { sc += 30 - i; break; }
-    if (/^en[-_](us|gb)/i.test(l)) sc += 5;
-    if (v.localService) sc += 2;
-    return sc;
-  }
-  function best() {
-    var vs = [], b = null, bs = 0;
-    try { vs = s.getVoices() || []; } catch (e) { vs = []; }
-    vs.forEach(function (v) { var x = score(v); if (x > bs) { bs = x; b = v; } });
-    return b;
-  }
-  var speak = s.speak.bind(s);
-  s.speak = function (u) {
-    try {
-      if (u && u.volume !== 0) {
-        var v = best();
-        if (v) { u.voice = v; u.lang = v.lang; }
-        u.rate = 0.92; u.pitch = 1.05;
-      }
-    } catch (e) { /* keep defaults */ }
-    return speak(u);
-  };
-})(typeof window !== "undefined" ? window : null);

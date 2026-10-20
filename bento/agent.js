@@ -1,13 +1,17 @@
 /* Bento's talking helper.
    1) create(): an on-device dialog engine (no network, no AI service). It reuses the app's own math
       from core.js, so every number it says is the number the tabs show.
+      It answers in the app's language (en, es, pt, fr, de, pl, uk, ru). For other languages the question is first
+      turned into the small English the engine reads (toEnglish: the language's word list in i18n.js),
+      so the same rules and the same math run for every language, and English words keep working too.
    2) mount(): the Talk view (animated Bento, voice in and out, chat). Browser only.
    Works in Node for tests: require("./agent.js").create({ core: require("./core.js"), getState }). */
 (function (root, factory) {
-  var api = factory();
+  var I = typeof module === "object" && module.exports ? require("./i18n.js") : root.BentoI18n;
+  var api = factory(I || null);
   if (typeof module === "object" && module.exports) module.exports = api;
   else { root.BentoAgent = api; root.BentoTalk = { mount: api.mount }; }
-})(typeof self !== "undefined" ? self : this, function () {
+})(typeof self !== "undefined" ? self : this, function (I) {
   "use strict";
 
   // =====================================================================
@@ -18,6 +22,7 @@
   var TENS = { twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
   function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
   function r4(x) { return Math.round(x * 10000) / 10000; }
+  function isLang(l) { return !!(l && l !== "en" && I && I.has(l)); }
 
   function wordsToDigits(t) {
     var parts = t.split(" "), out = [], i = 0;
@@ -48,18 +53,120 @@
   }
 
   var CUR_SYM = "(?:(?:us|ca|c|a)\\$|\\$|€|£)";
-  var MONEY_W = "(?:dollars?|bucks?|usd|cad|aud|euros?|eur|gbp|quid|zlotys?|złoty|zł|zl|pln|cents?|pence|pounds?)";
+  var MONEY_W = "(?:dollars?|bucks?|usd|cad|aud|euros?|eur|gbp|quid|zlotys?|złoty|zł|zl|pln|cents?|pence|pounds?|hryvnias?|uah|rubles?)";
   var MONEY_ANY = "(?:" + CUR_SYM + "\\s?\\d+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?\\s?(?:" + CUR_SYM + "|" + MONEY_W + "))";
-  var VOL = "cups?|tablespoons?|tbsps?|tbsp|tbs|teaspoons?|tsps?|tsp|pounds?|lbs?|lb|kilos?|kg|liters?|litres?|sticks?|ounces?|oz";
+  // glass250 / glass200 are internal words for a Polish glass (250 ml) and a Ukrainian or Russian glass (200 ml)
+  var VOL = "cups?|tablespoons?|tbsps?|tbsp|tbs|teaspoons?|tsps?|tsp|pounds?|lbs?|lb|kilos?|kg|liters?|litres?|sticks?|ounces?|oz|glass250|glass200";
+  var LETTER = "a-z\\u00df-\\u00f6\\u00f8-\\u00ff\\u0100-\\u017f\\u0400-\\u04ff";
 
-  function normalize(raw) {
+  // ---------- other languages -> the engine's English ----------
+  var COMPILED = {};
+  function compileRules(list, foldIt) {
+    return (list || []).map(function (r) {
+      var src = foldIt ? I.foldMarks(r[0]) : r[0], rep = r[1];
+      var re = new RegExp("(^| )(?:" + src + ")(?= |$)", "g");
+      return [re, function () {
+        var g = arguments;
+        if (typeof rep === "function") return g[1] + rep.apply(null, Array.prototype.slice.call(g, 2, g.length - 2));
+        return g[1] + String(rep).replace(/\$(\d)/g, function (x, n) { return g[+n + 1] == null ? "" : g[+n + 1]; });
+      }];
+    });
+  }
+  function compiled(lang) {
+    if (COMPILED[lang]) return COMPILED[lang];
+    var d = I.D[lang], N = d.nums || { w: {} }, w = {}, unitsW = [], tensW = [];
+    Object.keys(N.w).forEach(function (k) {
+      var f = I.fold(k); w[f] = N.w[k];
+      if (N.w[k] > 0 && N.w[k] < 10) unitsW.push(f);
+      if (N.w[k] >= 20 && N.w[k] < 100 && N.w[k] % 10 === 0) tensW.push(f);
+    });
+    var ufv = Object.assign({}, w);
+    Object.keys(N.ufw || {}).forEach(function (k) { ufv[I.fold(k)] = N.ufw[k]; unitsW.push(I.fold(k)); });
+    var c = {
+      pre: compileRules(d.pre, false), nlex: compileRules(d.nlex, true), lex: compileRules(d.lex, true),
+      w: w, ufv: ufv, join: (N.join || []).map(I.fold), fr: !!N.fr,
+      // German writes 24 as "vierundzwanzig" (four-and-twenty)
+      uf: N.uf ? new RegExp("^(" + unitsW.join("|") + ")" + N.uf + "(" + tensW.join("|") + ")$") : null
+    };
+    return (COMPILED[lang] = c);
+  }
+  function numVal(tok, c) {
+    if (has(c.w, tok)) return c.w[tok];
+    var m = c.uf && tok.match(c.uf);
+    return m ? c.ufv[m[1]] + c.ufv[m[2]] : null;
+  }
+  // number words -> digits ("veinticuatro" -> 24, "trente cinq" -> 35, "quatre vingt dix" -> 90, "двадцать четыре" -> 24)
+  function numberPass(t, c) {
+    var toks = t.split(" "), out = [], i = 0;
+    while (i < toks.length) {
+      var v = numVal(toks[i], c);
+      if (v == null) { out.push(toks[i]); i++; continue; }
+      var cur = v, last = v, j = i + 1;
+      while (j < toks.length) {
+        var k = j;
+        if (c.join.indexOf(toks[k]) >= 0 && k + 1 < toks.length) k++;
+        var nv = numVal(toks[k], c);
+        if (nv == null) break;
+        if (c.fr && nv === 20 && cur === 4 && last === 4) { cur = 80; last = 80; j = k + 1; continue; }
+        if (nv === 100 && cur < 10 && last === cur) { cur = cur * 100; last = 100; j = k + 1; continue; }
+        var ok = last % 10 === 0 && nv < last && (nv < 10 || last >= 100 || (c.fr && (last === 60 || last === 80) && nv < 20));
+        if (!ok) break;
+        cur += nv; last = nv; j = k + 1;
+      }
+      out.push(String(cur)); i = j;
+    }
+    return out.join(" ");
+  }
+  // Rules every non-English language shares, on the English side ("9 zł 50" -> "9.50 zł").
+  var POST = [
+    [/(^| )(\d+) (dollars?|euros?|pounds?|zł|zl|zloty|zlotys?|hryvnias?|rubles?) (?:and |with )?(\d{1,2})(?: cents?)?(?= [,;.!?]| and | with | of |$)/g,
+      function (m, b, a, u, c) { return b + a + "." + (c.length === 1 ? "0" + c : c) + " " + u; }],
+    [/(^| )(\d+) (\d{1,2}) cents?(?= |$)/g, function (m, b, a, c) { return b + a + "." + (c.length === 1 ? "0" + c : c) + " bucks"; }]
+  ];
+  function toEnglish(t, lang) {
+    var c = compiled(lang);
+    t = " " + t + " ";
+    c.pre.forEach(function (r) { t = t.replace(r[0], r[1]); });
+    t = I.fold(t).replace(/\s+/g, " ");
+    // "20 €/h", "20 zł/godz.", "300 грн/год" = per hour (in every language)
+    t = t.replace(/\/ ?(?:h|hr|hora|heure|stunde|std|stde|godz|godzine|godzina|час|ч|год|годину|година)(?= |$)/g, " per hour");
+    c.nlex.forEach(function (r) { t = t.replace(r[0], r[1]); });
+    t = numberPass(t.trim(), c);
+    t = " " + t + " ";
+    c.lex.forEach(function (r) { t = t.replace(r[0], r[1]); });
+    t = t.replace(/\s+/g, " ").trim();
+    POST.forEach(function (r) { t = t.replace(r[0], r[1]); });
+    return t.replace(/\s+/g, " ").trim();
+  }
+  // decimal commas and thousands dots as written in the comma languages
+  function localDecimals(t) {
+    t = t.replace(/(\d{1,3}(?:,\d{3})+)\.(\d+)/g, function (m, a, b) { return a.replace(/,/g, "") + "." + b; });
+    t = t.replace(/(\d{1,3}(?:\.\d{3})+),(\d+)/g, function (m, a, b) { return a.replace(/\./g, "") + "." + b; });
+    t = t.replace(/(^|[^\d.,])([1-9]\d{0,2}(?:\.\d{3})+)(?![\d.,])/g, function (m, p, a) { return p + a.replace(/\./g, ""); });
+    return t.replace(/(\d),(\d+)/g, "$1.$2");
+  }
+
+  function prep(raw, lang) {
     var t = " " + String(raw == null ? "" : raw).toLowerCase() + " ";
     t = t.replace(/[’`´]/g, "'").replace(/[“”"«»]/g, " ").replace(/[–—]/g, " ");
+    if (isLang(lang)) t = t.replace(/ʼ/g, "'").replace(/[„¿¡…]/g, " ");
     t = t.replace(/½/g, " 1/2").replace(/¼/g, " 1/4").replace(/¾/g, " 3/4").replace(/⅓/g, " 1/3").replace(/⅔/g, " 2/3").replace(/⅛/g, " 1/8");
-    t = t.replace(/(\d),(\d{3})(?!\d)/g, "$1$2").replace(/(\d),(\d{1,2})(?!\d)/g, "$1.$2");
-    t = t.replace(/([a-z])-(?=[a-z])/g, "$1 ");
-    t = t.replace(/([,;!?()])/g, " $1 ").replace(/\.(?!\d)/g, " . ").replace(/\s+/g, " ");
-    t = " " + wordsToDigits(t.trim()) + " ";
+    if (isLang(lang)) {
+      t = localDecimals(t);
+      t = t.replace(new RegExp("([" + LETTER + "])-(?=[" + LETTER + "])", "g"), "$1 ");
+      t = t.replace(/([,;:!?()])/g, " $1 ").replace(/\.(?!\d)/g, " . ").replace(/\s+/g, " ");
+    } else {
+      t = t.replace(/(\d),(\d{3})(?!\d)/g, "$1$2").replace(/(\d),(\d{1,2})(?!\d)/g, "$1.$2");
+      t = t.replace(/([a-z])-(?=[a-z])/g, "$1 ");
+      t = t.replace(/([,;!?()])/g, " $1 ").replace(/\.(?!\d)/g, " . ").replace(/\s+/g, " ");
+    }
+    return t.trim();
+  }
+
+  function normalize(raw, lang) {
+    var t = prep(raw, lang);
+    if (isLang(lang)) t = toEnglish(t, lang);
+    t = " " + wordsToDigits(t) + " ";
     // fractions: 1 1/2, 1-1/2, 3/4
     t = t.replace(/(\d+)[ -](\d+)\/(\d+)(?![\d\/])/g, function (m, a, b, c) { return +c ? String(r4(+a + b / c)) : m; });
     t = t.replace(/(\d+)\/(\d+)(?![\d\/])/g, function (m, b, c) { return +c ? String(r4(b / c)) : m; });
@@ -82,7 +189,7 @@
     t = t.replace(new RegExp("(" + MONEY_ANY + "|\\d+(?:\\.\\d+)?) ?(?:an?|per|each|every|by the|\\/) ?(?:hour|hr|h)\\b", "g"), "$1 /hr");
     t = t.replace(new RegExp("(" + MONEY_ANY + "|\\d+(?:\\.\\d+)?) ?hourly\\b", "g"), "$1 /hr");
     t = t.replace(/(\d)\/(?:hour|hr|h)\b/g, "$1 /hr");
-    t = t.replace(new RegExp(" (?:an?|1) (hours?|hrs?|minutes?|mins?|cups?|tablespoons?|tbsps?|tbsp|tbs|teaspoons?|tsps?|tsp|pounds?|lbs?|lb|ounces?|oz|kilos?|kg|kilograms?|liters?|litres?|ml|sticks?|egg|large egg) ", "g"), " 1 $1 ");
+    t = t.replace(new RegExp(" (?:an?|1) (hours?|hrs?|minutes?|mins?|cups?|tablespoons?|tbsps?|tbsp|tbs|teaspoons?|tsps?|tsp|pounds?|lbs?|lb|ounces?|oz|kilos?|kg|kilograms?|liters?|litres?|ml|sticks?|egg|large egg|glass250|glass200) ", "g"), " 1 $1 ");
     // 1 hour 30 minutes -> 90 minutes
     t = t.replace(/(\d+(?:\.\d+)?) ?(?:hours?|hrs?|h) (?:and )?(\d+(?:\.\d+)?) ?(?:minutes?|mins?|min|m)\b/g, function (m, h, mi) { return r4(h * 60 + +mi) + " minutes"; });
     return t.replace(/\s+/g, " ").trim();
@@ -93,9 +200,16 @@
   // =====================================================================
   var NOUNS = "cookies?|cupcakes?|pieces?|pcs|muffins?|brownies?|blondies?|bars?|cinnamon rolls?|rolls?|cake pops?|cakes?|cheesecakes?|whoopie pies?|pies?|macarons?|macaroons?|donuts?|doughnuts?|loaves|loaf|slices?|scones?|buns?|croissants?|biscuits?|treats?|items?|servings?|portions?|tartlets?|tarts?|bagels?|pretzels?|truffles?|eclairs?|cannoli|breads?|baguettes?|brookies?|bites?|squares?|minis?";
   var NOUN_RE = new RegExp("\\b(" + NOUNS + ")\\b");
-  var NOUN_AFTER = new RegExp("^ ?(?:(?!(?:for|of|to|in|on|at|with|and|per|is|are|cost|costs|a|the|each|from)\\b)[a-z']+ ){0,3}?(?:" + NOUNS + ")\\b");
+  function rxFor(word) {
+    return {
+      nounAfter: new RegExp("^ ?(?:(?!(?:for|of|to|in|on|at|with|and|per|is|are|cost|costs|a|the|each|from)\\b)[" + word + "']+ ){0,3}?(?:" + NOUNS + ")\\b"),
+      boxAfter: new RegExp("^ ?(?:pieces? |pcs |pc |count |ct )?(?:[" + word + "]+ )?(?:box|boxes|bundles?|trays?|platters?|assortments?)\\b"),
+      name: "[" + word + " ]+"
+    };
+  }
+  var RX_EN = rxFor("a-z"), RX_X = rxFor("a-z\\u0400-\\u04ff");
+  function rx(lang) { return isLang(lang) ? RX_X : RX_EN; }
   var BOX_BEFORE = /(?:box|boxes|bundles?|packs?|sets?|trays?|platters?|assortments?|tins?|bags?) (?:of |with )?(?:about )?$/;
-  var BOX_AFTER = /^ ?(?:pieces? |pcs |pc |count |ct )?(?:[a-z]+ )?(?:box|boxes|bundles?|trays?|platters?|assortments?)\b/;
 
   function plural(n) {
     if (!n) return "pieces";
@@ -105,7 +219,8 @@
     return n + "s";
   }
 
-  function mentions(t, cur) {
+  function mentions(t, cur, lang) {
+    var X = rx(lang);
     var re = new RegExp(
       "(" + CUR_SYM + ")\\s?(\\d+(?:\\.\\d+)?)" +
       "|(\\d+(?:\\.\\d+)?)\\s?(" + CUR_SYM + "|" + MONEY_W + ")(?![a-z])" +
@@ -130,8 +245,8 @@
       if (/^ ?\/hr\b/.test(after) && (o.kind === "money" || o.kind === "plain")) o.rate = true;
       if (/^ ?perdozen\b/.test(after)) o.perDozen = true;
       if (o.kind === "plain") {
-        if (BOX_BEFORE.test(before) || BOX_AFTER.test(after)) o.box = true;
-        else if (NOUN_AFTER.test(after)) o.noun = true;
+        if (BOX_BEFORE.test(before) || X.boxAfter.test(after)) o.box = true;
+        else if (X.nounAfter.test(after)) o.noun = true;
       }
       out.push(o);
     }
@@ -169,10 +284,10 @@
     return function (pos) { var c = 0; for (var i = 0; i < cuts.length; i++) if (cuts[i] < pos) c++; return c; };
   }
 
-  // Pulls price inputs out of a sentence. ctx: { cur, box (bool), prefer (slot to fill first) }
+  // Pulls price inputs out of a sentence. ctx: { cur, box (bool), prefer (slot to fill first), lang }
   function extractPrice(t, ctx) {
     ctx = ctx || {};
-    var ms = mentions(t, ctx.cur), clause = clauseOf(t), vals = {}, mins = 0, hasMins = false, notes = {};
+    var ms = mentions(t, ctx.cur, ctx.lang), clause = clauseOf(t), vals = {}, mins = 0, hasMins = false, notes = {};
     function put(m, slot) {
       if (m.used) return false;
       if (slot === "packBox") slot = ctx.box ? "boxPack" : "pack";
@@ -252,33 +367,35 @@
     scale: /\bscal(?:e|ing)\b|\bresize\b|\bmultiply\b|\bdouble (?:the|my|this|it|a|recipe|batch)\b|\bdouble$|\btriple\b|\bquadruple\b|\bhalve\b|\bhalf (?:the |my |a )?(?:recipe|batch)\b|\bi need \d|\bneed to make \d|\bmake \d+(?:\.\d+)? instead\b|\bfor \d+ (?:people|guests|kids)\b|\binstead of \d/,
     box: /\b(?:box|boxes|bundles?|platters?|trays?|gift sets?|assortments?)\b/,
     price: /\b(?:price|prices|pricing|charge|sell|selling|worth|cost per|per piece|per cookie|each|profit|how much should|how much to|what should i ask)\b/,
-    unit: new RegExp("(\\d+(?:\\.\\d+)?)? ?\\b(fl oz|fluid ounces?|cups?|tablespoons?|tbsps?|tbsp|tbs|tbl|teaspoons?|tsps?|tsp|milliliters?|millilitres?|ml|liters?|litres?|ounces?|oz|pounds?|lbs?|lb|kilograms?|kilos?|kg|sticks?)\\b"),
+    unit: new RegExp("(\\d+(?:\\.\\d+)?)? ?\\b(fl oz|fluid ounces?|cups?|tablespoons?|tbsps?|tbsp|tbs|tbl|teaspoons?|tsps?|tsp|milliliters?|millilitres?|ml|liters?|litres?|ounces?|oz|pounds?|lbs?|lb|kilograms?|kilos?|kg|sticks?|glass250|glass200)\\b"),
     egg: /(\d+(?:\.\d+)?)? ?\b(?:large )?(egg whites?|egg yolks?|yolks?|eggs?)\b/,
     grams: /\b(?:grams?|gr|g|weigh\w*|weight|convert)\b/
   };
   var UNIT_MAP = [
     [/^(?:cups?)$/, "cup"], [/^(?:tablespoons?|tbsps?|tbsp|tbs|tbl)$/, "tbsp"], [/^(?:teaspoons?|tsps?|tsp)$/, "tsp"],
     [/^(?:ml|milliliters?|millilitres?)$/, "ml"], [/^(?:liters?|litres?)$/, "l"], [/^(?:fl oz|fluid ounces?)$/, "fl oz"],
-    [/^(?:ounces?|oz)$/, "oz"], [/^(?:pounds?|lbs?|lb)$/, "lb"], [/^(?:kg|kilos?|kilograms?)$/, "kg"], [/^sticks?$/, "stick"]
+    [/^(?:ounces?|oz)$/, "oz"], [/^(?:pounds?|lbs?|lb)$/, "lb"], [/^(?:kg|kilos?|kilograms?)$/, "kg"], [/^sticks?$/, "stick"],
+    [/^glass250$/, "glass250"], [/^glass200$/, "glass200"]
   ];
+  var GLASS_ML = { glass250: 250, glass200: 200 };
   function unitKey(w) { for (var i = 0; i < UNIT_MAP.length; i++) if (UNIT_MAP[i][0].test(w)) return UNIT_MAP[i][1]; return null; }
   var UNIT_NAMES = { cup: ["cup", "cups", "cup", "cups"], tbsp: ["tbsp", "tbsp", "tablespoon", "tablespoons"], tsp: ["tsp", "tsp", "teaspoon", "teaspoons"],
     ml: ["ml", "ml", "milliliter", "milliliters"], l: ["l", "l", "liter", "liters"], "fl oz": ["fl oz", "fl oz", "fluid ounce", "fluid ounces"],
     oz: ["oz", "oz", "ounce", "ounces"], lb: ["lb", "lb", "pound", "pounds"], kg: ["kg", "kg", "kilogram", "kilograms"], g: ["g", "g", "gram", "grams"],
     piece: ["piece", "pieces", "piece", "pieces"] };
-  function unitLabel(u, n, spoken) { var a = UNIT_NAMES[u] || [u, u, u, u]; var one = n <= 1 + 1e-9; return spoken ? (one ? a[2] : a[3]) : (one ? a[0] : a[1]); }
+  function unitLabelEn(u, n, spoken) { var a = UNIT_NAMES[u] || [u, u, u, u]; var one = n <= 1 + 1e-9; return spoken ? (one ? a[2] : a[3]) : (one ? a[0] : a[1]); }
 
   function hasData(t) { return new RegExp(MONEY_ANY).test(t) || /\d\s?(?:%|percent)/.test(t); }
-  function isUnits(t) {
+  function isUnits(t, lang) {
     var u = t.match(RE.unit);
-    if (u && unitKey(u[2]) && !hasData(t) && (RE.grams.test(t) || /\bhow (?:much|many)\b/.test(t) || new RegExp("^(?:\\d+(?:\\.\\d+)? )?" + u[2] + " (?:of )?[a-z ]+$").test(t))) return true;
+    if (u && unitKey(u[2]) && !hasData(t) && (RE.grams.test(t) || /\bhow (?:much|many)\b/.test(t) || new RegExp("^(?:\\d+(?:\\.\\d+)? )?" + u[2] + " (?:of )?" + rx(lang).name + "$").test(t))) return true;
     return RE.egg.test(t) && /\b(?:grams?|g|weigh\w*)\b/.test(t) && !hasData(t);
   }
 
-  function classify(t) {
+  function classify(t, lang) {
     var data = hasData(t);
     if (RE.cancel.test(t)) return "cancel";
-    if (isUnits(t)) return "units";
+    if (isUnits(t, lang)) return "units";
     if (RE.pro.test(t) && !data) return "pro";
     if (!data) {
       if (RE.faqCottage.test(t)) return "faq:cottage";
@@ -289,7 +406,7 @@
       if (RE.recipe.test(t) && !RE.priceRecipe.test(t) && !/\d/.test(t)) return "recipe";
       if (RE.scale.test(t)) return "scale";
     }
-    var ms = mentions(t);
+    var ms = mentions(t, null, lang);
     if (ms.some(function (m) { return m.box; }) || (RE.box.test(t) && /\b(?:price|cost|charge|sell|how much)\b/.test(t) && !/\bpackag/.test(t))) return "box";
     if (RE.priceRecipe.test(t)) return "price";
     if (RE.price.test(t)) return "price";
@@ -307,26 +424,32 @@
   // =====================================================================
   var CUR_WORDS = { "$": ["dollar", "dollars", "cent", "cents"], "C$": ["dollar", "dollars", "cent", "cents"], "A$": ["dollar", "dollars", "cent", "cents"],
     "€": ["euro", "euros", "cent", "cents"], "£": ["pound", "pounds", "penny", "pence"], "zł": ["zloty", "zloty", "grosz", "groszy"] };
-  function spokenMoney(v, cur) {
-    var neg = v < 0, c = Math.round(Math.abs(v) * 100), whole = Math.floor(c / 100), cents = c % 100, w = CUR_WORDS[cur] || CUR_WORDS.$, out = [];
-    if (whole > 0 || cents === 0) out.push(whole + " " + (whole === 1 ? w[0] : w[1]));
-    if (cents > 0) out.push(cents + " " + (cents === 1 ? w[2] : w[3]));
-    return (neg ? "minus " : "") + out.join(" and ");
+  // Money as people say it: "2 dollars and 25 cents", "9 złotych 50 groszy", "9 євро 50 центів".
+  function spokenMoney(v, cur, lang) {
+    var neg = v < 0, c = Math.round(Math.abs(v) * 100), whole = Math.floor(c / 100), cents = c % 100, out = [];
+    if (!isLang(lang)) {
+      var w = CUR_WORDS[cur] || CUR_WORDS.$;
+      if (whole > 0 || cents === 0) out.push(whole + " " + (whole === 1 ? w[0] : w[1]));
+      if (cents > 0) out.push(cents + " " + (cents === 1 ? w[2] : w[3]));
+      return (neg ? "minus " : "") + out.join(" and ");
+    }
+    var M = I.D[lang].money, ww = M[cur] || M.$, minus = neg ? I.D[lang].words.minus + " " : "";
+    if (!ww[1] && cents > 0) {
+      // no everyday word for the cents in this language: the number and the currency name
+      var x = c / 100;
+      return minus + I.fill("{n}", { n: localDec(lang, x.toFixed(2)) }) + " " + I.pick(ww[0], lang, x);
+    }
+    if (whole > 0 || cents === 0) out.push(whole + " " + I.pick(ww[0], lang, whole));
+    if (cents > 0) out.push(cents + " " + I.pick(ww[1], lang, cents));
+    return minus + out.join(M.join);
   }
+  function localDec(lang, s) { return lang === "en" ? s : String(s).replace(".", ","); }
 
   var DEFAULT_CHIPS = ["Price my cookies", "2 cups flour in grams", "Scale my recipe"];
-  var TIPS = [
-    "Weigh your flour instead of using cups. It's the easiest way to get the same cookie every time.",
-    "Count your packaging. Boxes, bags and stickers add up faster than you think.",
-    "Time a whole batch once, from mixing to washing up. That's the time you should charge for.",
-    "Let cookies cool on the tray for a few minutes before you move them. They break less.",
-    "Take a deposit for big orders before you buy the ingredients.",
-    "Check your prices every few months. Ingredient prices change, and your price should follow.",
-    "Take butter and eggs out early. Room-temperature ingredients mix more evenly.",
-    "Plan for a few pieces you can't sell, like broken ones and tasters. That's what the loss percent is for.",
-    "Label every box with what's inside, the date and the allergens.",
-    "Bake a test batch before a big order and time it. Then price the order from real numbers."
-  ];
+  var CHIP_KEYS = ["c.priceCookies", "c.cupsFlour", "c.scale"];
+  function chipsFor(lang) { return CHIP_KEYS.map(function (k) { return I ? I.t(lang || "en", k) : DEFAULT_CHIPS[CHIP_KEYS.indexOf(k)]; }); }
+  function tipsFor(lang) { var out = []; for (var i = 0; i < 10; i++) out.push(I.t(lang || "en", "tip." + i)); return out; }
+  var TIPS = I ? tipsFor("en") : [];
 
   // =====================================================================
   // The engine
@@ -335,66 +458,119 @@
     var C = opts.core;
     var getState = opts.getState;
     var pending = null;
+    var lg = "en";
 
+    function curLang() {
+      var l = opts.lang != null ? (typeof opts.lang === "function" ? opts.lang() : opts.lang) : (getState() || {}).lang;
+      return I && I.has(l) ? l : "en";
+    }
     function cur() { return (getState() || {}).cur || "$"; }
-    function render(parts) {
-      var d = "", s = "", c = cur();
-      parts.forEach(function (p) {
+    function t(key, vars, n) { return I.t(lg, key, vars, n); }
+    function T(key, vars, n) { return I.parts(lg, key, vars, n); }
+    function seg(kd, ks, vars) { return { d: T(kd, vars), s: T(ks, vars) }; }
+    var NL = { d: "\n", s: " " };
+    function words() { return I.D[lg].words; }
+    function nEn(x) { return Number(C.fmtEn(x)); }
+
+    function renderMode(list, mode, c) {
+      var out = "";
+      (list || []).forEach(function (p) {
         if (p == null || p === false) return;
-        if (typeof p === "string") { d += p; s += p; return; }
-        if (p.m != null) { d += C.money(p.m, c); s += spokenMoney(p.m, c); }
-        else if (p.p != null) { d += C.pct(p.p); s += C.pct(p.p).replace("%", " percent"); }
-        else if (p.g != null) { d += C.fmt(p.g) + " g"; s += C.fmt(p.g) + " grams"; }
-        else if (p.min != null) { d += C.fmt(p.min) + " min"; s += C.fmt(p.min) + (p.min === 1 ? " minute" : " minutes"); }
-        else if (p.u) { d += C.fmt(p.u[0]) + " " + unitLabel(p.u[1], p.u[0]); s += C.fmt(p.u[0]) + " " + unitLabel(p.u[1], p.u[0], true); }
-        else { d += p.d || ""; s += p.s || ""; }
+        if (typeof p === "string" || typeof p === "number") { out += p; return; }
+        if (Array.isArray(p)) { out += renderMode(p, mode, c); return; }
+        var d = mode === "d";
+        if (p.m != null) out += d ? C.money(p.m, c, lg) : spokenMoney(p.m, c, lg);
+        else if (p.p != null) {
+          if (d) out += C.pct(p.p, lg);
+          else if (lg === "en") out += C.pct(p.p).replace("%", " percent");
+          else { var pv = Math.round(p.p * 10) / 10; out += C.localNum(String(pv), lg) + " " + I.pick(words().percent, lg, pv); }
+        } else if (p.g != null) {
+          if (lg === "en") out += C.fmt(p.g) + (d ? " g" : " grams");
+          else out += C.fmt(p.g, lg) + " " + C.unitLabel("g", nEn(p.g), lg, !d);
+        } else if (p.min != null) {
+          if (lg === "en") out += C.fmt(p.min) + (d ? " min" : (p.min === 1 ? " minute" : " minutes"));
+          else out += C.fmt(p.min, lg) + " " + (d ? words().min : I.pick(words().minute, lg, nEn(p.min)));
+        } else if (p.u) {
+          if (lg === "en") out += C.fmt(p.u[0]) + " " + unitLabelEn(p.u[1], p.u[0], !d);
+          else out += C.fmt(p.u[0], lg) + " " + C.unitLabel(p.u[1], nEn(p.u[0]), lg, !d);
+        } else {
+          var v = d ? p.d : p.s;
+          if (Array.isArray(v)) out += renderMode(v, mode, c);
+          else out += v || "";
+        }
       });
-      s = s.replace(/≈/g, "about").replace(/×/g, "times").replace(/\s*\n+\s*/g, " ").replace(/\s{2,}/g, " ").trim();
+      return out;
+    }
+    function render(parts) {
+      var c = cur(), d = renderMode(parts, "d", c), s = renderMode(parts, "s", c);
+      var about = lg === "en" ? "about" : words().about, times = lg === "en" ? "times" : words().times;
+      s = s.replace(/≈/g, about).replace(/×/g, times).replace(/\s*\n+\s*/g, " ").replace(/\s{2,}/g, " ").trim();
       return { text: d.trim(), speech: s };
     }
     function reply(intent, parts, o) {
       o = o || {};
-      var r = render(parts);
-      return { intent: intent, text: r.text, speech: r.speech, mood: o.mood || "happy", actions: o.actions || [], chips: o.chips || DEFAULT_CHIPS.slice(), data: o.data || null, blush: !!o.blush };
+      var r = render(typeof parts === "string" ? [parts] : parts);
+      return { intent: intent, text: r.text, speech: r.speech, mood: o.mood || "happy", actions: o.actions || [], chips: o.chips || chipsFor(lg), data: o.data || null, blush: !!o.blush };
     }
+    function numStr(x) { return lg === "en" ? String(x) : C.localNum(String(x), lg); }
+    function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    // ---------- bakery nouns in the language ----------
+    var NOUN_KEY = { cookies: "cookies", biscuits: "cookies", brookies: "cookies", cupcakes: "cupcakes", muffins: "muffins", brownies: "brownies", blondies: "brownies",
+      cakes: "cakes", "cake pops": "pieces", cheesecakes: "cheesecakes", pies: "pies", "whoopie pies": "pieces", buns: "buns", rolls: "buns", "cinnamon rolls": "buns",
+      breads: "breads", loaves: "breads", baguettes: "breads", croissants: "croissants", donuts: "donuts", doughnuts: "donuts", slices: "slices",
+      tarts: "tarts", tartlets: "tarts", macarons: "macarons", macaroons: "macarons", eclairs: "eclairs" };
+    function nounData(noun) {
+      var N = I.D[lg].nouns;
+      if (lg === "en") return { how: I.fill(N._how, { noun: noun }), n: function (k) { return I.fill(N._n, { n: k, noun: noun }); } };
+      var e = N[NOUN_KEY[noun] || "pieces"] || N.pieces;
+      return { how: e.how, n: function (k) { return I.fill(I.pick(e.n, lg, +k), { n: numStr(k) }); } };
+    }
+    function piecesStr(n) { return t("n.pieces", { n: numStr(n) }, +n); }
 
     // ---------- Price per piece / box ----------
-    var LABELS = { pcs: "pieces", ing: "ingredients", loss: "loss", pack: "packaging", mins: "your time", rate: "hourly rate", ovh: "overhead", margin: "margin" };
+    var LBL = ["pcs", "ing", "loss", "pack", "mins", "rate", "ovh", "margin"];
     // Says which values came from the Price tab: listed on screen, named (not read out) in speech.
     function priceDefaultsText(used, v) {
-      var c = cur(), M = function (k) { return C.money(C.num(v[k]), c); }, bits = [];
-      if (used.pcs && used.ing) bits.push(C.num(v.pcs) + " pieces from " + M("ing") + " of ingredients");
-      else if (used.pcs) bits.push(C.num(v.pcs) + " pieces a batch");
-      else if (used.ing) bits.push(M("ing") + " of ingredients");
-      if (used.loss) bits.push(C.pct(C.num(v.loss)) + " loss");
-      if (used.pack) bits.push(M("pack") + " packaging a piece");
-      if (used.mins && used.rate) bits.push(C.fmt(C.num(v.mins)) + " min at " + M("rate") + " an hour");
-      else if (used.mins) bits.push(C.fmt(C.num(v.mins)) + " min of your time");
-      else if (used.rate) bits.push(M("rate") + " an hour");
-      if (used.ovh) bits.push(M("ovh") + " overhead");
-      if (used.margin) bits.push(C.pct(C.num(v.margin)) + " margin");
+      var c = cur(), N = function (k) { return C.num(v[k], "en"); }, M = function (k) { return C.money(N(k), c, lg); }, bits = [];
+      if (used.pcs && used.ing) bits.push(t("b.pcsIng", { pieces: piecesStr(N("pcs")), ing: M("ing") }));
+      else if (used.pcs) bits.push(t("b.pcs", { pieces: piecesStr(N("pcs")) }));
+      else if (used.ing) bits.push(t("b.ing", { ing: M("ing") }));
+      if (used.loss) bits.push(t("b.loss", { loss: C.pct(N("loss"), lg) }));
+      if (used.pack) bits.push(t("b.pack", { pack: M("pack") }));
+      if (used.mins && used.rate) bits.push(t("b.minsRate", { mins: C.fmt(N("mins"), lg), rate: M("rate") }));
+      else if (used.mins) bits.push(t("b.mins", { mins: C.fmt(N("mins"), lg) }));
+      else if (used.rate) bits.push(t("b.rate", { rate: M("rate") }));
+      if (used.ovh) bits.push(t("b.ovh", { ovh: M("ovh") }));
+      if (used.margin) bits.push(t("b.margin", { margin: C.pct(N("margin"), lg) }));
       if (!bits.length) return [];
-      var names = Object.keys(used).filter(function (k) { return used[k]; }).map(function (k) { return LABELS[k]; });
-      var said = names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names[names.length - 1] : names[0];
-      return [{ d: "\nFrom your Price tab: " + bits.join(", ") + ".", s: " For the " + said + " I used your Price tab." }];
+      var names = LBL.filter(function (k) { return used[k]; }).map(function (k) { return t("lbl." + k); });
+      return [NL, { d: t("a.fromTab", { list: bits.join(", ") }), s: t("a.fromTab_s", { names: I.joinList(lg, names) }) }];
     }
 
     function askFor(p, slot) {
       p.ask = slot;
       pending = p;
-      var noun = p.noun || "pieces";
-      if (slot === "pcs") return reply("ask:pcs", ["How many " + noun + " does one batch make?"], { mood: "worried", chips: ["12 " + noun, "24 " + noun, "36 " + noun], data: { ask: slot } });
-      if (slot === "ing") return reply("ask:ing", ["What do the ingredients for one batch cost? For example, ", { m: 9.5 }, "."], { mood: "worried", chips: [C.money(5, cur()), C.money(10, cur()), "Use my recipe cost"], data: { ask: slot } });
-      if (slot === "box") return reply("ask:box", ["How many pieces go in the box?"], { mood: "worried", chips: ["6", "12", "24"], data: { ask: slot } });
-      if (slot === "margin") return reply("ask:margin", ["That margin is too high. Pick one between 0 and 94%. Which margin do you want?"], { mood: "worried", chips: ["30%", "35%", "40%"], data: { ask: slot } });
+      var noun = p.noun || "pieces", nd = nounData(noun);
+      if (slot === "pcs") return reply("ask:pcs", T("a.askPcs", { how: nd.how }), { mood: "worried", chips: [nd.n(12), nd.n(24), nd.n(36)], data: { ask: slot } });
+      if (slot === "ing") return reply("ask:ing", T("a.askIng", { ex: { m: 9.5 } }), { mood: "worried", chips: [C.money(5, cur(), lg), C.money(10, cur(), lg), t("price.fromRecipe")], data: { ask: slot } });
+      if (slot === "box") return reply("ask:box", T("a.askBox"), { mood: "worried", chips: ["6", "12", "24"], data: { ask: slot } });
+      if (slot === "margin") return reply("ask:margin", T("a.askMargin"), { mood: "worried", chips: [C.pct(30, lg), C.pct(35, lg), C.pct(40, lg)], data: { ask: slot } });
       return null;
     }
 
-    function handlePrice(t, isBox, continuing) {
+    // a value typed in the Price tab, as a plain number string ("1.500" typed in German is "1500")
+    function fromTab(x) {
+      var s = String(x == null ? "" : x);
+      if (lg === "en" || s.trim() === "") return s;
+      return String(C.num(s, lg));
+    }
+
+    function handlePrice(tx, isBox, continuing) {
       var st = getState(), p = continuing ? pending : { intent: isBox ? "box" : "price", given: {}, noun: null, box: null, boxPack: null };
       if (isBox) p.intent = "box";
       pending = null;
-      var ex = extractPrice(t, { cur: st.cur, box: p.intent === "box", prefer: continuing ? p.ask : null });
+      var ex = extractPrice(tx, { cur: st.cur, box: p.intent === "box", prefer: continuing ? p.ask : null, lang: lg });
       var g = ex.vals;
       ["pcs", "ing", "loss", "pack", "mins", "rate", "ovh", "margin", "now", "lossPcs"].forEach(function (k) { if (g[k] != null) p.given[k] = g[k]; });
       if (g.box != null) p.box = g.box;
@@ -403,12 +579,12 @@
       else if (!p.noun && ex.noun) p.noun = ex.noun;
       if (ex.notes.markup != null) p.markup = ex.notes.markup;
       var fromRecipe = false;
-      if (RE.priceRecipe.test(t) && p.given.ing == null) {
-        var rt = C.recipeTotal(st.recipe), mk = Math.floor(C.num(st.recipe.makes));
+      if (RE.priceRecipe.test(tx) && p.given.ing == null) {
+        var rt = C.recipeTotal(st.recipe, lg), mk = Math.floor(C.num(st.recipe.makes, lg));
         if (rt.total > 0) {
           p.given.ing = Math.round(rt.total * 100) / 100;
           if (p.given.pcs == null && mk > 0) p.given.pcs = mk;
-          fromRecipe = st.recipe.name || "your recipe";
+          fromRecipe = st.recipe.name || t("a.yourRecipeLc");
         }
       }
       if (p.given.lossPcs != null && p.given.pcs > 0 && p.given.loss == null) p.given.loss = r4(p.given.lossPcs / p.given.pcs * 100);
@@ -424,208 +600,238 @@
       var v = {}, used = {};
       ["pcs", "ing", "loss", "pack", "mins", "rate", "ovh", "margin"].forEach(function (k) {
         if (p.given[k] != null) v[k] = String(p.given[k]);
-        else { v[k] = String(st.price[k] == null ? "" : st.price[k]); used[k] = true; }
+        else { v[k] = fromTab(st.price[k]); used[k] = true; }
       });
-      var r = C.priceCalc(v);
+      var r = C.priceCalc(v, "en");
       if (!r.ok) {
         if (r.error === "margin") return askFor(p, "margin");
         return askFor(p, "pcs");
       }
       var values = Object.assign({}, v);
-      var noun = p.noun || "pieces", mood = "excited", parts;
+      var noun = p.noun || "pieces", nd = nounData(noun), mood = "excited", parts;
       if (p.intent === "box") {
         var n = Math.floor(p.box), bp = p.boxPack || 0, total = r.price * n + bp, cost = r.cost * n + bp, keep = total - cost;
-        parts = ["Charge ", { m: total }, " for a box of " + n + ": " + n + " × ", { m: r.price }, " a piece",
-          bp ? ", plus " : "", bp ? { m: bp } : null, bp ? " for the box" : "", ".",
-          { d: "\nYour cost is ", s: " Your cost is " }, { m: cost }, ", so you keep ", { m: keep }, " per box."];
+        var bv = { total: { m: total }, n: n, price: { m: r.price }, bp: { m: bp } };
+        parts = [bp ? seg("a.boxPlus", "a.boxPlus_s", bv) : seg("a.box", "a.box_s", bv), NL, T("a.boxCost", { cost: { m: cost }, keep: { m: keep } })];
         parts = parts.concat(priceDefaultsText(used, v));
-        return reply("box", parts, { mood: mood, actions: [{ type: "price", label: "Open in Price tab", values: values }],
-          chips: ["Price a box of 6", "Deposits for big orders", "Margin vs markup"],
+        return reply("box", parts, { mood: mood, actions: [{ type: "price", label: t("act.price"), values: values }],
+          chips: [t("c.box6"), t("c.deposits"), t("c.margin")],
           data: { values: values, result: r, used: used, count: n, boxPack: bp, total: total, cost: cost, keep: keep } });
       }
-      parts = [fromRecipe ? "For " + fromRecipe + " (" + r.pcs + " " + noun + ", " : "For " + r.pcs + " " + noun + " with ",
-        { m: r.ing }, fromRecipe ? " of ingredients):" : " of ingredients:",
-        { d: "\nTrue cost ", s: " Your true cost is " }, { m: r.cost }, " a piece.",
-        { d: "\nCharge at least ", s: " Charge at least " }, { m: r.price }, { d: " a piece, ", s: " a piece, or " }, { m: r.dozen }, " a dozen.",
-        { d: "\nProfit ", s: " You keep " }, { m: r.profit }, { d: " a piece, ", s: " a piece and " }, { m: r.batch }, " a batch."];
+      var count = nd.n(r.pcs);
+      parts = [fromRecipe ? T("a.priceHeadRecipe", { recipe: fromRecipe, count: count, ing: { m: r.ing } }) : T("a.priceHead", { count: count, ing: { m: r.ing } }),
+        NL, seg("a.trueCost", "a.trueCost_s", { cost: { m: r.cost } }),
+        NL, seg("a.charge", "a.charge_s", { price: { m: r.price }, dozen: { m: r.dozen } }),
+        NL, seg("a.profit", "a.profit_s", { profit: { m: r.profit }, batch: { m: r.batch } })];
       if (p.given.lossPcs != null && r.pcs > 0) {
-        var an = /^(?:8|11|18)/.test(C.pct(r.loss)) ? "an " : "a ";
-        parts.push({ d: "\nLosing " + C.fmt(p.given.lossPcs) + " of " + r.pcs + " is " + an + C.pct(r.loss) + " loss.", s: " Losing " + C.fmt(p.given.lossPcs) + " of " + r.pcs + " is " + an + C.pct(r.loss).replace("%", " percent") + " loss." });
+        var an = /^(?:8|11|18)/.test(C.pct(r.loss, "en"));
+        parts.push(NL, T(an ? "a.lossPcsAn" : "a.lossPcs", { lost: C.fmt(p.given.lossPcs, lg), pcs: r.pcs, loss: { p: r.loss } }));
       }
-      if (p.markup != null) parts.push({ d: "\nA " + C.pct(p.markup) + " markup is a " + C.pct(r.margin) + " margin.", s: " A " + p.markup + " percent markup is a " + C.pct(r.margin).replace("%", " percent") + " margin." });
+      if (p.markup != null) {
+        parts.push(NL, T("a.markup", { mk: lg === "en" ? { d: C.pct(p.markup), s: p.markup + " percent" } : { p: p.markup }, margin: { p: r.margin } }));
+      }
       parts = parts.concat(priceDefaultsText(used, v));
       var chk = null;
       if (p.given.now != null) {
         values.now = String(p.given.now);
-        chk = C.nowCheck(r, values.now);
-        if (chk && chk.status === "bad") { mood = "worried"; parts.push({ d: "\n", s: " " }, "At ", { m: chk.now }, " you lose ", { m: r.cost - chk.now }, " on every piece."); }
-        else if (chk && chk.status === "warn") { mood = "worried"; parts.push({ d: "\n", s: " " }, "At ", { m: chk.now }, " you keep ", { p: chk.m }, ", below your ", { p: r.margin }, " target."); }
-        else if (chk) parts.push({ d: "\n", s: " " }, "At ", { m: chk.now }, " you keep ", { p: chk.m }, ". That's on target.");
+        chk = C.nowCheck(r, values.now, "en");
+        if (chk && chk.status === "bad") { mood = "worried"; parts.push(NL, T("a.nowBad", { now: { m: chk.now }, diff: { m: r.cost - chk.now } })); }
+        else if (chk && chk.status === "warn") { mood = "worried"; parts.push(NL, T("a.nowWarn", { now: { m: chk.now }, m: { p: chk.m }, margin: { p: r.margin } })); }
+        else if (chk) parts.push(NL, T("a.nowOk", { now: { m: chk.now }, m: { p: chk.m } }));
       }
-      if (r.rate === 0) { mood = "worried"; parts.push({ d: "\n", s: " " }, "Your hourly rate is 0, so your time isn't paid. Add a rate in the Price tab."); }
-      return reply("price", parts, { mood: mood, actions: [{ type: "price", label: "Open in Price tab", values: values }],
-        chips: ["Price a box of 12", "Margin vs markup", "What does my recipe cost?"],
+      if (r.rate === 0) { mood = "worried"; parts.push(NL, T("a.rate0")); }
+      return reply("price", parts, { mood: mood, actions: [{ type: "price", label: t("act.price"), values: values }],
+        chips: [t("c.box12"), t("c.margin"), t("c.recipeCost")],
         data: { values: values, result: r, used: used, now: chk, noun: noun } });
     }
 
     // ---------- Recipe cost ----------
     function handleRecipe() {
-      var st = getState(), rec = st.recipe || { items: [] }, rt = C.recipeTotal(rec), makes = Math.floor(C.num(rec.makes));
-      var name = String(rec.name || "").trim() || "Your recipe";
+      var st = getState(), rec = st.recipe || { items: [] }, rt = C.recipeTotal(rec, lg), makes = Math.floor(C.num(rec.makes, lg));
+      var name = String(rec.name || "").trim() || t("a.yourRecipe");
       if (!(rt.total > 0)) {
-        return reply("recipe", ["Your Recipe tab is empty. Open it, add each ingredient with the amount you use, the pack size and what you paid for the pack, and I'll add it up."],
-          { mood: "worried", actions: [{ type: "recipe", label: "Open Recipe tab" }], data: { total: 0, makes: makes } });
+        return reply("recipe", T("a.recipeEmpty"), { mood: "worried", actions: [{ type: "recipe", label: t("act.recipe") }], data: { total: 0, makes: makes } });
       }
-      var parts = [name + ": one batch costs ", { m: rt.total }, " in ingredients"];
-      if (makes > 0) parts.push(", ", { m: rt.total / makes }, " a piece (" + makes + " pieces).");
-      else parts.push(". Add how many pieces it makes on the Recipe tab and I'll give you the cost per piece.");
-      if (rt.bad) parts.push({ d: "\n", s: " " }, rt.bad + (rt.bad === 1 ? " ingredient isn't" : " ingredients aren't") + " counted yet. See the Recipe tab.");
-      return reply("recipe", parts, { mood: rt.bad ? "worried" : "happy", actions: [{ type: "recipe", label: "Open Recipe tab" }],
-        chips: ["Price my recipe", "Scale my recipe", "Price a box of 12"],
+      var parts = [makes > 0 ? T("a.recipe", { name: name, total: { m: rt.total }, per: { m: rt.total / makes }, pieces: piecesStr(makes) }) : T("a.recipeNoMakes", { name: name, total: { m: rt.total } })];
+      if (rt.bad) parts.push(NL, T("a.recipeBad", { n: rt.bad }));
+      return reply("recipe", parts, { mood: rt.bad ? "worried" : "happy", actions: [{ type: "recipe", label: t("act.recipe") }],
+        chips: [t("c.priceRecipe"), t("c.scale"), t("c.box12")],
         data: { name: name, total: rt.total, perPiece: makes > 0 ? rt.total / makes : null, makes: makes, bad: rt.bad } });
     }
 
     // ---------- Scale ----------
-    function scaleTarget(t, makes) {
+    function scaleTarget(tx, makes) {
       var m;
-      if (/\bdouble\b/.test(t)) return makes * 2;
-      if (/\btriple\b/.test(t)) return makes * 3;
-      if (/\bquadruple\b/.test(t)) return makes * 4;
-      if (/\bhalve\b|\bhalf\b/.test(t)) return makes / 2;
-      if ((m = t.match(/\bx ?(\d+(?:\.\d+)?)\b|\b(\d+(?:\.\d+)?) ?(?:x|times)\b/))) return makes * +(m[1] || m[2]);
-      if ((m = t.match(/\b(?:to|need|make|making|for|into|get)\s(?:about\s)?(\d+(?:\.\d+)?)\b/))) return +m[1];
-      if ((m = t.match(new RegExp("(\\d+(?:\\.\\d+)?) ?(?:" + NOUNS + ")\\b")))) return +m[1];
-      if ((m = t.match(/(\d+(?:\.\d+)?)/))) return +m[1];
+      if (/\bdouble\b/.test(tx)) return makes * 2;
+      if (/\btriple\b/.test(tx)) return makes * 3;
+      if (/\bquadruple\b/.test(tx)) return makes * 4;
+      if (/\bhalve\b|\bhalf\b/.test(tx)) return makes / 2;
+      if ((m = tx.match(/\bx ?(\d+(?:\.\d+)?)\b|\b(\d+(?:\.\d+)?) ?(?:x|times)\b/))) return makes * +(m[1] || m[2]);
+      if ((m = tx.match(/\b(?:to|need|make|making|for|into|get)\s(?:about\s)?(\d+(?:\.\d+)?)\b/))) return +m[1];
+      if ((m = tx.match(new RegExp("(\\d+(?:\\.\\d+)?) ?(?:" + NOUNS + ")\\b")))) return +m[1];
+      if ((m = tx.match(/(\d+(?:\.\d+)?)/))) return +m[1];
       return null;
     }
-    function handleScale(t, continuing) {
-      var st = getState(), rec = st.recipe || { items: [] }, makes = C.num(rec.makes);
+    function handleScale(tx) {
+      var st = getState(), rec = st.recipe || { items: [] }, makes = C.num(rec.makes, lg);
       pending = null;
       if (!(makes > 0)) {
-        return reply("scale", ["Tell me on the Recipe tab how many pieces your recipe makes, then I can scale it."],
-          { mood: "worried", actions: [{ type: "recipe", label: "Open Recipe tab" }] });
+        return reply("scale", T("a.scaleNoMakes"), { mood: "worried", actions: [{ type: "recipe", label: t("act.recipe") }] });
       }
-      var to = scaleTarget(t, makes);
+      var to = scaleTarget(tx, makes);
       if (!(to > 0)) {
         pending = { intent: "scale", ask: "to" };
-        return reply("ask:scale", ["How many pieces do you need? Your recipe makes " + C.fmt(makes) + "."], { mood: "worried", chips: ["36", "48", "60"], data: { ask: "to" } });
+        return reply("ask:scale", T("a.scaleAsk", { makes: C.fmt(makes, lg) }), { mood: "worried", chips: ["36", "48", "60"], data: { ask: "to" } });
       }
-      var sc = C.scaleRecipe(rec, to), name = String(rec.name || "").trim() || "your recipe";
+      var sc = C.scaleRecipe(rec, to, lg), name = String(rec.name || "").trim() || t("a.yourRecipeLc");
       if (Math.abs(sc.f - 1) < 1e-9) {
-        return reply("scale", [name.charAt(0).toUpperCase() + name.slice(1) + " already makes " + C.fmt(sc.makes) + ", so you don't need to change anything."], { mood: "happy", chips: ["Scale to 36", "Scale to 60", "What does my recipe cost?"], data: { to: sc.to, makes: sc.makes, f: 1 } });
+        return reply("scale", T("a.scaleSame", { name: cap(name), makes: C.fmt(sc.makes, lg) }), { mood: "happy", chips: [t("c.scale36"), t("c.scale60"), t("c.recipeCost")], data: { to: sc.to, makes: sc.makes, f: 1 } });
       }
-      var parts = ["To make " + C.fmt(sc.to) + " instead of " + C.fmt(sc.makes) + ", multiply everything by " + C.fmt(sc.f) + ".",
-        { d: " Or bake " + sc.batches + " whole batch" + (sc.batches === 1 ? "" : "es") + " = " + C.fmt(sc.batches * sc.makes) + " pieces." }];
+      var whole = sc.batches * sc.makes;
+      var parts = [T("a.scale", { to: C.fmt(sc.to, lg), makes: C.fmt(sc.makes, lg), f: C.fmt(sc.f, lg) }),
+        { d: [" ", T("a.scaleBatches", { batches: t("n.wholeBatches", { n: sc.batches }), pieces: t("n.pieces", { n: C.fmt(whole, lg) }, nEn(whole)) })], s: "" }];
       var first = sc.lines.slice(0, 5);
       if (first.length) {
         first.forEach(function (ln) {
-          var g = ln.grams != null ? { d: " ≈ " + C.fmt(ln.grams) + " g", s: ", about " + C.fmt(ln.grams) + " grams" } : null;
-          parts.push({ d: "\n• " + ln.name + ": ", s: " " + ln.name + ": " }, ln.unit === "piece" ? C.fmt(ln.amount) + " " + ln.unitLabel : { u: [ln.amount, ln.unit] }, g, { s: "." });
+          var amt = lg === "en" && ln.unit === "piece" ? C.fmt(ln.amount) + " " + ln.unitLabel : { u: [ln.amount, ln.unit] };
+          var vars = { name: ln.name, amt: amt, g: { g: ln.grams } };
+          parts.push(NL, ln.grams != null ? seg("a.scaleLineG", "a.scaleLineG_s", vars) : seg("a.scaleLine", "a.scaleLine_s", vars));
         });
-        if (sc.lines.length > 5) parts.push({ d: "\n…and " + (sc.lines.length - 5) + " more in the Scale tab.", s: " The rest is in the Scale tab." });
+        if (sc.lines.length > 5) parts.push(NL, seg("a.scaleMore", "a.scaleMore_s", { k: sc.lines.length - 5 }));
       }
-      parts.push({ d: "\nIngredients for " + C.fmt(sc.to) + ": ", s: " Ingredients for " + C.fmt(sc.to) + " cost " }, { m: sc.cost }, ".");
-      return reply("scale", parts, { mood: "happy", actions: [{ type: "scale", label: "Open in Scale tab", to: sc.to }],
-        chips: ["What does my recipe cost?", "Scale to 36", "2 cups flour in grams"],
+      parts.push(NL, seg("a.scaleCost", "a.scaleCost_s", { to: C.fmt(sc.to, lg), cost: { m: sc.cost } }));
+      return reply("scale", parts, { mood: "happy", actions: [{ type: "scale", label: t("act.scale"), to: sc.to }],
+        chips: [t("c.recipeCost"), t("c.scale36"), t("c.cupsFlour")],
         data: { to: sc.to, makes: sc.makes, f: sc.f, batches: sc.batches, lines: first, cost: sc.cost, name: name } });
     }
 
     // ---------- Cups and spoons to grams ----------
     var STOP = /\b(?:how|many|much|grams?|gr|g|in|into|to|is|are|of|convert|what|whats|what's|does|do|weigh|weighs|weight|the|a|an|me|please|tell|it|there|equal|equals|us|would|be|approx|approximately|about|roughly|hey|bento|can|you|i|need|know|want|that|if|large)\b/g;
-    function handleUnits(t, continuing) {
+    var STOP_SET = {};
+    ("how many much grams gram gr g in into to is are of convert what whats what's does do weigh weighs weight the a an me please tell it there equal equals us would be approx approximately about roughly hey bento can you i need know want that if large" +
+      " have has my your with for per and or on at by this one so").split(" ").forEach(function (w) { STOP_SET[w] = 1; });
+    var origWords = {};
+    // the user's own spelling of a word (the engine reads words without accents)
+    function original(name) {
+      return name.split(" ").map(function (w) { return origWords[w] || w; }).join(" ");
+    }
+    function nameOf(s) {
+      if (lg === "en") return s.replace(/\d+(?:\.\d+)?/g, " ").replace(/[?.!,]/g, " ").replace(STOP, " ").replace(/\s+/g, " ").trim();
+      return s.replace(/\d+(?:\.\d+)?/g, " ").replace(/[?.!,;:]/g, " ").split(" ").filter(function (w) { return w && !STOP_SET[w]; }).join(" ");
+    }
+    function handleUnits(tx, continuing) {
       var amount, unit, name, p = continuing ? pending : null;
       pending = null;
-      if (p) { amount = p.amount; unit = p.unit; name = t.replace(/[?.!,]/g, " ").replace(STOP, " ").replace(/\s+/g, " ").trim(); }
+      if (p) { amount = p.amount; unit = p.unit; name = nameOf(tx); }
       else {
-        var u = t.match(RE.unit), e = t.match(RE.egg), rest;
+        var u = tx.match(RE.unit), e = tx.match(RE.egg), rest;
         if (u && unitKey(u[2])) {
           amount = u[1] != null ? +u[1] : 1; unit = unitKey(u[2]);
-          rest = t.slice(0, u.index) + " " + t.slice(u.index + u[0].length);
-          name = rest.replace(/\d+(?:\.\d+)?/g, " ").replace(/[?.!,]/g, " ").replace(STOP, " ").replace(/\s+/g, " ").trim();
+          rest = tx.slice(0, u.index) + " " + tx.slice(u.index + u[0].length);
+          name = nameOf(rest);
         } else if (e) {
           amount = e[1] != null ? +e[1] : 1; unit = "piece"; name = e[2];
         }
       }
       if (unit === "stick") {
-        return reply("units", ["I don't have sticks in my unit list. Ask me in cups or tablespoons instead, for example 8 tbsp butter in grams."], { mood: "worried", chips: ["8 tbsp butter in grams", "1 cup butter in grams", "Price my cookies"] });
+        return reply("units", T("a.stick"), { mood: "worried", chips: [t("c.butter8"), t("c.butterCup"), t("c.priceCookies")] });
       }
       if (!unit) return help("unknown");
-      var weight = C.BASE[unit] && C.BASE[unit][0] === "w";
+      var glass = GLASS_ML[unit] || 0;
+      var weight = !glass && C.BASE[unit] && C.BASE[unit][0] === "w";
       if (weight) {
-        var gw = C.grams(amount, unit, null);
-        return reply("units", [{ u: [amount, unit] }, name ? " of " + name : "", { d: " ≈ ", s: " is about " }, { g: gw }, "."],
-          { chips: ["2 cups flour in grams", "3 tbsp butter in grams", "Price my cookies"], data: { grams: gw, amount: amount, unit: unit } });
+        var gw = C.grams(amount, unit, null), nm = lg === "en" ? name : cap(original(name));
+        var wv = { amt: { u: [amount, unit] }, name: nm, g: { g: gw } };
+        return reply("units", [name ? seg("a.uWeightName", "a.uWeightName_s", wv) : seg("a.uWeight", "a.uWeight_s", wv)],
+          { chips: [t("c.cupsFlour"), t("c.butter3"), t("c.priceCookies")], data: { grams: gw, amount: amount, unit: unit } });
       }
       if (!name) {
         pending = { intent: "units", amount: amount, unit: unit };
-        return reply("ask:units", ["Which ingredient? A cup of flour and a cup of sugar weigh very differently."], { mood: "worried", chips: ["flour", "sugar", "butter"], data: { ask: "ingredient" } });
+        return reply("ask:units", T("a.uAsk"), { mood: "worried", chips: [t("c.flour"), t("c.sugar"), t("c.butter")], data: { ask: "ingredient" } });
       }
-      var d = C.findDensity(name);
-      var g = d ? C.grams(amount, unit, d) : null;
+      var d = C.findDensity(name, lg);
+      var g = d ? (glass ? C.grams(amount * glass, "ml", d) : C.grams(amount, unit, d)) : null;
       if (g == null) {
-        return reply("units", ["I don't have a typical weight for “" + name + "”" + (unit === "piece" ? "." : " in my table.") + " Cup and spoon weights change a lot from one ingredient to another, so weigh it once and write the grams down."],
-          { mood: "worried", chips: ["1 cup sugar in grams", "3 tbsp butter in grams", "Price my cookies"], data: { grams: null, name: name } });
+        return reply("units", T(unit === "piece" ? "a.uUnknownPiece" : "a.uUnknown", { name: lg === "en" ? name : original(name) }),
+          { mood: "worried", chips: [t("c.sugarCup"), t("c.butter3"), t("c.priceCookies")], data: { grams: null, name: name } });
       }
-      var label = d[0].charAt(0).toLowerCase() + d[0].slice(1), what;
+      var parts, onlyCup = unit === "cup" && Math.abs(amount - 1) < 1e-9;
+      var basis = unit === "piece" ? t("note.basisPiece", { g: C.fmt(d[3], lg) }) : t("note.basisCup", { g: C.fmt(d[2], lg) });
+      var shownUnit = glass ? "glass" : unit;
       if (unit === "piece") {
-        var lg = label.match(/^(.*), large$/), nm = lg ? "large " + lg[1] : label;
-        what = C.fmt(amount) + " " + (amount <= 1 ? nm.replace(/s$/, "") : nm);
+        var what;
+        if (lg === "en") {
+          var label = d[0].charAt(0).toLowerCase() + d[0].slice(1), lg2 = label.match(/^(.*), large$/), nm2 = lg2 ? "large " + lg2[1] : label;
+          what = C.fmt(amount) + " " + (amount <= 1 ? nm2.replace(/s$/, "") : nm2);
+        } else {
+          var ef = I.D[lg].eggs && I.D[lg].eggs[d[0]];
+          what = ef ? I.fill(I.pick(ef, lg, nEn(amount)), { n: C.fmt(amount, lg) }) : [{ u: [amount, "piece"] }, " ", C.ingName(d, lg).toLowerCase()];
+        }
+        parts = [seg("a.uOkPiece", "a.uOkPiece_s", { amt: what, g: { g: g } })];
+      } else {
+        var lbl = lg === "en" ? d[0].charAt(0).toLowerCase() + d[0].slice(1) : C.ingName(d, lg);
+        parts = [seg("a.uOk", "a.uOk_s", { amt: { u: [amount, shownUnit] }, name: lbl, g: { g: g } })];
       }
-      var basis = unit === "piece" ? "1 piece ≈ " + d[3] + " g" : "1 cup ≈ " + d[2] + " g";
-      var onlyCup = unit === "cup" && Math.abs(amount - 1) < 1e-9;
-      return reply("units", [what || { u: [amount, unit] }, what ? "" : " of " + label, { d: " ≈ ", s: " is about " }, { g: g }, ".",
-        { d: "\nTypical value" + (onlyCup ? "" : " (" + basis + ")") + ". Weigh it for the most consistent results.", s: " That's a typical value, so weigh it if you can." }],
-        { chips: ["3 tbsp butter in grams", "1 cup sugar in grams", "Price my cookies"], data: { grams: g, amount: amount, unit: unit, dens: d[0] } });
+      var note = [];
+      if (glass) note = [seg("a.uGlassNote", "a.uGlassNote_s", { ml: glass }), " "];
+      else if (lg !== "en" && unit === "cup") note = [seg("a.uCupNote", "a.uCupNote_s", {}), " "];
+      parts.push(NL, { d: note.concat([T(onlyCup || glass ? "a.uTypicalCup" : "a.uTypical", { basis: basis })]), s: note.concat([T("a.uTypical_s")]) });
+      var data = { grams: g, amount: amount, unit: unit, dens: d[0] };
+      if (glass) data.ml = glass;
+      return reply("units", parts, { chips: [t("c.butter3"), t("c.sugarCup"), t("c.priceCookies")], data: data });
     }
 
     // ---------- FAQ, Pro, small talk ----------
     function faq(id) {
-      if (id === "markup") return reply("faq:markup", ["Markup is what you add on top of your cost. Margin is the part of the price you keep. If a cookie costs ", { m: 1 }, " and you sell it for ", { m: 2 }, ", the markup is 100% but the margin is 50%. My Price tab works with margin."], { chips: ["Price my cookies", "What to charge for my time", "Deposits for big orders"] });
-      if (id === "howto") return reply("faq:howto", ["Add up four things for one batch: ingredients, packaging, your time and overhead like electricity. Divide by the pieces you can sell to get your true cost per piece. Then add the margin you want to keep. Tell me your batch and I'll do the math."], { chips: ["Price my cookies", "Margin vs markup", "What to charge for my time"] });
-      if (id === "deposit") return reply("faq:deposit", ["For big or custom orders, ask for a deposit before you buy the ingredients. A simple rule is a deposit that covers at least your ingredients and packaging, with the rest due at pickup. Put your deposit and cancellation terms in writing and send them with every order."], { chips: ["Price a box of 12", "Price my cookies", "Margin vs markup"] });
-      if (id === "time") return reply("faq:time", ["Pay yourself an hourly rate, the same way you would pay a helper. Pick a rate you would accept for similar work where you live, then count every minute: mixing, baking, cooling, decorating, packing and washing up. I add it to the price as minutes per batch times your rate, divided by the pieces."], { chips: ["Price my cookies", "Margin vs markup", "Deposits for big orders"] });
-      return reply("faq:cottage", ["Rules for selling food you bake at home are different from place to place. They can cover what you may sell, labels, permits and where you can sell. Please check your local rules with your local food safety office. I can't give legal advice."], { chips: ["Price my cookies", "Deposits for big orders", "What to charge for my time"] });
+      if (id === "markup") return reply("faq:markup", T("a.faqMarkup", { one: { m: 1 }, two: { m: 2 } }), { chips: [t("c.priceCookies"), t("c.time"), t("c.deposits")] });
+      if (id === "howto") return reply("faq:howto", T("a.faqHowto"), { chips: [t("c.priceCookies"), t("c.margin"), t("c.time")] });
+      if (id === "deposit") return reply("faq:deposit", T("a.faqDeposit"), { chips: [t("c.box12"), t("c.priceCookies"), t("c.margin")] });
+      if (id === "time") return reply("faq:time", T("a.faqTime"), { chips: [t("c.priceCookies"), t("c.margin"), t("c.deposits")] });
+      return reply("faq:cottage", T("a.faqCottage"), { chips: [t("c.priceCookies"), t("c.deposits"), t("c.time")] });
     }
     function pro() {
-      return reply("pro", ["Photo to recipe and orders with bookkeeping are coming soon in Bento Pro. Join the free waitlist and you'll get one email when it's ready."],
-        { actions: [{ type: "pro", label: "Join the Pro waitlist" }] });
+      return reply("pro", T("a.pro"), { actions: [{ type: "pro", label: t("act.pro") }] });
     }
     function help(kind) {
-      if (kind === "greet") return reply("greet", ["Hi, I'm Bento! I can price your bakes, cost your recipe, scale it and turn cups into grams. Try one of these, or just ask."], { blush: true });
-      if (kind === "thanks") return reply("thanks", ["You're welcome! Happy baking."], { blush: true });
-      if (kind === "help") return reply("help", ["I can work out a price per piece or per box, what your recipe costs, how to scale it, and cups or spoons to grams. I can also explain margin, deposits and pricing your time. Try one of these:"]);
-      if (kind === "cancel") return reply("cancel", ["Okay, let's start over. What would you like to work out?"]);
-      return reply("unknown", ["Sorry, I don't know that one. I can work out prices per piece and per box, your recipe cost, scaling, and cups or spoons to grams. Try one of these:"], { mood: "worried" });
+      if (kind === "greet") return reply("greet", T("a.greet"), { blush: true });
+      if (kind === "thanks") return reply("thanks", T("a.thanks"), { blush: true });
+      if (kind === "help") return reply("help", T("a.help"));
+      if (kind === "cancel") return reply("cancel", T("a.cancel"));
+      return reply("unknown", T("a.unknown"), { mood: "worried" });
     }
 
     function ask(raw) {
-      var t = normalize(String(raw || "").slice(0, 400));
-      if (!t) return help("help");
-      var intent = classify(t), p = pending;
+      lg = curLang();
+      var text = String(raw || "").slice(0, 400);
+      origWords = {};
+      if (lg !== "en") prep(text, lg).split(" ").forEach(function (w) { var f = I.fold(w); if (!origWords[f]) origWords[f] = w; });
+      var tx = normalize(text, lg);
+      if (!tx) return help("help");
+      var intent = classify(tx, lg), p = pending;
       if (p) {
         if (intent === "cancel") { pending = null; return help("cancel"); }
-        var numeric = /\d/.test(t) || RE.priceRecipe.test(t);
-        if ((p.intent === "price" || p.intent === "box") && (intent === "price" || intent === "box" || (intent === "unknown" && numeric))) return handlePrice(t, intent === "box", true);
-        if (p.intent === "scale" && (intent === "scale" || (intent === "unknown" && numeric))) return handleScale(t, true);
-        if (p.intent === "units" && intent === "unknown" && !numeric) return handleUnits(t, true);
+        var numeric = /\d/.test(tx) || RE.priceRecipe.test(tx);
+        if ((p.intent === "price" || p.intent === "box") && (intent === "price" || intent === "box" || (intent === "unknown" && numeric))) return handlePrice(tx, intent === "box", true);
+        if (p.intent === "scale" && (intent === "scale" || (intent === "unknown" && numeric))) return handleScale(tx, true);
+        if (p.intent === "units" && intent === "unknown" && !numeric) return handleUnits(tx, true);
         // a reply without a number to Bento's question: ask once more, kindly
         if (intent === "unknown" && !numeric) {
-          if (p.intent === "scale") { pending = p; return reply("ask:scale", ["I need a number for that. How many pieces do you need? Say cancel to stop."], { mood: "worried", chips: ["36", "48", "60"] }); }
+          if (p.intent === "scale") { pending = p; return reply("ask:scale", T("a.scaleAgain"), { mood: "worried", chips: ["36", "48", "60"] }); }
           if ((p.intent === "price" || p.intent === "box") && p.ask) {
             var again = askFor(p, p.ask);
-            again.text = "I need a number for that. " + again.text; again.speech = "I need a number for that. " + again.speech;
+            again.text = t("a.needNumber", { q: again.text }); again.speech = t("a.needNumber", { q: again.speech });
             return again;
           }
         }
         pending = null;
       }
-      if (intent === "units") return handleUnits(t);
+      if (intent === "units") return handleUnits(tx);
       if (intent === "pro") return pro();
       if (intent.indexOf("faq:") === 0) return faq(intent.slice(4));
       if (intent === "recipe") return handleRecipe();
-      if (intent === "scale") return handleScale(t);
-      if (intent === "box") return handlePrice(t, true);
-      if (intent === "price") return handlePrice(t, false);
+      if (intent === "scale") return handleScale(tx);
+      if (intent === "box") return handlePrice(tx, true);
+      if (intent === "price") return handlePrice(tx, false);
       if (intent === "cancel") return help("cancel");
       return help(intent);
     }
@@ -634,8 +840,9 @@
       ask: ask,
       reset: function () { pending = null; },
       pending: function () { return pending; },
-      welcome: function () { return reply("welcome", ["Hi, I'm Bento! Ask me what to charge, what your recipe costs, how to scale it, or how many grams are in a cup."]); },
-      tip: function (i) { var tx = TIPS[i % TIPS.length]; return reply("tip", [tx], { mood: "happy" }); }
+      lang: function () { return curLang(); },
+      welcome: function () { lg = curLang(); return reply("welcome", T("a.welcome")); },
+      tip: function (i) { lg = curLang(); return reply("tip", T("tip." + (i % 10)), { mood: "happy" }); }
     };
   }
 
@@ -649,11 +856,13 @@
     var doc = document, win = window;
     function $(id) { return doc.getElementById(id); }
     var agent = create({ core: opts.core, getState: opts.getState });
+    function L() { return agent.lang(); }
+    function tr(key, vars) { return I ? I.t(L(), key, vars) : key; }
     var sec = $("tab-talk"), svg = $("talkBento"), hopEl = $("talkHop"), tapBtn = $("bentoTap"), stage = $("talkStage"), berry = svg.querySelector(".tb-berry"), look = svg.querySelector(".tb-look");
     var sayEl = $("talkSay"), actionsEl = $("talkActions"), chipsEl = $("talkChips"), heardEl = $("heard");
     var micBtn = $("micBtn"), micLabel = $("micLabel"), talkForm = $("talkForm"), talkInput = $("talkInput"), tipEl = $("talkTip");
     var speakerBtn = $("speakerBtn"), typeBtn = $("typeBtn"), backBtn = $("backTalk"), mainEl = $("talkMain"), chatEl = $("talkChat");
-    var logEl = $("chatLog"), chatForm = $("chatForm"), chatInput = $("chatInput"), chatChips = $("chatChips");
+    var logEl = $("chatLog"), chatForm = $("chatForm"), chatInput = $("chatInput"), chatChips = $("chatChips"), voiceNote = $("voiceNote");
     function mq(q) { return win.matchMedia ? win.matchMedia(q) : { matches: false, addEventListener: function () {} }; }
     var reduceMq = mq("(prefers-reduced-motion: reduce)"), fineMq = mq("(pointer: fine)");
     function reduced() { return !!reduceMq.matches; }
@@ -737,14 +946,34 @@
 
     // ---------- voice out (speechSynthesis) ----------
     var synth = win.speechSynthesis || null, voice = null, unlocked = false, speakId = 0, sawBoundary = false;
-    var voiceOn = true;
+    var voiceOn = true, noVoice = false;
     try { voiceOn = win.localStorage.getItem(VOICE_KEY) !== "off"; } catch (e) { voiceOn = true; }
+    // A voice for the app's language (the exact locale first, a voice on the device first).
+    // When the device lists voices but none for this language, Bento shows a note and stays quiet
+    // instead of reading the text with a wrong-language voice. An empty list means "not known yet".
     function pickVoice() {
-      if (!synth || !synth.getVoices) return;
-      var vs = [];
-      try { vs = synth.getVoices() || []; } catch (e) { vs = []; }
-      var us = vs.filter(function (v) { return /^en[-_]us/i.test(v.lang || ""); });
-      voice = us.filter(function (v) { return v.localService; })[0] || us[0] || vs.filter(function (v) { return /^en/i.test(v.lang || ""); })[0] || null;
+      voice = null; noVoice = false;
+      if (synth && synth.getVoices) {
+        var vs = [], lg = L();
+        try { vs = synth.getVoices() || []; } catch (e) { vs = []; }
+        var code = function (v) { return String(v.lang || "").toLowerCase().replace(/_/g, "-"); };
+        if (lg === "en") {
+          var us = vs.filter(function (v) { return /^en[-_]us/i.test(v.lang || ""); });
+          voice = us.filter(function (v) { return v.localService; })[0] || us[0] || vs.filter(function (v) { return /^en/i.test(v.lang || ""); })[0] || null;
+        } else {
+          var loc = I.META[lg].sr.toLowerCase();
+          var same = vs.filter(function (v) { return code(v).split("-")[0] === lg; });
+          var exact = same.filter(function (v) { return code(v) === loc; });
+          voice = exact.filter(function (v) { return v.localService; })[0] || exact[0] || same.filter(function (v) { return v.localService; })[0] || same[0] || null;
+        }
+        noVoice = vs.length > 0 && !voice;
+      }
+      renderVoiceNote();
+    }
+    function renderVoiceNote() {
+      if (!voiceNote) return;
+      voiceNote.textContent = tr("talk.noVoice");
+      voiceNote.hidden = !(noVoice && voiceOn);
     }
     if (synth) {
       pickVoice();
@@ -775,8 +1004,10 @@
       resetIdle();
     }
     function busy() { try { return !!(synth && (synth.speaking || synth.pending)); } catch (e) { return false; } }
+    // Safari drops an utterance queued in the same moment as cancel(), so after a real cancel() the next answer waits ~120 ms.
+    var cancelledAt = -1e9;
     function cancelSpeech() {
-      if (synth && busy()) { try { synth.cancel(); } catch (e) { /* ignore */ } }
+      if (synth && busy()) { try { synth.cancel(); cancelledAt = Date.now(); } catch (e) { /* ignore */ } }
       stopTalking();
     }
     function chunks(text) {
@@ -788,8 +1019,9 @@
     function speakOut(text) {
       var wasBusy = busy();
       if (synth && wasBusy) { try { synth.cancel(); } catch (e) { /* ignore */ } }
+      if (!wasBusy && Date.now() - cancelledAt < 120) wasBusy = true;
       stopTalking();
-      if (!voiceOn || !synth || !unlocked || !win.SpeechSynthesisUtterance || !text) return false;
+      if (!voiceOn || !synth || !unlocked || !win.SpeechSynthesisUtterance || !text || noVoice) return false;
       try { if (synth.resume) synth.resume(); } catch (e) { /* ignore */ }
       var id = ++speakId, list = chunks(text);
       speaking = true; sawBoundary = false;
@@ -799,7 +1031,7 @@
       later("talkSafety", 4000 + text.length * 110, function () { if (id === speakId) stopTalking(); });
       list.forEach(function (c, i) {
         var u = new win.SpeechSynthesisUtterance(c);
-        u.lang = "en-US"; if (voice) { try { u.voice = voice; } catch (e) { /* ignore */ } }
+        u.lang = I ? I.META[L()].sr : "en-US"; if (voice) { try { u.voice = voice; } catch (e) { /* ignore */ } }
         u.rate = 1.0; u.pitch = 1.2;
         u.onboundary = function (e) { if (id === speakId && (!e || !e.name || e.name === "word")) mouthOpen(); };
         u.onend = function () { if (id === speakId && i === list.length - 1) stopTalking(); };
@@ -820,8 +1052,9 @@
     }
     function renderSpeaker() {
       speakerBtn.setAttribute("aria-pressed", voiceOn ? "true" : "false");
-      speakerBtn.setAttribute("aria-label", voiceOn ? "Bento's voice is on" : "Bento's voice is off");
+      speakerBtn.setAttribute("aria-label", tr(voiceOn ? "talk.voiceOn" : "talk.voiceOff"));
       speakerBtn.classList.toggle("off", !voiceOn);
+      renderVoiceNote();
     }
     speakerBtn.addEventListener("click", function () {
       voiceOn = !voiceOn;
@@ -870,7 +1103,7 @@
     function renderChips(list) {
       [chipsEl, chatChips].forEach(function (box) {
         box.innerHTML = "";
-        (list || DEFAULT_CHIPS).slice(0, 3).forEach(function (c) {
+        (list || chipsFor(L())).slice(0, 3).forEach(function (c) {
           var b = doc.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = c;
           b.addEventListener("click", function () { userAsk(c); });
           box.appendChild(b);
@@ -901,7 +1134,7 @@
       cancelSpeech();
       clear("think");
       addMsg("u", text);
-      heardEl.textContent = "You: " + text;
+      heardEl.textContent = tr("talk.you", { text: text });
       thinking = true;
       setMood("thinking");
       var typing = doc.createElement("div"); typing.className = "cm cm-b cm-typing"; typing.setAttribute("aria-hidden", "true"); typing.innerHTML = "<span></span><span></span><span></span>";
@@ -923,8 +1156,8 @@
       listening = on;
       micBtn.classList.toggle("listening", on);
       micBtn.setAttribute("aria-pressed", on ? "true" : "false");
-      micBtn.setAttribute("aria-label", on ? "Listening. Tap to stop" : "Ask Bento");
-      micLabel.textContent = on ? "Listening…" : "Ask Bento";
+      micBtn.setAttribute("aria-label", fallback && !on ? tr("talk.typeAria") : tr(on ? "talk.listeningAria" : "talk.ask"));
+      micLabel.textContent = tr(on ? "talk.listening" : "talk.ask");
       if (on) setMood("listening");
       else if (mood === "listening") setMood("happy");
     }
@@ -932,14 +1165,11 @@
       fallback = true;
       talkForm.hidden = false;
       tipEl.hidden = false;
-      micBtn.setAttribute("aria-label", "Ask Bento: type your question");
+      micBtn.setAttribute("aria-label", tr("talk.typeAria"));
       if (why) {
-        var msg = why === "denied" ? "I can't use the microphone here, so let's type."
-          : why === "network" ? "Voice input needs your browser's speech service, and it isn't reachable right now. You can type instead."
-          : why === "nomic" ? "I can't find a microphone. You can type instead."
-          : why === "quiet" ? "I still can't hear anything, so let's type instead."
-          : "Voice input isn't working in this browser. You can type instead.";
-        showReply({ text: msg, speech: msg, mood: "worried", actions: [], chips: DEFAULT_CHIPS, blush: false }, { noLog: true });
+        var msg = tr(why === "denied" ? "talk.err.denied" : why === "network" ? "talk.err.network" : why === "nomic" ? "talk.err.nomic"
+          : why === "quiet" ? "talk.err.quiet" : "talk.err.other");
+        showReply({ text: msg, speech: msg, mood: "worried", actions: [], chips: chipsFor(L()), blush: false }, { noLog: true });
       }
     }
     function stopListening(user) {
@@ -960,8 +1190,8 @@
     function heardNothing() {
       quiet++;
       if (quiet >= 2) { showFallback("quiet"); return; }
-      var msg = "I didn't hear anything. Tap the button and try again.";
-      showReply({ text: msg, speech: msg, mood: "worried", actions: [], chips: DEFAULT_CHIPS }, { noLog: true });
+      var msg = tr("talk.heardNothing");
+      showReply({ text: msg, speech: msg, mood: "worried", actions: [], chips: chipsFor(L()) }, { noLog: true });
     }
     // stop on silence; if the browser never reports the end, finish anyway so the button is never stuck
     function endSoon() {
@@ -974,7 +1204,7 @@
       cancelSpeech();
       handled = false; transcript = ""; userStopped = false;
       try { rec = new SR(); } catch (e) { rec = null; showFallback("error"); return; }
-      rec.lang = "en-US"; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+      rec.lang = I ? I.META[L()].sr : "en-US"; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
       rec.onresult = function (e) {
         var interim = "", fin = "";
         for (var i = e.resultIndex || 0; i < e.results.length; i++) {
@@ -1038,7 +1268,7 @@
       cancelSpeech();
       tapBtn.classList.remove("squish"); void tapBtn.offsetWidth; tapBtn.classList.add("squish");
       later("unsquish", 500, function () { tapBtn.classList.remove("squish"); });
-      var i; do { i = Math.floor(Math.random() * TIPS.length); } while (i === lastTip && TIPS.length > 1);
+      var i; do { i = Math.floor(Math.random() * 10); } while (i === lastTip);
       lastTip = i;
       var rep = agent.tip(i);
       rep.mood = "happy";
@@ -1050,17 +1280,41 @@
     var hello = agent.welcome();
     sayEl.textContent = hello.text;
     if (!msgs.length) addMsg("b", hello.text);
-    renderChips(DEFAULT_CHIPS);
+    renderChips(chipsFor(L()));
+    setListening(false);
     setMood("happy");
+
+    // The app's language changed: new voice and words; the bubble starts again with a hello in the new language.
+    // A chat that is only the hello is replaced; a real conversation stays as it was written.
+    function relang() {
+      agent.reset();
+      cancelSpeech();
+      if (listening) stopListening(false);
+      pickVoice();
+      renderSpeaker();
+      setListening(false);
+      var welcomes = I ? I.LANGS.map(function (l) { return I.t(l, "a.welcome"); }) : [];
+      var h = agent.welcome();
+      if (msgs.length === 1 && msgs[0].w === "b" && welcomes.indexOf(msgs[0].t) >= 0) {
+        msgs[0].t = h.text; persist();
+        logEl.innerHTML = ""; logEl.appendChild(msgEl("b", h.text));
+      }
+      sayEl.textContent = h.text;
+      actionsEl.innerHTML = "";
+      heardEl.textContent = "";
+      renderChips(chipsFor(L()));
+      setMood("happy");
+    }
 
     return {
       onShow: function () { visible = true; sec.classList.remove("paused"); startLife(); },
       onHide: function () { visible = false; stopLife(); if (listening) stopListening(false); },
-      ask: ask, agent: agent, setMood: setMood, setMode: setMode,
-      state: function () { return { mood: mood, mode: mode, speaking: speaking, listening: listening, thinking: thinking, voiceOn: voiceOn, fallback: fallback, messages: msgs.length }; },
-      tips: TIPS
+      ask: ask, agent: agent, setMood: setMood, setMode: setMode, relang: relang,
+      state: function () { return { mood: mood, mode: mode, speaking: speaking, listening: listening, thinking: thinking, voiceOn: voiceOn, fallback: fallback, messages: msgs.length, noVoice: noVoice, voice: voice ? voice.lang : null, lang: L() }; },
+      get tips() { return tipsFor(L()); }
     };
   }
 
-  return { create: create, mount: mount, normalize: normalize, extractPrice: extractPrice, classify: classify, spokenMoney: spokenMoney, TIPS: TIPS, DEFAULT_CHIPS: DEFAULT_CHIPS };
+  return { create: create, mount: mount, normalize: normalize, extractPrice: extractPrice, classify: classify, spokenMoney: spokenMoney,
+    toEnglish: toEnglish, chipsFor: chipsFor, tipsFor: tipsFor, TIPS: TIPS, DEFAULT_CHIPS: DEFAULT_CHIPS };
 });
