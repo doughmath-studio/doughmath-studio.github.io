@@ -6,7 +6,7 @@
   "use strict";
 
   // The paid Google Sheets template lives in the Etsy shop. CEO: swap in the exact listing URL here (one place only).
-  var TEMPLATE_URL = "https://www.etsy.com/shop/DoughMathStudio";
+  var TEMPLATE_URL = "https://www.etsy.com/listing/4600023124";
 
   var D = window.DMMenu;
   var DRAFT_KEY = "dm.qrmenu.draft.v1";
