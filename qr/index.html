@@ -111,6 +111,21 @@
           <input id="payNote" maxlength="200" autocomplete="off" placeholder="e.g. Ask staff for your receipt">
           <span class="hint">Shown on the Pay screen. Plain text only.</span>
         </div>
+        <div class="field">
+          <label for="payReview">Google review link (optional)</label>
+          <input id="payReview" maxlength="400" autocomplete="off" spellcheck="false" inputmode="url" placeholder="https://g.page/r/your-cafe/review">
+          <span class="hint" id="payReviewHint" role="status"></span>
+        </div>
+        <div class="field">
+          <label for="payWhatsapp">Manager's WhatsApp number (optional)</label>
+          <input id="payWhatsapp" maxlength="40" autocomplete="off" inputmode="tel" placeholder="+48 600 111 222">
+          <span class="hint" id="payWhatsappHint" role="status"></span>
+        </div>
+        <div class="field">
+          <label for="payEmail">Manager's e-mail (optional)</label>
+          <input id="payEmail" maxlength="100" autocomplete="off" spellcheck="false" inputmode="email" placeholder="manager@yourcafe.com">
+          <span class="hint" id="payEmailHint" role="status"></span>
+        </div>
       </div>
     </div>
     <div id="payLive" class="qb-payread" hidden>
@@ -119,11 +134,13 @@
       <dl class="qb-kv" id="payRead"></dl>
       <p><strong>Change these in your sheet's Settings tab.</strong> The QR code stays the same.</p>
       <div class="field">
-        <label for="billsTab">Bills tab name (optional)</label>
-        <input id="billsTab" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Bills">
-        <span class="hint">Guests whose card has a table number see the amount from this tab. Leave empty to use the tab called “Bills”.</span>
+        <label for="billsTab">Bill feed tab name (optional)</label>
+        <input id="billsTab" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Bill feed">
+        <span class="hint">Guests whose card has a table number see the open bill from this tab. Leave empty to use the tab called “Bill feed”. If there is none, the older “Bills” tab (table, amount) is read.</span>
       </div>
     </div>
+    <p class="qb-muted qb-legal" id="payRateNote">After paying, guests can rate the visit. Whatever the rating, they see the same buttons: one to describe the visit on Google, one to message your manager. A message is written in the guest's own WhatsApp or e-mail app and goes straight to you. Nothing is stored and nothing passes through us.</p>
+    <p class="qb-muted qb-legal" id="payWaiterNote">Waiter names appear only if you type them in the sheet, and only with the waiter's consent.</p>
     <p class="note qb-warn" id="payWarn" role="alert" hidden></p>
     <p class="qb-muted qb-legal" id="payPrivacy">What you type here is part of the menu link, so every guest can see it. Never type card numbers, passwords or bank logins. Table numbers: turn on “Number the cards” in step 5 and every card gets its own QR code with the table number inside.</p>
   </div>
@@ -186,23 +203,26 @@ Breakfast,Shakshuka,34,"Eggs in spiced tomato sauce, sourdough","1, 3","V, SPICY
       </ul>
       <h3 class="qb-h3">Payments (optional)</h3>
       <p>To add “Pay the bill”, put these two rows right under the settings values, then keep one blank row, then the header row that starts with <code>section</code>. Columns are found by their names, so the order does not matter.</p>
-      <pre class="qb-code" id="payExample">#pay,enabled,tips,terminal,link,blik,note
-,yes,"10, 15, 20",yes,https://paypal.me/yourcafe,+48 600 000 000,Ask staff for your receipt</pre>
+      <pre class="qb-code" id="payExample">#pay,enabled,tips,terminal,link,blik,note,review_link,feedback_whatsapp,feedback_email
+,yes,"10, 15, 20",yes,https://paypal.me/yourcafe,+48 600 000 000,Ask staff for your receipt,https://g.page/r/your-cafe/review,+48 600 111 222,manager@yourcafe.com</pre>
       <ul>
         <li><strong>enabled:</strong> yes or no. <strong>tips:</strong> up to 4 whole numbers from 1 to 50, such as <code>10, 15, 20</code>. An empty cell means no tip buttons (guests can still type a tip). Leave the whole <code>tips</code> column out to get 10, 15, 20.</li>
         <li><strong>terminal:</strong> yes if you have a card terminal. The guest gets a big card with the total to show your waiter.</li>
         <li><strong>link:</strong> your own payment page. It has to start with <code>https://</code> and be at most 300 characters. For a plain <code>paypal.me/yourname</code> link the total is added for the guest. <strong>blik:</strong> your BLIK phone number (only <code>+</code>, digits and spaces, 9 to 15 digits). <strong>note:</strong> plain text, up to 200 characters.</li>
+        <li><strong>review_link:</strong> your Google review page (https only, up to 300 characters). <strong>feedback_whatsapp:</strong> the manager's WhatsApp number in international format (only <code>+</code>, digits and spaces, 9 to 15 digits). <strong>feedback_email:</strong> the manager's e-mail. All three are optional. After paying, guests can rate the visit and then see the same buttons whatever the rating: describe the visit on Google, and message the manager by WhatsApp and/or e-mail. If none of the three is filled in, the rating block is not shown.</li>
         <li>Leave a cell empty to skip that way of paying. If nothing valid is left, guests see the menu only, as before.</li>
       </ul>
-      <h3 class="qb-h3">Bills tab (optional)</h3>
-      <p>Your waiter can type the open bills into a second tab named <code>Bills</code>. A guest who scans a numbered card (step 5) then sees the amount for their table, and can still change it to split the bill:</p>
-      <pre class="qb-code" id="billsExample">table,amount
-1,43.50
-2,18.75</pre>
+      <h3 class="qb-h3">Bill feed tab (optional)</h3>
+      <p>Your till or your waiters can write the open bills into a second tab named <code>Bill feed</code>, one row per ordered item. A guest who scans a numbered card (step 5) sees the items of their table, can pay all of it, only their own items, or split it between people:</p>
+      <pre class="qb-code" id="billsExample">table,item,qty,price,waiter
+12,Żurek,1,24.00,Marek
+12,Pierogi ruskie,2,30.00,Marek</pre>
       <ul>
-        <li><strong>table:</strong> a whole number from 1 to 999. <strong>amount:</strong> a number with a comma or a dot. A row with an empty amount counts as no bill. Nothing else is read.</li>
-        <li>The page reads this tab when the guest opens the Pay screen, or taps Refresh there. A change shows up a few seconds after you type it.</li>
-        <li><strong>Anyone who has the sheet link can read this tab.</strong> Put only table numbers and amounts in it, never names. Link mode and published sheets have no Bills tab: guests type the amount.</li>
+        <li><strong>table:</strong> a whole number from 1 to 999. <strong>item:</strong> the name. <strong>qty:</strong> a whole number, empty means 1. <strong>price:</strong> the price of ONE item, with a comma or a dot (<code>24,00</code> or <code>24.00</code>). The line is qty × price. <strong>waiter:</strong> optional, see below. Extra or empty columns are fine. Rows without a table number, an item or a valid price are skipped.</li>
+        <li>The page reads this tab when the guest opens the Pay screen, or taps Refresh there. A change shows up a few seconds after you type it. The tab is read as it is: remove or empty the rows when a table pays.</li>
+        <li><strong>Waiter names appear only if you type them in the sheet, and only with the waiter's consent.</strong> The waiter of a table is the last non-empty name in its rows. With an empty waiter column the guest sees no name anywhere.</li>
+        <li><strong>Anyone who has the sheet link can read this tab.</strong> Put only table numbers, items, prices and (with consent) a first name in it, never guest names or contact details. Link mode and published sheets have no bill tab: guests type the amount.</li>
+        <li>The older tab named <code>Bills</code> (columns <code>table, amount</code>) still works when there is no Bill feed tab: guests then see the amount and can change it to split the bill.</li>
       </ul>
     </details>
     <div class="field">
@@ -247,6 +267,27 @@ Breakfast,Shakshuka,34,"Eggs in spiced tomato sauce, sourdough","1, 3","V, SPICY
       </div>
     </div>
   </div>
+
+  <div class="qb-nfc" id="nfcPanel">
+    <h3 class="qb-h3">NFC tag (optional)</h3>
+    <p>A guest can also tap their phone on a small NFC tag instead of scanning the QR code. Write the link below to the tag with a free app such as NFC Tools. Use NTAG213 or NTAG215 stickers. iPhone XS and newer and Android phones with NFC switched on open the link without an app. Write the same link as the QR. Lock the tag after writing so nobody can change it.</p>
+    <div class="field">
+      <label class="qb-check"><input type="checkbox" id="nfcNumOn"> One tag per table (a link with the table number for each)</label>
+      <div id="nfcNumBox" hidden>
+        <label for="nfcCount">Tables 1 to</label>
+        <input id="nfcCount" type="number" inputmode="numeric" min="1" max="200" value="10">
+      </div>
+    </div>
+    <div class="field">
+      <label for="nfcUrls">Links to write, one per line</label>
+      <textarea id="nfcUrls" rows="4" readonly spellcheck="false" wrap="off"></textarea>
+    </div>
+    <p class="qb-info" id="nfcInfo" role="status"></p>
+    <p class="note qb-warn" id="nfcWarn" role="alert" hidden></p>
+    <div class="qb-btnrow">
+      <button type="button" class="btn small" id="btnNfcCopy">Copy all links</button>
+    </div>
+  </div>
 </section>
 
 <section class="calc" id="step-print" aria-labelledby="h-print">
@@ -264,6 +305,10 @@ Breakfast,Shakshuka,34,"Eggs in spiced tomato sauce, sourdough","1, 3","V, SPICY
     <div class="field">
       <label for="printLine">Small line (optional)</label>
       <input id="printLine" maxlength="80" autocomplete="off" placeholder="e.g. Wi-Fi: guest / 12345">
+    </div>
+    <div class="field">
+      <label class="qb-check"><input type="checkbox" id="nfcSign"> Show NFC sign (a tap icon and “Scan or tap your phone”)</label>
+      <label class="qb-check" id="nfcHeadRow" hidden><input type="checkbox" id="nfcHead"> Add the headline “Pay without waiting for the waiter”</label>
     </div>
   </div>
   <div class="qb-sheetwrap">
@@ -290,6 +335,10 @@ Breakfast,Shakshuka,34,"Eggs in spiced tomato sauce, sourdough","1, 3","V, SPICY
     <div class="qb-sheetside">
       <p class="qb-info" id="shopInfo" role="status"></p>
       <p class="note qb-warn" id="shopWarn" role="alert" hidden></p>
+      <div class="field">
+        <label class="qb-check"><input type="checkbox" id="shopNfcSign"> Show NFC sign (a tap icon and “Scan or tap your phone”)</label>
+        <label class="qb-check" id="shopHeadRow" hidden><input type="checkbox" id="shopNfcHead"> Add the headline “Pay without waiting for the waiter”</label>
+      </div>
       <div class="field" id="shopTableBox" hidden>
         <label for="shopTable">Show and download table</label>
         <input id="shopTable" type="number" inputmode="numeric" min="1" max="200" value="1">

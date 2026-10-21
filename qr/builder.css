@@ -217,3 +217,16 @@ fieldset.qb-themes { border: 0; padding: 0; margin: 16px 0 0; }
 .qb-kv dd.bad { color: #a12a1a; font-weight: 600; }
 .field .hint.qb-okhint, .field .hint.qb-badhint { display: block; }
 #numBox .hint { margin: 6px 0 0; }
+
+/* PAY-2: NFC tag panel, NFC sign and headline on cards */
+.qb-check[hidden] { display: none !important; }
+.qb-nfc { margin-top: 22px; padding-top: 6px; border-top: 1px solid var(--line, #ddd); }
+#nfcUrls { width: 100%; font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; overflow: auto; }
+#nfcNumBox[hidden] { display: none; }
+.card .c-head { font-weight: 700; line-height: 1.2; max-width: 100%; overflow-wrap: anywhere; }
+.card .c-nfc { display: inline-block; vertical-align: -0.22em; width: 1.15em; height: 1.15em; margin-right: .3em; }
+.card-a6 .c-head { margin-bottom: 3mm; }
+.card-s6 .c-head { margin-bottom: .6mm; }
+.card-s5 .c-head { margin-bottom: .5mm; }
+.card-poster .c-head { margin-bottom: 6mm; }
+#payRateNote, #payWaiterNote { margin: 10px 0 0; }
