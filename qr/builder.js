@@ -13,6 +13,7 @@
   var BENTO_KEY = "bento.v1";
   var LONG_LINK = 1400;       // above this the QR gets dense (warning)
   var MAX_SECTIONS = 60, MAX_ITEMS = 600, MAX_TABLES = 200;
+  var DEFAULT_TIPS_TEXT = "10, 15, 20";
   var SERIF = 'Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif';
   var SANS_PS = "Arial, Helvetica, sans-serif";
   var PT = 25.4 / 72; // mm per point
@@ -73,7 +74,8 @@
   function blankState() {
     return {
       menu: { n: "", c: guessCur(), l: guessLang(), t: "espresso", f: "", s: [newSection()] },
-      out: { mode: "link", ec: "M", live: "", tab: "" },
+      out: { mode: "link", ec: "M", live: "", tab: "", bt: "" },
+      pay: { on: false, tips: DEFAULT_TIPS_TEXT, terminal: true, link: "", blik: "", note: "" },
       print: { layout: "tent", numbers: false, count: 10, line: "" },
       shop: { size: "s6" }
     };
@@ -94,9 +96,11 @@
     };
   }
   // editing state -> schema JSON (empty items and sections dropped, empty fields omitted)
-  function toSchema() {
+  // forFile: the Export JSON keeps a switched-off payment setup too (so nothing typed is lost); links and previews carry it only when it works
+  function toSchema(forFile) {
     var m = st.menu, out = { v: 1, n: m.n.trim(), c: (m.c || "").trim(), l: m.l, t: m.t };
     var f = m.f.trim(); if (f) out.f = f;
+    var pc = payConfig(forFile); if (pc) out.p = pc;
     out.s = [];
     m.s.forEach(function (sec) {
       var items = [];
@@ -115,6 +119,32 @@
     return out;
   }
   function countItems() { var n = 0; st.menu.s.forEach(function (sec) { n += sec.i.length; }); return n; }
+
+  // ---------- payments: what the guest page gets (step 3) ----------
+  // Checks use the guest page's own functions (DMMenu), so the builder and the page can never disagree about what is valid.
+  function payCheck() {
+    var P = st.pay, link = P.link.trim(), blik = P.blik.trim();
+    var lk = link ? D.checkPayLink(link) : null, bk = blik ? D.checkBlik(blik) : null;
+    return { tips: D.parseTips(P.tips), lk: lk, bk: bk, any: !!(P.terminal || (lk && lk.ok) || (bk && bk.ok)) };
+  }
+  // The "p" object of the menu JSON. Normal use: only when switched on AND at least one way of paying is valid (otherwise null: the page stays as it is).
+  function payConfig(forFile) {
+    var P = st.pay, c = payCheck();
+    if (forFile) { if (!(P.on || P.link.trim() || P.blik.trim() || P.note.trim())) return null; }
+    else if (!(P.on && c.any)) return null;
+    var out = { e: P.on ? 1 : 0 };
+    if (c.tips.join(",") !== DEFAULT_TIPS_TEXT.replace(/ /g, "")) out.t = c.tips;
+    if (P.terminal) out.x = 1;
+    if (c.lk && c.lk.ok) out.l = c.lk.url;
+    if (c.bk && c.bk.ok) out.b = c.bk.value;
+    var n = P.note.trim().slice(0, 200); if (n) out.n = n;
+    return out;
+  }
+  // a menu file / link -> the editing state of step 3 (null when the file has no payment setup)
+  function payFromSchema(raw) {
+    var p = D.normalize(raw).p; if (!p) return null;
+    return { on: p.e === 1, tips: (p.t || []).join(", "), terminal: p.x === 1, link: p.l || "", blik: p.b || "", note: p.n || "", bad: p.bad || [] };
+  }
 
   // ---------- draft (this browser only) ----------
   var draftOk = true;
@@ -143,7 +173,12 @@
       });
       secs.forEach(function (sec) { if (!sec.i.length) sec.i.push(newItem()); });
       b.menu = { n: head.n, c: head.c || b.menu.c, l: head.l, t: head.t, f: head.f, s: secs.length ? secs : [newSection()] };
-      if (d.out) { b.out.mode = d.out.mode === "live" ? "live" : "link"; b.out.ec = ["L", "M", "Q", "H"].indexOf(d.out.ec) >= 0 ? d.out.ec : "M"; b.out.live = String(d.out.live || "").slice(0, 600); b.out.tab = String(d.out.tab || "").slice(0, 100); }
+      if (d.out) { b.out.mode = d.out.mode === "live" ? "live" : "link"; b.out.ec = ["L", "M", "Q", "H"].indexOf(d.out.ec) >= 0 ? d.out.ec : "M"; b.out.live = String(d.out.live || "").slice(0, 600); b.out.tab = String(d.out.tab || "").slice(0, 100); b.out.bt = String(d.out.bt || "").slice(0, 100); }
+      if (d.pay && typeof d.pay === "object") {
+        b.pay.on = d.pay.on === true; b.pay.terminal = d.pay.terminal !== false;
+        b.pay.tips = d.pay.tips == null ? DEFAULT_TIPS_TEXT : String(d.pay.tips).slice(0, 40);
+        b.pay.link = String(d.pay.link || "").slice(0, 400); b.pay.blik = String(d.pay.blik || "").slice(0, 40); b.pay.note = String(d.pay.note || "").slice(0, 200);
+      }
       if (d.print) { b.print.layout = ["tent", "s6", "s5", "poster"].indexOf(d.print.layout) >= 0 ? d.print.layout : "tent"; b.print.numbers = !!d.print.numbers; b.print.count = Math.max(1, Math.min(MAX_TABLES, parseInt(d.print.count, 10) || 10)); b.print.line = String(d.print.line || "").slice(0, 80); }
       if (d.shop && PS[d.shop.size]) b.shop.size = d.shop.size;
       st = b;
@@ -186,9 +221,9 @@
     $("cur").addEventListener("change", function (e) {
       if (e.target.value === "__other") { $("curOther").hidden = false; st.menu.c = $("curOther").value.trim(); $("curOther").focus(); }
       else { $("curOther").hidden = true; st.menu.c = e.target.value; }
-      changed();
+      renderPayStep(); changed();   // the PayPal hint in step 3 depends on the currency
     });
-    $("curOther").addEventListener("input", function (e) { st.menu.c = e.target.value.trim(); changed(); });
+    $("curOther").addEventListener("input", function (e) { st.menu.c = e.target.value.trim(); renderPayStep(); changed(); });
   }
   function footerHint() {
     var f = st.menu.f, bad = /\b(javascript|vbscript)\s*:|\bdata\s*:\s*(text|image|application)\//i.test(f);
@@ -339,6 +374,77 @@
     var it = st.menu.s[+secEl.dataset.s].i[+itemEl.dataset.i]; if (it) it.open = det.open;
   }
 
+  // ---------- step 3: payments ----------
+  var PAY_LINK_MSG = {
+    http: "Use a link that starts with https:// (plain http:// links are not allowed).",
+    scheme: "Only https:// links are allowed.",
+    credentials: "Links with a user name or password in them are not allowed.",
+    port: "Links with a port number are not allowed.",
+    host: "That does not look like a web address. Use a link such as https://paypal.me/yourcafe",
+    long: "Links can be at most 300 characters.",
+    invalid: "That does not look like a link. Use one that starts with https://"
+  };
+  var PAY_BLIK_MSG = { chars: "Use only a + sign, digits and spaces.", digits: "A phone number has 9 to 15 digits." };
+  function setHint(id, text, cls) { var e = $(id); e.textContent = text; e.className = "hint" + (cls ? " " + cls : ""); }
+  function applyPay() {
+    var P = st.pay;
+    $("payOn").checked = P.on; $("payTips").value = P.tips; $("payTerminal").checked = P.terminal;
+    $("payLink").value = P.link; $("payBlik").value = P.blik; $("payNote").value = P.note; $("billsTab").value = st.out.bt;
+    renderPayStep();
+  }
+  function renderPayStep() {
+    var P = st.pay, c = payCheck(), live = st.out.mode === "live";
+    // live mode: the sheet decides, so the switch is gone and the box always shows what the sheet says
+    $("payToggle").hidden = live; $("payBox").hidden = !live && !P.on; $("payLocal").hidden = live; $("payLive").hidden = !live;
+    var toks = P.tips.split(/[,;\/\s]+/).filter(Boolean).map(function (t) { return t.replace(/%$/, ""); });
+    var ignored = toks.filter(function (t) { return !(/^\d{1,2}$/.test(t) && c.tips.indexOf(parseInt(t, 10)) >= 0); });
+    var shown = c.tips.length ? c.tips.join("%, ") + "%" : "none";
+    if (ignored.length) setHint("payTipsHint", "Buttons: " + shown + ". Left out: " + ignored.join(", ") + ". Use up to 4 whole numbers from 1 to 50.", "qb-badhint");
+    else setHint("payTipsHint", c.tips.length ? "Guests get buttons for " + shown + " and No tip, and can type their own tip." : "No percent buttons. Guests can still type their own tip.");
+    if (!P.link.trim()) setHint("payLinkHint", "Guests tap it to pay on your own payment page. Only https:// links. Example: https://paypal.me/yourcafe");
+    else if (c.lk.ok) {
+      var extra = D.isPayPalName(c.lk.url)
+        ? (D.paypalCode(st.menu.c) ? " The total is added to the link for them." : " Your currency is not one a PayPal link can name, so only the amount is added to the link.")
+        : " Guests get a Copy amount button and are asked to enter the total there.";
+      setHint("payLinkHint", "Guests will be sent to " + c.lk.host + "." + extra, "qb-okhint");
+    } else setHint("payLinkHint", PAY_LINK_MSG[c.lk.reason] || PAY_LINK_MSG.invalid, "qb-badhint");
+    if (!P.blik.trim()) setHint("payBlikHint", "The phone number guests send a BLIK phone transfer to. Only a + sign, digits and spaces.");
+    else if (c.bk.ok) setHint("payBlikHint", "Guests will see " + c.bk.value + ", the amount, and the table as the transfer title.", "qb-okhint");
+    else setHint("payBlikHint", PAY_BLIK_MSG[c.bk.reason] || PAY_BLIK_MSG.chars, "qb-badhint");
+    var w = $("payWarn"), wt = "", bads = [];
+    if (P.link.trim() && !c.lk.ok) bads.push("payment link");
+    if (P.blik.trim() && !c.bk.ok) bads.push("BLIK number");
+    if (P.on && !live) {
+      if (!c.any) wt = "Nothing to pay with yet. Tick the card terminal box, or add a valid payment link or BLIK number. Until then guests see the menu only.";
+      else if (bads.length) wt = "The " + bads.join(" and the ") + " above " + (bads.length > 1 ? "are" : "is") + " not valid, so guests will not see " + (bads.length > 1 ? "them" : "it") + ".";
+    }
+    w.hidden = !wt; w.textContent = wt;
+    renderPayRead();
+  }
+  function readRow(dl, k, v, bad) { dl.appendChild(h("dt", null, k)); dl.appendChild(h("dd", bad ? { class: "bad" } : null, v)); }
+  // Live mode: what the guest page read from the sheet's #pay block (the sheet is the source of truth)
+  function renderPayRead() {
+    var dl = $("payRead"), msg = $("payReadMsg"); dl.textContent = "";
+    if (st.out.mode !== "live") { msg.textContent = ""; return; }
+    var r = liveRes && liveShown.key && liveRes.key === liveShown.key ? liveRes : null;
+    if (!liveWant) { msg.textContent = "Paste your Google Sheets link in step 4. This box then shows what your sheet says about payments."; return; }
+    if (!r) { msg.textContent = "Reading your sheet…"; return; }
+    if (!r.ok) { msg.textContent = "The sheet could not be read yet, so there is nothing to show. See step 4."; return; }
+    var p = r.pay;
+    if (!p) { msg.textContent = "Your sheet has no #pay block, so guests see the menu only. To switch on “Pay the bill”, add the #pay rows described under “Build your own sheet” in step 4."; return; }
+    var bad = p.bad || [];
+    msg.textContent = D.payActive({ p: p }) ? "Your sheet turns on “Pay the bill”. This is what guests get:"
+      : p.e !== 1 ? "Your sheet has a #pay block, but enabled is not “yes”, so guests see the menu only."
+        : "Your sheet has a #pay block, but nothing valid to pay with is in it, so guests see the menu only.";
+    readRow(dl, "Enabled", p.e === 1 ? "yes" : "no");
+    readRow(dl, "Tip buttons", p.t.length ? p.t.join("%, ") + "%" : "none");
+    readRow(dl, "Card terminal", p.x === 1 ? "yes" : "no");
+    var lk = p.l ? D.checkPayLink(p.l) : null;
+    readRow(dl, "Payment link", lk && lk.ok ? p.l + " (guests go to " + lk.host + ")" : bad.indexOf("link") >= 0 ? "not valid, so guests do not see it" : "none", bad.indexOf("link") >= 0);
+    readRow(dl, "BLIK phone", p.b ? p.b : bad.indexOf("blik") >= 0 ? "not valid, so guests do not see it" : "none", bad.indexOf("blik") >= 0);
+    readRow(dl, "Note", p.n || "none");
+  }
+
   // ---------- menu tools: example, Bento, JSON ----------
   function hasContent() { return st.menu.s.some(function (sec) { return sec.i.some(function (it) { return it.n.trim(); }); }); }
   function loadExample() {
@@ -371,7 +477,7 @@
     showMsg("Added " + fresh.length + " recipe" + (fresh.length === 1 ? "" : "s") + " from Bento to a new section called “Bakery”" + (skipped ? " (" + skipped + " already in your menu were skipped)" : "") + ". Bento keeps ingredient costs, not selling prices, so the prices are blank: add them here.", true);
   }
   function exportJson() {
-    var json = JSON.stringify(toSchema(), null, 1);
+    var json = JSON.stringify(toSchema(true), null, 1);
     download(new Blob([json], { type: "application/json" }), "qr-menu-" + slug(st.menu.n) + ".json");
   }
   function importJsonFile(file) {
@@ -383,9 +489,14 @@
       if (!obj || typeof obj !== "object" || Array.isArray(obj) || !Array.isArray(obj.s)) return showMsg("That file is not a menu file from this tool.", false);
       st.menu = fromSchema(obj);
       if (!st.menu.s.length) st.menu.s = [newSection()];
+      var pp = payFromSchema(obj), dropped = "";
+      if (pp) {
+        st.pay = { on: pp.on, tips: pp.tips, terminal: pp.terminal, link: pp.link, blik: pp.blik, note: pp.note };
+        if (pp.bad.length) dropped = " The " + (pp.bad.length === 2 ? "payment link and the BLIK number in that file were" : pp.bad[0] === "link" ? "payment link in that file was" : "BLIK number in that file was") + " not valid and left out.";
+      }
       applyAll();
       var n = countItems();
-      showMsg("Imported " + (hasContent() ? n : 0) + " items.", true);
+      showMsg("Imported " + (hasContent() ? n : 0) + " items" + (pp ? " and the payment setup" : "") + "." + dropped, true);
     };
     r.onerror = function () { showMsg("The file could not be read.", false); };
     r.readAsText(file);
@@ -407,6 +518,21 @@
       } catch (e) { /* too long for this level: try a lower one */ }
     }
     return null;
+  }
+  // The same QR is asked for again and again (preview, print, sticker file), and one QR per table adds up: keep what was made.
+  var qrCache = {}, qrCacheN = 0;
+  function qrFor(link, level) {
+    var k = level + "|" + link;
+    if (!Object.prototype.hasOwnProperty.call(qrCache, k)) {
+      if (qrCacheN >= 500) { qrCache = {}; qrCacheN = 0; }
+      qrCache[k] = makeQr(link, level); qrCacheN++;
+    }
+    return qrCache[k];
+  }
+  // The link of table N: tb=N goes before the # of a link-mode menu (the # part is never sent anywhere) or after the other parameters of a live link.
+  function withTable(link, n) {
+    var i = link.indexOf("#"), base = i < 0 ? link : link.slice(0, i), hash = i < 0 ? "" : link.slice(i);
+    return base + (base.indexOf("?") < 0 ? "?" : "&") + "tb=" + n + hash;
   }
   function qrPath(qr, quiet) {
     var n = qr.getModuleCount(), d = [];
@@ -463,7 +589,7 @@
       afterOutput();
       return;
     }
-    var q = makeQr(link, st.out.ec);
+    var q = qrFor(link, st.out.ec);
     $("linkOut").value = link;
     if (!q) {
       cur = null;
@@ -498,6 +624,7 @@
 
   function refreshOutput() {
     var my = ++seq, menu = toSchema();
+    syncPvSwitch();
     if (st.out.mode === "link") {
       livePreview(null);
       if (!menu.s.length) { setOutput(null, { text: "Add at least one menu item to get a QR code." }); return; }
@@ -514,12 +641,14 @@
         msg.textContent = text; if (text) msg.className = "hint qb-badhint";
         livePreview(null);
         setOutput(null, { text: "Paste your Google Sheets link to get the QR code." });
+        renderPayRead();
         return;
       }
       var tab = D.cleanTab(st.out.tab), link, key, query, what;
       if (p.kind === "share") {
-        query = "d=" + p.doc + (tab !== D.DEFAULT_TAB ? "&t=" + encodeURIComponent(tab) : "");
-        key = "d|" + p.doc + "|" + tab;
+        var bt = st.out.bt.trim() ? D.cleanTab(st.out.bt) : "";   // the Bills tab; "Bills" is the default and is not written into the link
+        query = "d=" + p.doc + (tab !== D.DEFAULT_TAB ? "&t=" + encodeURIComponent(tab) : "") + (bt && bt !== D.DEFAULT_BILLS ? "&bt=" + encodeURIComponent(bt) : "");
+        key = "d|" + p.doc + "|" + tab + (bt && bt !== D.DEFAULT_BILLS ? "|" + bt : "");
         what = "Google Sheet " + p.doc.slice(0, 8) + "…, tab “" + tab + "”";
       } else {
         query = "s=" + p.id + (p.gid ? "&g=" + p.gid : "");
@@ -527,11 +656,13 @@
         what = "published sheet " + p.id.slice(0, 8) + "…" + (p.gid ? ", tab " + p.gid : ", first tab");
       }
       link = baseUrl() + "/m/?" + query + "&l=" + menu.l;
-      livePreview({ key: key, query: query });
+      if (st.print.numbers) key += "|tb";   // numbered cards: the preview page is opened as table 1 (its own address, so it reloads)
+      livePreview({ key: key, query: query, tb: st.print.numbers });
       var res = liveRes && liveRes.key === key ? liveRes : null;
       msg.textContent = res ? res.text : "Link understood: " + what + ". Checking it now…";
       if (res && !res.ok) msg.className = "hint qb-badhint"; else if (res) msg.className = "hint qb-okhint";
       setOutput(link, { live: p });
+      renderPayRead();
     }
   }
 
@@ -573,7 +704,7 @@
     if (liveShown.key === want.key) return;
     liveTimer = setTimeout(function () {
       if (!liveWant || liveWant.key === liveShown.key) return;
-      var search = "?" + liveWant.query + "&l=" + st.menu.l + "&embed=1";
+      var search = "?" + liveWant.query + "&l=" + st.menu.l + (liveWant.tb ? "&tb=1" : "") + "&embed=1";
       liveShown = { key: liveWant.key, search: search }; liveRes = null;
       $("prevNote").textContent = PREV_LIVE;
       f.src = "/m/" + search;
@@ -585,6 +716,10 @@
     var f = $("previewFrame");
     if (ev.origin !== location.origin || ev.source !== f.contentWindow) return;
     var d = ev.data;
+    if (d && typeof d === "object" && typeof d.dmView === "string" && liveShown.key && d.q === liveShown.search) {   // the guest page changed screen (someone tapped inside the phone)
+      if (["start", "menu", "pay"].indexOf(d.dmView) >= 0) { pvView = d.dmView; syncPvSwitch(); }
+      return;
+    }
     if (!d || typeof d !== "object" || d.dmLive !== 1 || !liveShown.key || d.q !== liveShown.search) return;   // only the answer for the page we asked for
     var mode = liveShown.key.charAt(0) === "d" ? "d" : "s", key = liveShown.key;
     if (d.ok !== true) {
@@ -601,17 +736,39 @@
       st.menu.n = m.n; st.menu.l = m.l; applyStep1(); changed();
       text += " The cafe name and menu language were filled in from it.";
     }
-    liveRes = { key: key, ok: true, text: text, dishes: dishes };
+    liveRes = { key: key, ok: true, text: text, dishes: dishes, pay: m.p || null };   // the sheet's #pay block, as the guest page read it (.bad names what it dropped as invalid)
+    syncPvSwitch(true);   // the page was just (re)loaded: it opens on its start screen when payments are on
     refreshOutput();
   }
 
   // ---------- preview iframe ----------
+  // The Start / Menu / Pay switch above the phone. It only shows when payments are on and something valid is set up
+  // (link mode: step 3; live mode: what the sheet's #pay block says). The phone itself is the real guest page.
+  var pvView = "menu", pvWasActive = false;
+  var pvOpts = { view: "menu", tb: 0, onView: function (v) { pvView = v; syncPvSwitch(); } };   // tapping inside the phone moves the switch too
+  function pvActive() {
+    if (st.out.mode === "live") return !!(liveRes && liveRes.ok && liveShown.key && liveRes.key === liveShown.key && D.payActive({ p: liveRes.pay }));
+    return !!payConfig();
+  }
+  function syncPvSwitch(reset) {
+    var on = pvActive(), sw = $("pvSwitch");
+    if (!on) pvView = "menu"; else if (!pvWasActive || reset) pvView = "start";
+    pvWasActive = on; sw.hidden = !on;
+    Array.prototype.forEach.call(sw.querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-view") === pvView ? "true" : "false"); });
+  }
+  function setPvView(v) {
+    if (["start", "menu", "pay"].indexOf(v) < 0) return;
+    pvView = v; syncPvSwitch();
+    if (liveShown.key) { try { var w = $("previewFrame").contentWindow; if (w && w.DMMenu) w.DMMenu.setView(v); } catch (e) { /* frame not ready */ } }
+    else previewUpdate();
+  }
   function previewUpdate() {
     var f = $("previewFrame");
+    syncPvSwitch();
     if (liveShown.key) return;   // the frame shows the live sheet, not the local menu
     try {
       var w = f.contentWindow, root = w && w.document && w.document.getElementById("menu-root");
-      if (w && w.DMMenu && root) w.DMMenu.render(root, toSchema());
+      if (w && w.DMMenu && root) { pvOpts.view = pvView; pvOpts.tb = st.print.numbers ? 1 : 0; w.DMMenu.render(root, toSchema(), pvOpts); }
     } catch (e) { /* frame not ready yet: the load handler renders */ }
   }
 
@@ -628,13 +785,17 @@
     if (w <= room) return f.max;
     return Math.max(f.min, Math.floor(f.max * room / w * 10) / 10);
   }
-  function defsSvg(id, q) {
-    var N = q.n + 2 * QUIET;
+  // One hidden svg holding every QR the sheets use: a single one, or one per table when the cards are numbered.
+  function defsSvg(entries) {
     var svg = s("svg", { class: "qb-defs", width: 0, height: 0, "aria-hidden": "true", focusable: "false" });
-    var defs = s("defs"), g = s("g", { id: id });
-    g.appendChild(s("rect", { width: N, height: N, fill: "#ffffff" }));
-    g.appendChild(s("path", { fill: "#000000", d: qrPath(q.qr, QUIET) }));
-    defs.appendChild(g); svg.appendChild(defs);
+    var defs = s("defs");
+    entries.forEach(function (e) {
+      var N = e.q.n + 2 * QUIET, g = s("g", { id: e.id });
+      g.appendChild(s("rect", { width: N, height: N, fill: "#ffffff" }));
+      g.appendChild(s("path", { fill: "#000000", d: qrPath(e.q.qr, QUIET) }));
+      defs.appendChild(g);
+    });
+    svg.appendChild(defs);
     return svg;
   }
   function qrUse(id, q) {
@@ -646,7 +807,8 @@
   function buildCard(kind, ctx, number) {
     var c = h("div", { class: "card card-" + kind });
     if (ctx.name) { var nm = h("div", { class: "c-name" }, ctx.name); nm.style.fontSize = fitNamePt(kind, ctx.name) + "pt"; c.appendChild(nm); }
-    c.appendChild(qrUse(ctx.symId, ctx.q));
+    var sy = ctx.sym(number);
+    c.appendChild(qrUse(sy.id, sy.q));
     c.appendChild(h("div", { class: "c-cap" }, ctx.caption));
     c.appendChild(h("div", { class: "c-dom" }, ctx.domain));
     if (number != null || ctx.line) {
@@ -672,17 +834,31 @@
       }
     }
   }
-  function printContext(symId) {
-    var l = st.menu.l, L = D.T[l];
-    return { name: st.menu.n.trim(), caption: L.scan, tableWord: L.table, line: st.print.line.trim(), domain: domainOf(cur ? cur.link : baseUrl() + "/m/"), q: cur.q, symId: symId };
+  // Numbered cards: every card has its own QR, with tb=N in the link. ctx.sym(n) makes (and remembers) the QR of table n; null = the plain QR.
+  function printContext(prefix) {
+    var l = st.menu.l, L = D.T[l], used = {}, order = [];
+    return {
+      name: st.menu.n.trim(), caption: L.scan, tableWord: L.table, line: st.print.line.trim(), domain: domainOf(cur ? cur.link : baseUrl() + "/m/"),
+      order: order,
+      sym: function (n) {
+        var k = n == null ? 0 : n;
+        if (!used[k]) { used[k] = { id: prefix + "-" + k, q: n == null ? cur.q : qrFor(withTable(cur.link, n), st.out.ec) }; order.push(used[k]); }
+        return used[k];
+      }
+    };
+  }
+  // The QR with the longest link on the sheets (the highest table number): the dots are smallest there, so every size check uses it. null = does not fit.
+  function printLongest() {
+    if (!cur) return null;
+    return st.print.numbers ? qrFor(withTable(cur.link, st.print.count), st.out.ec) : cur.q;
   }
   function pageCount(key) {
     var L = LAYOUTS[key], numbers = st.print.numbers ? st.print.count : 0;
     return numbers ? Math.ceil(numbers / L.per) : 1;
   }
-  // Returns an array of .sheet elements (first page only when firstOnly).
-  function buildSheets(key, symId, firstOnly) {
-    var L = LAYOUTS[key], ctx = printContext(symId), nums = [];
+  // Returns {pages: [.sheet elements], defs: <svg with the QRs>} (first page only when firstOnly).
+  function buildSheets(key, prefix, firstOnly) {
+    var L = LAYOUTS[key], ctx = printContext(prefix), nums = [];
     if (st.print.numbers) for (var k = 1; k <= st.print.count; k++) nums.push(k);
     var pages = [], total = nums.length ? Math.ceil(nums.length / L.per) : 1;
     if (firstOnly) total = 1;
@@ -721,7 +897,7 @@
       }
       pages.push(sheet);
     }
-    return pages;
+    return { pages: pages, defs: defsSvg(ctx.order) };
   }
 
   function renderSheetPreview() {
@@ -732,16 +908,23 @@
       box.appendChild(h("p", { class: "qb-muted qb-center" }, "The print preview appears when the QR code is ready."));
       info.textContent = ""; toggleOff(["btnPrint"], true); return;
     }
+    var longQ = printLongest();   // numbered cards: the QR of the highest table number (longest link, smallest dots)
+    if (!longQ) {
+      box.appendChild(h("p", { class: "qb-muted qb-center" }, "The table numbers make the link too long for a QR code."));
+      info.textContent = ""; toggleOff(["btnPrint"], true);
+      warn.hidden = false; warn.textContent = "With the table number added, the link is too long for a QR code. Shorten the menu, or use Live mode (a short link).";
+      return;
+    }
     toggleOff(["btnPrint"], false);
     var L = LAYOUTS[key];
-    box.appendChild(defsSvg("qrg-prev", cur.q));
-    var pages = buildSheets(key, "qrg-prev", true);
-    var sheet = pages[0]; box.appendChild(sheet);
+    var built = buildSheets(key, "qrg-prev", true);
+    box.appendChild(built.defs);
+    var sheet = built.pages[0]; box.appendChild(sheet);
     var k = box.clientWidth / 793.7; sheet.style.transformOrigin = "0 0"; sheet.style.transform = "scale(" + k + ")";
     sheet.style.position = "absolute"; sheet.style.left = "0"; sheet.style.top = "0";
     var np = pageCount(key), cards = st.print.numbers ? st.print.count : null;
-    var mod = L.qr / (cur.q.n + 8);
-    info.textContent = (cards ? cards + " numbered card" + (cards === 1 ? "" : "s") + " · " : "") + np + " page" + (np === 1 ? "" : "s") + " (A4). QR is " + L.qr + " mm wide, each dot about " + num(mod, 2) + " mm.";
+    var mod = L.qr / (longQ.n + 8);
+    info.textContent = (cards ? cards + " numbered card" + (cards === 1 ? "" : "s") + ", each with its own QR code (table number inside) · " : "") + np + " page" + (np === 1 ? "" : "s") + " (A4). QR is " + L.qr + " mm wide, each dot about " + num(mod, 2) + " mm.";
     info.setAttribute("data-module-mm", num(mod, 3));
     var notes = [];
     if (mod < 0.3) notes.push("The dots are only " + num(mod, 2) + " mm wide. That may be hard to scan. Choose a bigger layout, or shorten the menu, or use Live mode.");
@@ -767,8 +950,10 @@
   function doPrint() {
     if (!cur) return;
     var root = $("printRoot"); root.textContent = "";
-    root.appendChild(defsSvg("qrg-print", cur.q));
-    buildSheets(st.print.layout, "qrg-print", false).forEach(function (sh) { root.appendChild(sh); });
+    if (!printLongest()) return;
+    var built = buildSheets(st.print.layout, "qrg-print", false);
+    root.appendChild(built.defs);
+    built.pages.forEach(function (sh) { root.appendChild(sh); });
     window.print();
   }
 
@@ -780,7 +965,8 @@
     s8: { label: "8 × 8 cm", shape: "sq", size: 80, r: 5, cls: "ps8", nameMax: 11, capMax: 8.5, domMax: 7.5 },
     r6: { label: "Ø 6 cm round", shape: "round", size: 60, cls: "pr6", domMax: 5.5 }
   };
-  var shopQr = null, shopCache = null;   // QR at error correction H for the current link
+  var shopQr = null;   // QR at error correction H for the current link (numbered stickers: the one with the highest table number, which has the smallest dots)
+  var shopTable = 1;   // the table whose sticker the preview and the SVG show
   function fitPt(text, weight, maxPt, minPt, maxMm) {
     var w = textW(text, weight, maxPt, SANS_PS);
     if (w <= maxMm) return maxPt;
@@ -790,23 +976,38 @@
   // Layout of one sticker. All numbers in mm, artwork box = size + 2 * bleed.
   function stickerPlan(key, n, texts) {
     var P = PS[key], W = P.size + 2 * BLEED, N = n + 2 * QUIET, i;
-    var plan = { key: key, W: W, n: n, ok: false, mod: 0, q: 0, lines: [], omitted: [] };
+    var plan = { key: key, W: W, n: n, ok: false, mod: 0, q: 0, lines: [], omitted: [], tblWord: texts.tblWord || "" };
     if (P.shape === "round") {
-      var Rs = P.size / 2 - SAFE, c = W / 2;
-      var pt = fitPt(texts.dom, "700", P.domMax, 3.5, 2 * Rs * 0.75) || 3.5;
-      var hd = lineMm(pt), wd = textW(texts.dom, "700", pt, SANS_PS), g = 1, best = 0;
-      for (var q = 44; q >= 10; q -= 0.05) {
-        var H = q + g + hd;
-        if (Math.sqrt(q * q / 4 + H * H / 4) <= Rs && Math.sqrt(wd * wd / 4 + H * H / 4) <= Rs) { best = q; break; }
-      }
-      var Hs = best + g + hd, top = c - Hs / 2;
-      plan.q = best; plan.qx = c - best / 2; plan.qy = top;
-      plan.lines = [{ kind: "dom", text: texts.dom, pt: pt, w: wd, x: c, y: top + best + g + 0.92 * pt * PT, weight: "700" }];
+      var Rs = P.size / 2 - SAFE, c = W / 2, g = 1, gt = 0.4, span = 2 * Rs * 0.75;
+      var mk = function (text, maxPt, maxW, kind) { var pt = fitPt(text, "700", maxPt, 3.5, maxW) || 3.5; return { kind: kind, text: text, pt: pt, h: lineMm(pt), w: textW(text, "700", pt, SANS_PS) }; };
+      // the largest QR above a stack of text lines such that every box (QR, each line) has its farthest corner inside the circle
+      var fitStack = function (ls) {
+        var below = 0; ls.forEach(function (l, k) { below += l.h + (k ? gt : 0); });
+        for (var q = 44; q >= 10; q -= 0.05) {
+          var H = q + g + below, mid = H / 2, ok = true, y = q + g, boxes = [[q / 2, 0, q]];
+          ls.forEach(function (l) { boxes.push([l.w / 2, y, y + l.h]); y += l.h + gt; });
+          boxes.forEach(function (b) { var dy = Math.max(Math.abs(b[1] - mid), Math.abs(b[2] - mid)); if (Math.sqrt(b[0] * b[0] + dy * dy) > Rs) ok = false; });
+          if (ok) return { q: q, H: H, ls: ls };
+        }
+        return { q: 0, H: g + below, ls: ls };
+      };
+      // numbered stickers: "Table N" above the web address, or both on one line when that leaves a bigger QR
+      var cands = texts.tbl
+        ? [fitStack([mk(texts.tbl, P.domMax + 1.5, 2 * Rs * 0.7, "tbl"), mk(texts.dom, P.domMax, span, "dom")]), fitStack([mk(texts.tbl + " \u00b7 " + texts.dom, P.domMax, span, "tbldom")])]
+        : [fitStack([mk(texts.dom, P.domMax, span, "dom")])];
+      var pick = cands.reduce(function (a, b) { return b.q > a.q ? b : a; }, cands[0]);
+      var top = c - pick.H / 2, yy = top + pick.q + g;
+      plan.q = pick.q; plan.qx = c - pick.q / 2; plan.qy = top;
+      pick.ls.forEach(function (l) {
+        plan.lines.push({ kind: l.kind, text: l.text, pt: l.pt, w: l.w, x: c, y: yy + 0.92 * l.pt * PT, weight: "700", dom: texts.dom });
+        yy += l.h + gt;
+      });
       plan.omitted = ["cafe name", "“Scan for the menu”"];
     } else {
       var A = P.size - 2 * SAFE, gq = 1.2, gl = 0.5;
-      var fits = { name: texts.name ? fitPt(texts.name, "700", P.nameMax, 4.5, A) : 0, cap: texts.cap ? fitPt(texts.cap, "600", P.capMax, 4.5, A) : 0, dom: fitPt(texts.dom, "700", P.domMax, 3.5, A) || 3.5 };
-      var combos = [["name", "cap", "dom"], ["cap", "dom"], ["dom"]];
+      var fits = { name: texts.name ? fitPt(texts.name, "700", P.nameMax, 4.5, A) : 0, cap: texts.cap ? fitPt(texts.cap, "600", P.capMax, 4.5, A) : 0, dom: fitPt(texts.dom, "700", P.domMax, 3.5, A) || 3.5,
+        tbl: texts.tbl ? fitPt(texts.tbl, "700", P.nameMax, 4.5, A) || 4.5 : 0 };
+      var combos = texts.tbl ? [["name", "tbl", "cap", "dom"], ["tbl", "cap", "dom"], ["tbl", "dom"]] : [["name", "cap", "dom"], ["cap", "dom"], ["dom"]];
       var chosen = null;
       for (i = 0; i < combos.length; i++) {
         var cb = combos[i];
@@ -818,16 +1019,20 @@
         chosen = { cb: cb, q: qq, mod: m, hasName: hasName };
         if (m >= MIN_MOD) break;
       }
-      if (!chosen) chosen = { cb: ["dom"], q: Math.min(A, A - lineMm(fits.dom) - gq), mod: 0, hasName: false };
+      if (!chosen) chosen = texts.tbl ? { cb: ["tbl", "dom"], q: Math.min(A, A - lineMm(fits.tbl) - lineMm(fits.dom) - gq - gl), mod: 0, hasName: false } : { cb: ["dom"], q: Math.min(A, A - lineMm(fits.dom) - gq), mod: 0, hasName: false };
       chosen.mod = chosen.q / N;
+      if (texts.tbl && chosen.mod < MIN_MOD) {   // "Table 5 \u00b7 web address" on one line saves a line, so the QR can be bigger
+        var mtxt = texts.tbl + " \u00b7 " + texts.dom, mpt = fitPt(mtxt, "700", P.domMax, 3.5, A);
+        if (mpt) { var mq = Math.min(A, A - lineMm(mpt) - gq); if (mq / N > chosen.mod) { chosen = { cb: ["tbldom"], q: mq, mod: mq / N, hasName: false }; fits.tbldom = mpt; texts.tbldom = mtxt; } }
+      }
       var cx = W / 2, y = BLEED + SAFE;
-      var weights = { name: "700", cap: "600", dom: "700" }, texts2 = { name: texts.name, cap: texts.cap, dom: texts.dom };
+      var weights = { name: "700", cap: "600", dom: "700", tbl: "700", tbldom: "700" }, texts2 = { name: texts.name, cap: texts.cap, dom: texts.dom, tbl: texts.tbl, tbldom: texts.tbldom };
       var lines = [];
       if (chosen.hasName) { lines.push({ kind: "name", text: texts.name, pt: fits.name, w: textW(texts.name, "700", fits.name, SANS_PS), x: cx, y: y + 0.92 * fits.name * PT, weight: "700" }); y += lineMm(fits.name) + gq; }
       plan.qx = cx - chosen.q / 2; plan.qy = y; y += chosen.q + gq;
       chosen.cb.forEach(function (k) {
         if (k === "name") return;
-        lines.push({ kind: k, text: texts2[k], pt: fits[k], w: textW(texts2[k], weights[k], fits[k], SANS_PS), x: cx, y: y + 0.92 * fits[k] * PT, weight: weights[k] });
+        lines.push({ kind: k, text: texts2[k], pt: fits[k], w: textW(texts2[k], weights[k], fits[k], SANS_PS), x: cx, y: y + 0.92 * fits[k] * PT, weight: weights[k], dom: texts.dom });
         y += lineMm(fits[k]) + gl;
       });
       plan.q = chosen.q; plan.lines = lines;
@@ -837,9 +1042,13 @@
     plan.ok = plan.mod >= MIN_MOD - 1e-9;
     return plan;
   }
-  function stickerTexts() { var L = D.T[st.menu.l]; return { name: st.menu.n.trim(), cap: L.scan, dom: domainOf(cur ? cur.link : baseUrl() + "/m/") }; }
+  function stickerTexts() {
+    var L = D.T[st.menu.l], t = { name: st.menu.n.trim(), cap: L.scan, dom: domainOf(cur ? cur.link : baseUrl() + "/m/") };
+    if (st.print.numbers) { t.tblWord = L.table; t.tbl = L.table + " " + st.print.count; }   // sized for the highest table number; digits are all equally wide
+    return t;
+  }
   // mode: "file" (SVG download: artwork + CutContour), "print" (PDF: artwork only), "preview" (adds guides)
-  function stickerSvg(plan, q, mode) {
+  function stickerSvg(plan, q, mode, tableNo) {
     var P = PS[plan.key], W = plan.W, N = q.n + 2 * QUIET, m = plan.q / N;
     var svg = s("svg", { xmlns: SVGNS, "xmlns:inkscape": "http://www.inkscape.org/namespaces/inkscape", width: W + "mm", height: W + "mm", viewBox: "0 0 " + W + " " + W });
     svg.appendChild(s("title", null, "QR menu sticker " + P.label));
@@ -851,7 +1060,11 @@
     qg.appendChild(s("path", { fill: "#000000", d: qrPath(q.qr, QUIET) }));
     art.appendChild(qg);
     plan.lines.forEach(function (ln) {
-      var t = s("text", { x: num(ln.x, 3), y: num(ln.y, 3), "text-anchor": "middle", "font-family": SANS_PS, "font-weight": ln.weight, "font-size": num(ln.pt * PT, 3), fill: "#000000", textLength: num(ln.w, 3), lengthAdjust: "spacingAndGlyphs" }, ln.text);
+      var text = ln.text, w = ln.w;
+      if (tableNo && (ln.kind === "tbl" || ln.kind === "tbldom")) {   // the plan is sized for the widest label; this table's own text is set at the same size
+        text = plan.tblWord + " " + tableNo + (ln.kind === "tbldom" ? " \u00b7 " + ln.dom : ""); w = textW(text, ln.weight, ln.pt, SANS_PS);
+      }
+      var t = s("text", { x: num(ln.x, 3), y: num(ln.y, 3), "text-anchor": "middle", "font-family": SANS_PS, "font-weight": ln.weight, "font-size": num(ln.pt * PT, 3), fill: "#000000", textLength: num(w, 3), lengthAdjust: "spacingAndGlyphs" }, text);
       art.appendChild(t);
     });
     svg.appendChild(art);
@@ -877,10 +1090,13 @@
   function renderShop() {
     var box = $("shopPrev"), info = $("shopInfo"), warn = $("shopWarn"), grid = $("shopSizes");
     warn.hidden = true; warn.textContent = ""; box.textContent = "";
-    shopQr = null; var overflow = false;
+    shopQr = null; var overflow = false, nums = st.print.numbers;
+    shopTable = Math.max(1, Math.min(st.print.count, shopTable));
+    $("shopTableBox").hidden = !nums; $("shopTable").max = String(st.print.count);
+    if (document.activeElement !== $("shopTable")) $("shopTable").value = shopTable;
     if (cur) {
-      if (!shopCache || shopCache.link !== cur.link) { var q = makeQr(cur.link, "H"); shopCache = { link: cur.link, q: q && q.level === "H" ? q : null }; }
-      if (shopCache.q) shopQr = shopCache.q; else overflow = true;
+      var lq = qrFor(nums ? withTable(cur.link, st.print.count) : cur.link, "H");
+      if (lq && lq.level === "H") shopQr = lq; else overflow = true;
     }
     Array.prototype.forEach.call(grid.querySelectorAll("label.qb-layout"), function (lab) {
       var k = lab.querySelector("input").value, sm = lab.querySelector("small");
@@ -904,8 +1120,9 @@
       return;
     }
     var plan = currentPlan();
-    box.appendChild(stickerSvg(plan, shopQr, "preview"));
-    info.textContent = "QR version " + shopQr.version + " at error correction H · " + shopQr.n + " × " + shopQr.n + " dots · each dot " + num(plan.mod, 2) + " mm (minimum " + MIN_MOD + " mm) · QR " + num(plan.q, 1) + " mm wide incl. quiet zone · page " + plan.W + " × " + plan.W + " mm (sticker + " + BLEED + " mm bleed).";
+    box.appendChild(stickerSvg(plan, shopQrFor(shopTable), "preview", nums ? shopTable : 0));
+    info.textContent = "QR version " + shopQr.version + " at error correction H · " + shopQr.n + " × " + shopQr.n + " dots · each dot " + num(plan.mod, 2) + " mm (minimum " + MIN_MOD + " mm) · QR " + num(plan.q, 1) + " mm wide incl. quiet zone · page " + plan.W + " × " + plan.W + " mm (sticker + " + BLEED + " mm bleed)."
+      + (nums ? " Numbered: " + st.print.count + " stickers, each with its own QR code. The size check uses table " + st.print.count + ", the longest link." : "");
     info.setAttribute("data-module-mm", num(plan.mod, 3)); info.setAttribute("data-ok", plan.ok ? "1" : "0");
     var notes = [];
     if (!plan.ok) {
@@ -914,19 +1131,26 @@
     if (notes.length) { warn.hidden = false; warn.textContent = notes.join(" "); }
     toggleOff(["btnShopPdf", "btnShopSvg"], !plan.ok);
   }
+  // the QR (error correction H) of one table's sticker; table 0 = the plain link
+  function shopQrFor(n) { return qrFor(n ? withTable(cur.link, n) : cur.link, "H"); }
+  // One page per sticker. Numbered: one page per table, each with its own QR and its "Table N" line.
   function shopPrint() {
     var plan = currentPlan(); if (!plan || !plan.ok) return;
     var P = PS[plan.key], root = $("printRoot"); root.textContent = "";
-    var sheet = h("div", { class: "sheet sheet-ps " + P.cls });
-    sheet.style.width = plan.W + "mm"; sheet.style.height = plan.W + "mm";
-    sheet.appendChild(stickerSvg(plan, shopQr, "print"));
-    root.appendChild(sheet);
+    var nums = st.print.numbers, count = nums ? st.print.count : 1;
+    for (var n = 1; n <= count; n++) {
+      var sheet = h("div", { class: "sheet sheet-ps " + P.cls });
+      sheet.style.width = plan.W + "mm"; sheet.style.height = plan.W + "mm";
+      sheet.appendChild(stickerSvg(plan, nums ? shopQrFor(n) : shopQr, "print", nums ? n : 0));
+      root.appendChild(sheet);
+    }
     window.print();
   }
   function shopSvgDownload() {
     var plan = currentPlan(); if (!plan || !plan.ok) return;
-    var xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(stickerSvg(plan, shopQr, "file"));
-    download(new Blob([xml], { type: "image/svg+xml" }), "sticker-" + plan.key + "-" + slug(st.menu.n) + ".svg");
+    var nums = st.print.numbers;
+    var xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(stickerSvg(plan, nums ? shopQrFor(shopTable) : shopQr, "file", nums ? shopTable : 0));
+    download(new Blob([xml], { type: "image/svg+xml" }), "sticker-" + plan.key + "-" + slug(st.menu.n) + (nums ? "-table-" + shopTable : "") + ".svg");
   }
 
   // ---------- tabs, layouts, wiring ----------
@@ -935,8 +1159,9 @@
     $("tabLink").setAttribute("aria-selected", live ? "false" : "true");
     $("tabLive").setAttribute("aria-selected", live ? "true" : "false");
     $("panelLink").hidden = live; $("panelLive").hidden = !live;
-    $("liveLink").value = st.out.live; $("liveTab").value = st.out.tab; $("ec").value = st.out.ec;
+    $("liveLink").value = st.out.live; $("liveTab").value = st.out.tab; $("ec").value = st.out.ec; $("billsTab").value = st.out.bt;
     if (st.out.tab) $("tabBox").open = true;
+    renderPayStep();
   }
   function buildShopSizes() {
     var grid = $("shopSizes"); grid.textContent = "";
@@ -974,7 +1199,7 @@
     };
   })();
   function applyAll(skipSave) {
-    applyStep1(); applyMode(); applyPrint(); renderEditor();
+    applyStep1(); applyPay(); applyMode(); applyPrint(); renderEditor();
     previewUpdate(); refreshOutput(); if (!skipSave) saveDraft();
   }
 
@@ -1021,11 +1246,23 @@
     $("btnPng").addEventListener("click", function () { if (cur) qrPngBlob(cur.q, function (b) { download(b, "qr-menu-" + slug(st.menu.n) + ".png"); }); });
     $("btnOpen").addEventListener("click", function (e) { if (!cur) e.preventDefault(); });
 
-    $("numOn").addEventListener("change", function (e) { st.print.numbers = e.target.checked; $("numBox").hidden = !st.print.numbers; renderSheetPreview(); saveDraft(); });
+    // Numbered cards change the QR codes on the sheets and stickers (tb=N), and in live mode the address of the preview page
+    function numbersChanged() { renderSheetPreview(); renderShop(); if (st.out.mode === "live") refreshOutput(); previewUpdate(); saveDraft(); }
+    $("numOn").addEventListener("change", function (e) { st.print.numbers = e.target.checked; $("numBox").hidden = !st.print.numbers; numbersChanged(); });
     $("numCount").addEventListener("input", function (e) {
       var v = parseInt(e.target.value, 10); if (!(v >= 1)) v = 1; if (v > MAX_TABLES) v = MAX_TABLES;
-      st.print.count = v; renderSheetPreview(); saveDraft();
+      st.print.count = v; numbersChanged();
     });
+    $("shopTable").addEventListener("input", function (e) { var v = parseInt(e.target.value, 10); if (v >= 1) { shopTable = Math.min(v, st.print.count); renderShop(); } });
+    $("shopTable").addEventListener("change", function () { $("shopTable").value = shopTable; });
+
+    $("payOn").addEventListener("change", function (e) { st.pay.on = e.target.checked; renderPayStep(); changed(); });
+    $("payTerminal").addEventListener("change", function (e) { st.pay.terminal = e.target.checked; renderPayStep(); changed(); });
+    [["payTips", "tips"], ["payLink", "link"], ["payBlik", "blik"], ["payNote", "note"]].forEach(function (f) {
+      $(f[0]).addEventListener("input", function (e) { st.pay[f[1]] = e.target.value; renderPayStep(); changed(); });
+    });
+    $("billsTab").addEventListener("input", function (e) { st.out.bt = e.target.value.slice(0, 100); refreshOutput(); saveDraft(); });
+    $("pvSwitch").addEventListener("click", function (e) { var b = e.target.closest("button[data-view]"); if (b) setPvView(b.getAttribute("data-view")); });
     $("printLine").addEventListener("input", function (e) { st.print.line = e.target.value; renderSheetPreview(); renderShop(); saveDraft(); });
     $("btnPrint").addEventListener("click", doPrint);
     $("btnShopPdf").addEventListener("click", shopPrint);
@@ -1042,7 +1279,7 @@
   }
 
   window.QRB = {
-    getMenu: toSchema, getLink: function () { return cur ? cur.link : ""; }, getQr: function () { return cur ? cur.q : null; },
+    getMenu: toSchema, getPay: payConfig, withTable: withTable, tableQr: function (n, level) { if (!cur) return null; var l = withTable(cur.link, n), q = qrFor(l, level || st.out.ec); return q ? { link: l, n: q.n, level: q.level } : null; }, getLongestQr: printLongest, getLink: function () { return cur ? cur.link : ""; }, getQr: function () { return cur ? cur.q : null; },
     example: function () { return clone(EXAMPLE); }, state: function () { return st; }, live: function () { return { shown: liveShown.search, result: liveRes }; }, TEMPLATE_URL: TEMPLATE_URL,
     stickerPlan: function (key, n, texts) { return stickerPlan(key, n, texts); }, PS: PS, LAYOUTS: LAYOUTS
   };

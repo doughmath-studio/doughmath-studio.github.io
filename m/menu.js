@@ -132,6 +132,51 @@
     }
   };
 
+  // ---------- Labels for the "Pay the bill" screen (PAY-1). {total}, {host}: filled in by the page. Translations are mine: native speakers should check them. ----------
+  var PAY_T = {
+    en: { refresh: "Refresh", payBtn: "Pay the bill", back: "Back to menu", fromBill: "Amount from your bill", enterAmt: "Enter the amount on your bill", split: "You can change the amount, for example to split the bill.",
+      bill: "Bill", tip: "Tip", total: "Total", noTip: "No tip", custom: "Custom", customLabel: "Tip amount", howH: "How to pay",
+      terminalH: "Show this to your waiter", payOn: "Pay {total} on {host}", openHost: "Open {host}", copyAmount: "Copy amount", enterOn: "Enter {total} on the next page",
+      blikH: "BLIK phone transfer", phone: "Phone number", amount: "Amount", ttl: "Transfer title", blikHint: "Use BLIK phone transfer in your banking app.", copy: "Copy", copied: "Copied",
+      safe: "You pay on {host} or in your banking app. This page never asks for card details.", safeNo: "You pay at the cafe or in your banking app. This page never asks for card details." },
+    es: { refresh: "Actualizar", payBtn: "Pagar la cuenta", back: "Volver a la carta", fromBill: "Importe de tu cuenta", enterAmt: "Introduce el importe de tu cuenta", split: "Puedes cambiar el importe, por ejemplo para dividir la cuenta.",
+      bill: "Cuenta", tip: "Propina", total: "Total", noTip: "Sin propina", custom: "Otra", customLabel: "Importe de la propina", howH: "Cómo pagar",
+      terminalH: "Enséñale esto al camarero", payOn: "Pagar {total} en {host}", openHost: "Abrir {host}", copyAmount: "Copiar importe", enterOn: "Introduce {total} en la página siguiente",
+      blikH: "Transferencia BLIK al teléfono", phone: "Número de teléfono", amount: "Importe", ttl: "Título de la transferencia", blikHint: "Usa la transferencia BLIK al teléfono en la app de tu banco.", copy: "Copiar", copied: "Copiado",
+      safe: "Pagas en {host} o en la app de tu banco. Esta página nunca pide datos de tarjeta.", safeNo: "Pagas en el local o en la app de tu banco. Esta página nunca pide datos de tarjeta." },
+    pt: { refresh: "Atualizar", payBtn: "Pagar a conta", back: "Voltar ao menu", fromBill: "Valor da sua conta", enterAmt: "Introduza o valor da sua conta", split: "Pode alterar o valor, por exemplo para dividir a conta.",
+      bill: "Conta", tip: "Gorjeta", total: "Total", noTip: "Sem gorjeta", custom: "Outro valor", customLabel: "Valor da gorjeta", howH: "Como pagar",
+      terminalH: "Mostre isto ao empregado", payOn: "Pagar {total} em {host}", openHost: "Abrir {host}", copyAmount: "Copiar valor", enterOn: "Introduza {total} na página seguinte",
+      blikH: "Transferência BLIK por telefone", phone: "Número de telefone", amount: "Valor", ttl: "Título da transferência", blikHint: "Use a transferência BLIK por telefone na app do seu banco.", copy: "Copiar", copied: "Copiado",
+      safe: "Paga em {host} ou na app do seu banco. Esta página nunca pede dados do cartão.", safeNo: "Paga no local ou na app do seu banco. Esta página nunca pede dados do cartão." },
+    fr: { refresh: "Actualiser", payBtn: "Payer l’addition", back: "Retour à la carte", fromBill: "Montant de votre addition", enterAmt: "Saisissez le montant de votre addition", split: "Vous pouvez modifier le montant, par exemple pour partager l’addition.",
+      bill: "Addition", tip: "Pourboire", total: "Total", noTip: "Sans pourboire", custom: "Autre", customLabel: "Montant du pourboire", howH: "Comment payer",
+      terminalH: "Montrez ceci au serveur", payOn: "Payer {total} sur {host}", openHost: "Ouvrir {host}", copyAmount: "Copier le montant", enterOn: "Saisissez {total} sur la page suivante",
+      blikH: "Virement BLIK par téléphone", phone: "Numéro de téléphone", amount: "Montant", ttl: "Titre du virement", blikHint: "Utilisez le virement BLIK par téléphone dans l’application de votre banque.", copy: "Copier", copied: "Copié",
+      safe: "Vous payez sur {host} ou dans l’application de votre banque. Cette page ne demande jamais de coordonnées de carte.", safeNo: "Vous payez sur place ou dans l’application de votre banque. Cette page ne demande jamais de coordonnées de carte." },
+    de: { refresh: "Aktualisieren", payBtn: "Rechnung bezahlen", back: "Zurück zur Speisekarte", fromBill: "Betrag Ihrer Rechnung", enterAmt: "Geben Sie den Betrag Ihrer Rechnung ein", split: "Sie können den Betrag ändern, zum Beispiel um die Rechnung zu teilen.",
+      bill: "Rechnung", tip: "Trinkgeld", total: "Gesamt", noTip: "Kein Trinkgeld", custom: "Anderer Betrag", customLabel: "Trinkgeld-Betrag", howH: "So bezahlen Sie",
+      terminalH: "Zeigen Sie das Ihrem Kellner", payOn: "{total} bei {host} bezahlen", openHost: "{host} öffnen", copyAmount: "Betrag kopieren", enterOn: "Geben Sie {total} auf der nächsten Seite ein",
+      blikH: "BLIK-Handyüberweisung", phone: "Telefonnummer", amount: "Betrag", ttl: "Überweisungstitel", blikHint: "Nutzen Sie die BLIK-Handyüberweisung in der App Ihrer Bank.", copy: "Kopieren", copied: "Kopiert",
+      safe: "Sie zahlen bei {host} oder in der App Ihrer Bank. Diese Seite fragt nie nach Kartendaten.", safeNo: "Sie zahlen vor Ort oder in der App Ihrer Bank. Diese Seite fragt nie nach Kartendaten." },
+    pl: { refresh: "Odśwież", payBtn: "Zapłać rachunek", back: "Wróć do menu", fromBill: "Kwota z Twojego rachunku", enterAmt: "Wpisz kwotę z rachunku", split: "Możesz zmienić kwotę, np. aby podzielić rachunek.",
+      bill: "Rachunek", tip: "Napiwek", total: "Razem", noTip: "Bez napiwku", custom: "Inna kwota", customLabel: "Kwota napiwku", howH: "Jak zapłacić",
+      terminalH: "Pokaż to kelnerowi", payOn: "Zapłać {total} na {host}", openHost: "Otwórz {host}", copyAmount: "Kopiuj kwotę", enterOn: "Wpisz {total} na następnej stronie",
+      blikH: "Przelew BLIK na telefon", phone: "Numer telefonu", amount: "Kwota", ttl: "Tytuł przelewu", blikHint: "Użyj przelewu BLIK na telefon w aplikacji swojego banku.", copy: "Kopiuj", copied: "Skopiowano",
+      safe: "Płacisz na {host} lub w aplikacji swojego banku. Ta strona nigdy nie prosi o dane karty.", safeNo: "Płacisz na miejscu lub w aplikacji swojego banku. Ta strona nigdy nie prosi o dane karty." },
+    uk: { refresh: "Оновити", payBtn: "Сплатити рахунок", back: "Назад до меню", fromBill: "Сума з вашого рахунку", enterAmt: "Введіть суму з вашого рахунку", split: "Ви можете змінити суму, наприклад, щоб розділити рахунок.",
+      bill: "Рахунок", tip: "Чайові", total: "Разом", noTip: "Без чайових", custom: "Інша сума", customLabel: "Сума чайових", howH: "Як сплатити",
+      terminalH: "Покажіть це офіціанту", payOn: "Сплатити {total} на {host}", openHost: "Відкрити {host}", copyAmount: "Копіювати суму", enterOn: "Введіть {total} на наступній сторінці",
+      blikH: "Переказ BLIK на телефон", phone: "Номер телефону", amount: "Сума", ttl: "Призначення переказу", blikHint: "Скористайтеся переказом BLIK на телефон у застосунку свого банку.", copy: "Копіювати", copied: "Скопійовано",
+      safe: "Ви платите на {host} або в застосунку свого банку. Ця сторінка ніколи не просить дані картки.", safeNo: "Ви платите на місці або в застосунку свого банку. Ця сторінка ніколи не просить дані картки." },
+    ru: { refresh: "Обновить", payBtn: "Оплатить счёт", back: "Назад к меню", fromBill: "Сумма из вашего счёта", enterAmt: "Введите сумму из вашего счёта", split: "Сумму можно изменить, например, чтобы разделить счёт.",
+      bill: "Счёт", tip: "Чаевые", total: "Итого", noTip: "Без чаевых", custom: "Другая сумма", customLabel: "Сумма чаевых", howH: "Как оплатить",
+      terminalH: "Покажите это официанту", payOn: "Оплатить {total} на {host}", openHost: "Открыть {host}", copyAmount: "Скопировать сумму", enterOn: "Введите {total} на следующей странице",
+      blikH: "Перевод BLIK на телефон", phone: "Номер телефона", amount: "Сумма", ttl: "Назначение перевода", blikHint: "Воспользуйтесь переводом BLIK на телефон в приложении своего банка.", copy: "Копировать", copied: "Скопировано",
+      safe: "Вы платите на {host} или в приложении своего банка. Эта страница никогда не запрашивает данные карты.", safeNo: "Вы платите на месте или в приложении своего банка. Эта страница никогда не запрашивает данные карты." }
+  };
+  function fill(str, vars) { return String(str).replace(/\{(\w+)\}/g, function (all, k) { return vars && vars[k] != null ? vars[k] : all; }); }
+
   // ---------- small helpers ----------
   function clip(v, n) { v = v == null ? "" : String(v); v = v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, ""); return v.length > n ? v.slice(0, n) : v; }
   function pickLang(l) {
@@ -157,6 +202,8 @@
       f: clip(r.f, LIMITS.footer),
       s: []
     };
+    var pp = normalizePay(r.p);
+    if (pp) out.p = pp;
     var total = 0;
     var secs = Array.isArray(r.s) ? r.s.slice(0, LIMITS.sections) : [];
     secs.forEach(function (sec) {
@@ -333,7 +380,7 @@
   // a blank row, then "section,item,price,description,allergens,tags,sold_out" and one item per row.
   // Also accepted: settings as vertical "key,value" rows above the header row.
   function menuFromRows(rows) {
-    var settings = {}, hi = -1, i, r;
+    var settings = {}, hi = -1, i, r, payCfg = null;
     function cell0(row) { return String(row && row[0] != null ? row[0] : "").trim().toLowerCase(); }
     function isHeader(row) {   // a row naming a section column and an item column (extra columns may come before them)
       var sec = false, item = false;
@@ -355,6 +402,12 @@
         }
         continue;
       }
+      if (k === "#pay") {   // optional payments block: header row + values row, matched by header name
+        var pvals = rows[i + 1] || [];
+        if (!isHeader(pvals)) i++; else pvals = [];
+        payCfg = payFromCells(r, pvals);
+        continue;
+      }
       if (SET_ALIASES[k] && r.length > 1) settings[SET_ALIASES[k]] = String(r[1] == null ? "" : r[1]).trim();
     }
     if (hi < 0) throw new Error("csv");
@@ -367,6 +420,7 @@
     var lang = lc ? (LANG_NAMES[lc] || lc.slice(0, 2)) : "en";
     var theme = (settings.theme || "").toLowerCase();
     var menu = { v: 1, n: settings.name || "", c: settings.currency || "", l: pickLang(lang), t: THEMES.indexOf(theme) >= 0 ? theme : "espresso", f: settings.footer || "", s: [] };
+    if (payCfg) menu.p = payCfg;
     var cur = null, byTitle = {};
     function section(title) {
       if (byTitle[title]) return byTitle[title];
@@ -430,6 +484,159 @@
     return { format: function (v) { var n = nf.format(v); return cur ? (/^[\u00a3$\u20ac\u00a5]/.test(cur) ? cur + n : n + NB + cur) : n; } };
   }
 
+  // ---------- payments (PAY-1) ----------
+  // No money passes through us. The page only shows amounts and sends the guest to the cafe's OWN way of paying (a payment link, a card
+  // terminal at the table, a BLIK phone number). It never asks for card data, never stores an amount and has no analytics.
+  var PAY_LIMITS = { link: 300, note: 200, tips: 4, tipMin: 1, tipMax: 50 };
+  var DEFAULT_TIPS = [10, 15, 20];
+  var DEFAULT_BILLS = "Bills";
+  var YES_RE = /^(yes|y|true|1|tak|да|si|sí|oui|ja|sim)$/i;
+  var MINOR0 = { JPY: 1, HUF: 1 };   // currencies shown without decimals; everything else has 2
+  function minorDigits(cur) { return MINOR0[currencyCode(cur)] ? 0 : 2; }
+  function toMinor(v, d) { return Math.round(parseFloat((v * Math.pow(10, d)).toPrecision(12))); }
+  function moneyFormatter(lang, cur) { return priceFormatter(lang, cur, minorDigits(cur) === 0); }
+
+  // up to 4 integers from 1 to 50 ("10, 15, 20", "10%", [10, 15]); anything else is dropped; sorted ascending
+  function parseTips(v) {
+    var parts = Array.isArray(v) ? v : String(v == null ? "" : v).split(/[,;\/\s]+/), out = [];
+    for (var i = 0; i < parts.length && out.length < PAY_LIMITS.tips; i++) {
+      var t = String(parts[i]).trim().replace(/%$/, "");
+      if (!/^\d{1,2}$/.test(t)) continue;
+      var n = parseInt(t, 10);
+      if (n < PAY_LIMITS.tipMin || n > PAY_LIMITS.tipMax || out.indexOf(n) >= 0) continue;
+      out.push(n);
+    }
+    return out.sort(function (a, b) { return a - b; });
+  }
+
+  // The cafe's payment link. https only; no user:pass@, no port, no IP address, no javascript: or data:, at most 300 characters.
+  // -> {ok:true, url, host} | {ok:false, reason: empty|long|invalid|http|scheme|credentials|port|host}
+  function checkPayLink(text) {
+    var s = String(text == null ? "" : text).trim();
+    if (!s) return { ok: false, reason: "empty" };
+    if (s.length > PAY_LIMITS.link) return { ok: false, reason: "long" };
+    var m = s.match(/^([A-Za-z][A-Za-z0-9+.\-]*):/);
+    if (m) {
+      var sch = m[1].toLowerCase();
+      if (sch === "http") return { ok: false, reason: "http" };
+      if (sch !== "https") return { ok: false, reason: "scheme" };
+    } else if (/^[a-z0-9][a-z0-9.\-]*\.[a-z]{2,}(\/|$)/i.test(s)) return { ok: false, reason: "http" };   // "paypal.me/name": no https://
+    else return { ok: false, reason: "invalid" };
+    if (/[\u0000- \u007f-\u009f\\]/.test(s)) return { ok: false, reason: "invalid" };
+    var u;
+    try { u = new URL(s); } catch (e) { return { ok: false, reason: "invalid" }; }
+    if (u.protocol !== "https:") return { ok: false, reason: "scheme" };
+    if (u.username || u.password || /^https:\/\/[^\/?#]*@/i.test(s)) return { ok: false, reason: "credentials" };
+    if (u.port) return { ok: false, reason: "port" };
+    var host = u.hostname;
+    if (!host || host.indexOf(".") < 0 || host.charAt(0) === "[" || /^[0-9.]+$/.test(host)) return { ok: false, reason: "host" };
+    return { ok: true, url: s, host: host };
+  }
+  // BLIK phone number: only +, digits and spaces (the + only first); 9 to 15 digits. -> {ok:true, value} | {ok:false, reason: empty|chars|digits}
+  function checkBlik(text) {
+    var s = String(text == null ? "" : text).replace(/[  ]/g, " ").trim();
+    if (!s) return { ok: false, reason: "empty" };
+    if (!/^\+?[0-9 ]+$/.test(s)) return { ok: false, reason: "chars" };
+    var n = s.replace(/\D/g, "").length;
+    if (n < 9 || n > 15) return { ok: false, reason: "digits" };
+    return { ok: true, value: s.replace(/ {2,}/g, " ") };
+  }
+  // The payment config of a menu. f = {e, t, x, l, b, n} (raw values). Never throws. Invalid link or BLIK are dropped and named in .bad.
+  function buildPay(f) {
+    var p = { e: f.e ? 1 : 0, t: f.t === undefined ? DEFAULT_TIPS.slice() : parseTips(f.t), x: f.x ? 1 : 0, l: "", b: "", n: clip(f.n, PAY_LIMITS.note).trim() }, bad = [];
+    var ls = String(f.l == null ? "" : f.l).trim();
+    if (ls) { if (checkPayLink(ls).ok) p.l = ls; else bad.push("link"); }
+    var bs = String(f.b == null ? "" : f.b).trim();
+    if (bs) { var cb = checkBlik(bs); if (cb.ok) p.b = cb.value; else bad.push("blik"); }
+    if (bad.length) p.bad = bad;
+    return p;
+  }
+  function normalizePay(r) {
+    if (!r || typeof r !== "object" || Array.isArray(r)) return null;
+    var yes = function (v) { return v === 1 || v === true || v === "1"; };
+    var p = buildPay({ e: yes(r.e), t: "t" in r ? r.t : undefined, x: yes(r.x), l: r.l, b: r.b, n: r.n });
+    // what an earlier pass already dropped as invalid stays named (the sheet is read, normalized, shown and reported to the builder: that is normalize() more than once)
+    if (Array.isArray(r.bad)) r.bad.forEach(function (k) { if ((k === "link" || k === "blik") && (!p.bad || p.bad.indexOf(k) < 0)) (p.bad = p.bad || []).push(k); });
+    return p;
+  }
+  // the guest sees the start screen and the Pay screen only when pay is on AND at least one way of paying is valid
+  function payActive(m) { return !!(m && m.p && m.p.e === 1 && (m.p.x === 1 || m.p.l || m.p.b)); }
+
+  var PAY_ALIASES = { enabled: "enabled", enable: "enabled", on: "enabled", tips: "tips", tip: "tips", terminal: "terminal", card: "terminal", link: "link", url: "link", blik: "blik", phone: "blik", note: "note", notes: "note" };
+  // "#pay" header row + the values row under it (matched by header name, column A is the marker)
+  function payFromCells(head, vals) {
+    var c = {};
+    (head || []).forEach(function (h, i) { var a = i > 0 && PAY_ALIASES[String(h).trim().toLowerCase()]; if (a && !(a in c)) c[a] = String(vals && vals[i] != null ? vals[i] : "").trim(); });
+    return buildPay({ e: YES_RE.test(c.enabled || ""), t: "tips" in c ? c.tips : undefined, x: YES_RE.test(c.terminal || ""), l: c.link, b: c.blik, n: c.note });
+  }
+
+  // An amount typed by a guest or written in the Bills tab: "48,50", "48.5", "1 200,00", "48,50 zł". -> number >= 0 or null
+  function parseAmount(text) {
+    var s = String(text == null ? "" : text).replace(/[\s  ]+/g, " ").trim();
+    if (!s) return null;
+    var v = parsePrice(s);
+    return typeof v === "number" && isFinite(v) && v >= 0 && v <= 10000000 ? v : null;
+  }
+  // The Bills tab: first row must be exactly table,amount (gviz returns the FIRST tab when the named tab does not exist, so anything else is ignored).
+  // -> {tableNumber: amount} (last row of a table wins; amounts must be > 0) or null
+  function billsFromRows(rows) {
+    var i = 0, blank = function (c) { return String(c == null ? "" : c).trim() === ""; };
+    while (i < rows.length && rows[i].every(blank)) i++;
+    var h = rows[i];
+    if (!h || String(h[0] == null ? "" : h[0]).trim().toLowerCase() !== "table" || String(h[1] == null ? "" : h[1]).trim().toLowerCase() !== "amount") return null;
+    for (var k = 2; k < h.length; k++) if (!blank(h[k])) return null;
+    var out = {};
+    for (i++; i < rows.length; i++) {
+      var r = rows[i], m = String(r[0] == null ? "" : r[0]).trim().match(/^(\d{1,3})(?:[.,]0+)?$/);
+      if (!m) continue;
+      var n = parseInt(m[1], 10), a = parseAmount(r[1]);
+      if (n < 1 || n > 999 || a === null || a <= 0) continue;
+      out[n] = a;
+    }
+    return out;
+  }
+  // CSV text of the Bills tab + table number -> amount or null
+  function billFor(csvText, table) {
+    var b; try { b = billsFromRows(parseCsv(csvText)); } catch (e) { return null; }
+    return b && Object.prototype.hasOwnProperty.call(b, table) ? b[table] : null;
+  }
+
+  // Tip in minor units, half up: bill 10.05 at 15% -> 1.51. Integer arithmetic only.
+  function tipMinor(billMinor, pct) { return Math.floor((2 * billMinor * pct + 100) / 200); }
+  // tip = {kind:"none"} | {kind:"pct", pct} | {kind:"custom", minor}; -> {bill, tip, total} in minor units
+  function payTotals(billMinor, tip) {
+    var b = Math.max(0, Math.round(billMinor || 0)), t = 0;
+    if (tip && tip.kind === "pct") t = tipMinor(b, tip.pct);
+    else if (tip && tip.kind === "custom") t = Math.max(0, Math.round(tip.minor || 0));
+    return { bill: b, tip: t, total: b + t };
+  }
+  // "12.50" / "12,50" / "9": plain number for a banking app or a payment page
+  function plainAmount(minor, d, comma) {
+    var s = (minor / Math.pow(10, d)).toFixed(d);
+    return comma ? s.replace(".", ",") : s;
+  }
+  var PP_CODES = { "zł": "PLN", "zl": "PLN", "€": "EUR", "$": "USD", "£": "GBP", "kč": "CZK", "kc": "CZK", "ft": "HUF", "chf": "CHF", "kr": "SEK", "₴": "UAH" };
+  // currency of the menu -> the code PayPal expects ("" when it cannot be mapped: then only the amount is sent)
+  function paypalCode(cur) {
+    var c = String(cur == null ? "" : cur).trim();
+    if (PP_CODES[c.toLowerCase()]) return PP_CODES[c.toLowerCase()];
+    return /^[A-Za-z]{3}$/.test(c) && c.toLowerCase() !== "lei" ? c.toUpperCase() : "";   // an ISO code written as such ("lei" is a sign, not a code)
+  }
+  // paypal.me/Name (the username only) -> paypal.me/Name/25.50EUR. A link that already has an amount (or anything else) is returned unchanged.
+  function isPayPalName(url) {
+    var u; try { u = new URL(url); } catch (e) { return false; }
+    if (u.hostname !== "paypal.me" && u.hostname !== "www.paypal.me") return false;
+    var segs = u.pathname.split("/").filter(Boolean);
+    return segs.length === 1 && /^[A-Za-z0-9._\-]+$/.test(segs[0]);
+  }
+  function paypalUrl(url, totalMinor, d, code) {
+    if (!isPayPalName(url) || !(totalMinor > 0)) return url;
+    var u = new URL(url), name = u.pathname.split("/").filter(Boolean)[0], f = Math.pow(10, d);
+    var amt = d && totalMinor % f !== 0 ? (totalMinor / f).toFixed(d) : String(Math.round(totalMinor / f));
+    u.pathname = "/" + name + "/" + amt + (code || "");
+    return u.href;
+  }
+
   // ---------- rendering ----------
   function el(tag, cls, text) {
     var e = document.createElement(tag);
@@ -446,21 +653,35 @@
     return any;
   }
 
-  function setMeta(m, L) {
+  function setMeta(m, L, title) {
     var de = document.documentElement;
     de.setAttribute("data-theme", m.t);
     de.setAttribute("lang", m.l);
-    document.title = (m.n ? m.n + " · " : "") + L.menu;
+    document.title = (m.n ? m.n + " · " : "") + (title || L.menu);
     var tc = document.querySelector('meta[name="theme-color"]');
     if (tc) tc.setAttribute("content", THEME_COLORS[m.t]);
   }
 
   // Render a (raw or normalized) menu into root. Returns the normalized menu.
-  function render(root, raw) {
+  // opts (all optional): view "menu" (default) | "start" | "pay" (the last two only when payments are on and usable), tb table number,
+  // bills function returning a Promise of the amount for this table, nav true on the real page (history entries).
+  function render(root, raw, opts) {
     var m = normalize(raw), L = T[m.l];
-    setMeta(m, L);
+    opts = opts || {};
+    var view = opts.view === "start" || opts.view === "pay" ? opts.view : "menu";
+    if (!payActive(m)) view = "menu";
+    last = { root: root, m: m, opts: opts, view: view };
+    setMeta(m, L, view === "pay" ? PAY_T[m.l].payBtn : "");
     root.textContent = "";
     root.removeAttribute("aria-busy");
+    if (scrollOff) { scrollOff(); scrollOff = null; }
+    if (view === "start") renderStart(root, m, L, opts);
+    else if (view === "pay") renderPay(root, m, L, opts);
+    else renderMenu(root, m, L, opts);
+    return m;
+  }
+
+  function renderMenu(root, m, L, opts) {
     var fmt = priceFormatter(m.l, m.c, allWhole(m));
 
     var head = el("header", "mn-head");
@@ -547,6 +768,13 @@
       root.appendChild(lg);
     }
 
+    if (payActive(m)) {   // a small button that stays at the bottom of the screen while the guest reads the menu
+      var dock = el("div", "mn-paydock"), pb = el("button", "mn-paybtn", PAY_T[m.l].payBtn);
+      pb.type = "button";
+      pb.addEventListener("click", function () { setView("pay"); });
+      dock.appendChild(pb); root.appendChild(dock);
+    }
+
     var foot = el("footer", "mn-foot");
     if (m.f) foot.appendChild(el("p", "mn-ft", m.f));
     var a = el("a", "mn-brand", "Free QR menu by DoughMath Studio");
@@ -555,8 +783,217 @@
     root.appendChild(foot);
 
     if (chips.length) trackChips(chipBox, chips, secEls);
-    return m;
   }
+
+  // ---------- start screen and Pay screen (PAY-1) ----------
+  var last = null;   // the last render: {root, m, opts, view}; setView() re-renders it
+  function currencySign(cur) { var code = currencyCode(cur); return SIGNS[code] || String(cur || ""); }
+  function brandFooter() {
+    var foot = el("footer", "mn-foot");
+    var a = el("a", "mn-brand", "Free QR menu by DoughMath Studio");
+    a.href = HOME; a.rel = "noopener"; foot.appendChild(a);
+    return foot;
+  }
+  // view: "start" | "menu" | "pay". The real page (opts.nav) also gets a browser-history entry, so the phone's Back button works.
+  function setView(view, fromHistory) {
+    if (!last) return;
+    var o = last.opts; o.view = view;
+    render(last.root, last.m, o);
+    if (o.nav && !fromHistory) { try { global.history.pushState({ dmView: last.view }, "", global.location.href); } catch (e) { /* no history API: fine */ } }
+    try { global.scrollTo(0, 0); } catch (e) { /* ignore */ }
+    if (typeof o.onView === "function") { try { o.onView(last.view); } catch (e) { /* the builder's preview switch: nothing to do if it is gone */ } }
+  }
+  function copyText(text, btn, P, src) {
+    var label = btn.textContent;
+    function ok() { btn.textContent = P.copied; btn.classList.add("done"); setTimeout(function () { btn.textContent = label; btn.classList.remove("done"); }, 1600); }
+    function fallback() {
+      var done = false, ta = document.createElement("input");
+      ta.type = "text"; ta.value = text; ta.readOnly = true; ta.className = "mn-offscreen"; ta.setAttribute("aria-hidden", "true"); ta.tabIndex = -1;
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { ta.setSelectionRange(0, text.length); } catch (e) { /* ignore */ }
+      try { done = document.execCommand("copy"); } catch (e) { done = false; }
+      ta.remove();
+      if (!done && src) {   // last resort: leave the visible text selected so the guest can copy it by hand
+        try { var r = document.createRange(); r.selectNodeContents(src); var sel = global.getSelection(); sel.removeAllRanges(); sel.addRange(r); } catch (e) { /* ignore */ }
+      }
+      if (done) ok();
+    }
+    if (global.navigator && navigator.clipboard && typeof navigator.clipboard.writeText === "function") navigator.clipboard.writeText(text).then(ok, fallback); else fallback();
+  }
+  function copyBtn(label, text, P, src, aria) {
+    var b = el("button", "mn-copy", label); b.type = "button";
+    if (aria) b.setAttribute("aria-label", label + ": " + aria);
+    b.addEventListener("click", function () { copyText(text, b, P, src); });
+    return b;
+  }
+
+  function renderStart(root, m, L, opts) {
+    var P = PAY_T[m.l];
+    var head = el("header", "mn-head");
+    head.appendChild(el("h1", "mn-title", m.n || L.menu));
+    head.appendChild(el("div", "mn-rule"));
+    root.appendChild(head);
+    var main = el("main", "mn-start");
+    if (opts.tb) main.appendChild(el("p", "mn-table", L.table + " " + opts.tb));
+    var bm = el("button", "mn-big mn-big-menu", L.menu); bm.type = "button";
+    bm.addEventListener("click", function () { setView("menu"); });
+    var bp = el("button", "mn-big mn-big-pay", P.payBtn); bp.type = "button";
+    bp.addEventListener("click", function () { setView("pay"); });
+    main.appendChild(bm); main.appendChild(bp);
+    root.appendChild(main);
+    root.appendChild(brandFooter());
+  }
+
+  function renderPay(root, m, L, opts) {
+    var P = PAY_T[m.l], p = m.p, d = minorDigits(m.c), F = Math.pow(10, d), fmt = moneyFormatter(m.l, m.c), comma = m.l !== "en";
+    var chk = p.l ? checkPayLink(p.l) : { ok: false }, host = chk.ok ? chk.host : "";
+    var S = opts.state || (opts.state = { bill: "", touched: false, from: null, tip: { kind: "none" }, custom: "", seq: 0 });   // memory only: nothing is stored
+    if (S.from !== null && !S.touched && !S.bill) S.bill = plainAmount(toMinor(S.from, d), d, comma);
+
+    var head = el("header", "mn-head mn-head-pay");
+    head.appendChild(el("h1", "mn-title", m.n || L.menu));
+    root.appendChild(head);
+    var main = el("main", "mn-pay");
+    var back = el("button", "mn-back", P.back); back.type = "button";
+    back.addEventListener("click", function () { setView("menu"); });
+    main.appendChild(back);
+    if (opts.tb) main.appendChild(el("p", "mn-table", L.table + " " + opts.tb));
+
+    // bill
+    var card = el("section", "mn-pcard");
+    card.appendChild(el("h2", "mn-ph", P.bill));
+    var top = el("div", "mn-fromrow");
+    var lab = el("label", "mn-fromline"); lab.setAttribute("for", "mn-amt");
+    top.appendChild(lab);
+    var canLookUp = typeof opts.bills === "function" && !!opts.tb;
+    var refresh = null;
+    if (canLookUp) { refresh = el("button", "mn-linkbtn", P.refresh); refresh.type = "button"; top.appendChild(refresh); }
+    card.appendChild(top);
+    var row = el("div", "mn-amtrow");
+    var inp = el("input", "mn-amt"); inp.id = "mn-amt"; inp.type = "text"; inp.value = S.bill; inp.maxLength = 12; inp.spellcheck = false;
+    inp.setAttribute("inputmode", "decimal"); inp.setAttribute("autocomplete", "off"); inp.setAttribute("autocapitalize", "off"); inp.setAttribute("enterkeyhint", "done");
+    row.appendChild(inp); row.appendChild(el("span", "mn-cursign", currencySign(m.c)));
+    card.appendChild(row);
+    var split = el("p", "mn-split", P.split);
+    card.appendChild(split);
+    main.appendChild(card);
+
+    // tip
+    var tcard = el("section", "mn-pcard");
+    tcard.appendChild(el("h2", "mn-ph", P.tip));
+    var grp = el("div", "mn-tips"); grp.setAttribute("role", "radiogroup"); grp.setAttribute("aria-label", P.tip);
+    var choices = [{ kind: "none", label: P.noTip }].concat(p.t.map(function (n) { return { kind: "pct", pct: n, label: n + "%" }; })).concat([{ kind: "custom", label: P.custom }]);
+    var tbtns = choices.map(function (c) {
+      var b = el("button", "mn-tipbtn", c.label); b.type = "button"; b.setAttribute("role", "radio");
+      if (c.kind === "pct") b.setAttribute("data-pct", String(c.pct)); else b.setAttribute("data-tip", c.kind);
+      b.addEventListener("click", function () { S.tip = c.kind === "pct" ? { kind: "pct", pct: c.pct } : { kind: c.kind }; paintTips(); update(); if (c.kind === "custom") cin.focus(); });
+      grp.appendChild(b); return b;
+    });
+    tcard.appendChild(grp);
+    var crow = el("div", "mn-customrow");
+    var clab = el("label", "mn-fromline", P.customLabel + " (" + currencySign(m.c) + ")"); clab.setAttribute("for", "mn-ctip");
+    var cin = el("input", "mn-amt mn-ctip"); cin.id = "mn-ctip"; cin.type = "text"; cin.value = S.custom; cin.maxLength = 12; cin.spellcheck = false;
+    cin.setAttribute("inputmode", "decimal"); cin.setAttribute("autocomplete", "off"); cin.setAttribute("autocapitalize", "off");
+    crow.appendChild(clab); crow.appendChild(cin);
+    tcard.appendChild(crow);
+    main.appendChild(tcard);
+
+    // sum
+    var sum = el("dl", "mn-sum");
+    function line(cls, label) { var dt = el("dt", cls, label), dd = el("dd", cls, ""); sum.appendChild(dt); sum.appendChild(dd); return { dt: dt, dd: dd }; }
+    var lBill = line("mn-l-bill", P.bill), lTip = line("mn-l-tip", P.tip), lTot = line("mn-l-total", P.total);
+    main.appendChild(sum);
+
+    var mh = el("h2", "mn-ph mn-mhead", P.howH); main.appendChild(mh);
+    var mbox = el("div", "mn-methods"); main.appendChild(mbox);
+    if (p.n) main.appendChild(el("p", "mn-paynote", p.n));
+    main.appendChild(el("p", "mn-safe", host ? fill(P.safe, { host: host }) : P.safeNo));
+    root.appendChild(main);
+    root.appendChild(brandFooter());
+
+    function totals() {
+      var billM = toMinor(parseAmount(S.bill) || 0, d);
+      var tip = S.tip.kind === "custom" ? { kind: "custom", minor: toMinor(parseAmount(S.custom) || 0, d) } : S.tip;
+      return payTotals(billM, tip);
+    }
+    function paintTips() {
+      tbtns.forEach(function (b, i) {
+        var c = choices[i], on = c.kind === S.tip.kind && (c.kind !== "pct" || c.pct === S.tip.pct);
+        b.setAttribute("aria-checked", on ? "true" : "false");
+      });
+      crow.hidden = S.tip.kind !== "custom";
+    }
+    function paintFrom() {
+      lab.textContent = S.from !== null ? P.fromBill + ": " + fmt.format(S.from) : P.enterAmt;
+      split.hidden = S.from === null;
+    }
+    function copyRow(parent, label, shown, plain) {
+      var kv = el("div", "mn-kv"); kv.appendChild(el("span", "mn-k", label));
+      var v = el("span", "mn-val", shown); kv.appendChild(v);
+      kv.appendChild(copyBtn(P.copy, plain, P, v, label));
+      parent.appendChild(kv);
+    }
+    function methods(t) {
+      mbox.textContent = "";
+      var have = t.total > 0, totalTxt = have ? fmt.format(t.total / F) : "";
+      if (p.x) {
+        var c = el("section", "mn-mcard mn-terminal");
+        c.appendChild(el("h3", "mn-mh", P.terminalH));
+        c.appendChild(el("p", "mn-t-label", P.total));
+        c.appendChild(el("p", "mn-t-total", have ? totalTxt : "—"));
+        if (t.tip > 0) c.appendChild(el("p", "mn-t-tip", P.tip + ": " + fmt.format(t.tip / F)));
+        else if (have) c.appendChild(el("p", "mn-t-tip", P.noTip));
+        if (opts.tb) c.appendChild(el("p", "mn-t-table", L.table + " " + opts.tb));
+        mbox.appendChild(c);
+      }
+      if (host) {
+        var inUrl = have && isPayPalName(p.l);
+        var a = el("a", "mn-btn mn-link mn-paylink", have ? fill(P.payOn, { total: totalTxt, host: host }) : fill(P.openHost, { host: host }));
+        a.href = inUrl ? paypalUrl(p.l, t.total, d, paypalCode(m.c)) : p.l; a.target = "_blank"; a.rel = "noopener noreferrer";
+        mbox.appendChild(a);
+        if (have && !inUrl) {
+          var cr = el("div", "mn-copyrow");
+          cr.appendChild(copyBtn(P.copyAmount, plainAmount(t.total, d, comma), P, null));
+          cr.appendChild(el("p", "mn-enter", fill(P.enterOn, { total: totalTxt })));
+          mbox.appendChild(cr);
+        }
+      }
+      if (p.b) {
+        var bc = el("section", "mn-mcard mn-blik");
+        bc.appendChild(el("h3", "mn-mh", P.blikH));
+        copyRow(bc, P.phone, p.b, p.b);
+        if (have) copyRow(bc, P.amount, totalTxt, plainAmount(t.total, d, comma));
+        if (opts.tb) copyRow(bc, P.ttl, L.table + " " + opts.tb, L.table + " " + opts.tb);
+        bc.appendChild(el("p", "mn-hint", P.blikHint));
+        mbox.appendChild(bc);
+      }
+    }
+    function update() {
+      var t = totals();
+      lBill.dd.textContent = t.bill > 0 ? fmt.format(t.bill / F) : "—";
+      lTip.dt.textContent = P.tip + (S.tip.kind === "pct" ? " (" + S.tip.pct + "%)" : "");
+      lTip.dd.textContent = t.bill > 0 || t.tip > 0 ? fmt.format(t.tip / F) : "—";
+      lTot.dd.textContent = t.total > 0 ? fmt.format(t.total / F) : "—";
+      methods(t);
+    }
+    inp.addEventListener("input", function () { S.bill = inp.value; S.touched = true; update(); });
+    cin.addEventListener("input", function () { S.custom = cin.value; update(); });
+    paintFrom(); paintTips(); update();
+
+    // the bill from the "Bills" tab (share-link mode with a table number): looked up when this screen opens, never blocks the guest
+    function lookUp(force) {
+      var token = ++S.seq;
+      opts.bills().then(function (amt) {
+        if (token !== S.seq || amt === null || amt === undefined) return;
+        S.from = amt;
+        if (force || (!S.touched && !S.bill)) { S.bill = plainAmount(toMinor(amt, d), d, comma); S.touched = false; inp.value = S.bill; }
+        paintFrom(); update();
+      });
+    }
+    if (canLookUp) { lookUp(false); refresh.addEventListener("click", function () { lookUp(true); }); }
+  }
+
+
 
   var scrollOff = null;
   function trackChips(chipBox, chips, secEls) {
@@ -598,9 +1035,17 @@
   // Share-link mode (?d=<doc id>): a normal Google Sheets sharing link ("Anyone with the link" + Viewer), read through the gviz CSV endpoint.
   var DOC_RE = /^[A-Za-z0-9_\-]{25,100}$/;
   var DEFAULT_TAB = "Publish this tab";
-  function cleanTab(t) { t = String(t == null ? "" : t).replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 100); return t || DEFAULT_TAB; }
-  function docUrl(id, tab) {
-    return "https://docs.google.com/spreadsheets/d/" + id + "/gviz/tq?tqx=out:csv&headers=0&sheet=" + encodeURIComponent(cleanTab(tab));
+  function cleanTab(t, def) { t = String(t == null ? "" : t).replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 100); return t || def || DEFAULT_TAB; }
+  function docUrl(id, tab, def) {
+    return "https://docs.google.com/spreadsheets/d/" + id + "/gviz/tq?tqx=out:csv&headers=0&sheet=" + encodeURIComponent(cleanTab(tab, def));
+  }
+  // The "Bills" tab (table,amount), asked for when the Pay screen opens. Same fetch options as the menu; any failure just means "no bill found".
+  function fetchBills(d, bt, tb) {
+    var ctrl = typeof AbortController === "function" ? new AbortController() : null, timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 10000) : 0;
+    return fetch(docUrl(d, bt, DEFAULT_BILLS), { credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", redirect: "follow", signal: ctrl ? ctrl.signal : undefined })
+      .then(function (res) { return res.ok ? res.text() : null; })
+      .then(function (text) { clearTimeout(timer); return text == null || /^\s*</.test(text) ? null : billFor(text, tb); })
+      .catch(function () { clearTimeout(timer); return null; });
   }
 
   // Pasted Google Sheets link -> one of
@@ -704,6 +1149,17 @@
 
     // builder preview (?embed=1): tell the same-origin parent page what was loaded, so it can show the result next to the preview
     var embed = q.get("embed") === "1" && global.parent && global.parent !== global.self;
+    var tbRaw = q.get("tb"), tb = /^\d{1,3}$/.test(tbRaw || "") && +tbRaw >= 1 ? +tbRaw : 0;   // table number 1..999 (from the table's own QR)
+    var bt = q.get("bt");                                                                          // name of the Bills tab (default "Bills")
+    // show the menu; with payments switched on the guest first sees the start screen (Menu / Pay the bill)
+    function present(raw, docId) {
+      var m = normalize(raw), o = { tb: tb, nav: !embed, view: payActive(m) ? "start" : "menu" };
+      if (embed) o.onView = function (v) { tell({ dmView: v }); };   // the builder's Start / Menu / Pay switch follows the guest page
+      if (docId) o.bills = function () { return fetchBills(docId, bt, tb); };
+      render(root, m, o);
+      if (o.nav) { try { global.history.replaceState({ dmView: last.view }, "", global.location.href); } catch (e) { /* ignore */ } }
+      return last.m;
+    }
     function tell(msg) {
       if (!embed) return;
       try { msg.q = global.location.search; global.parent.postMessage(msg, global.location.origin); } catch (e) { /* no listener: nothing to do */ }
@@ -718,7 +1174,7 @@
       if (hash) {
         decodePayload(hash).then(function (obj) {
           if (my !== started) return;
-          render(root, obj);
+          present(obj, "");
         }, function (err) {
           if (my !== started) return;
           showError(root, uiLang, err && err.code === "old" ? "oldBrowser" : "badLink");
@@ -745,8 +1201,8 @@
           if (mode === "d" && /^\s*</.test(text)) throw fail("net");
           var menu;
           try { menu = menuFromCsv(text); } catch (e) { tell({ dmLive: 1, ok: false, key: "csvErr" }); return showError(root, uiLang, "csvErr", retry, mode === "d" ? "tab" : ""); }
-          render(root, menu);
-          tell({ dmLive: 1, ok: true, menu: normalize(menu) });
+          var shown = present(menu, mode === "d" ? d : "");
+          tell({ dmLive: 1, ok: true, menu: shown });
         }).catch(function () {
           clearTimeout(timer);
           if (my !== started) return;
@@ -759,6 +1215,7 @@
     }
     status(root, T[uiLang].loading, "load");
     load();
+    global.addEventListener("popstate", function (e) { var v = e.state && e.state.dmView; if (last && (v === "start" || v === "menu" || v === "pay")) setView(v, true); });
     global.addEventListener("hashchange", function () { hash = global.location.hash.replace(/^#/, ""); status(root, T[uiLang].loading, "load"); load(); });
   }
 
@@ -768,7 +1225,10 @@
     canCompress: canCompress, canDecompress: canDecompress,
     parseCsv: parseCsv, menuFromRows: menuFromRows, menuFromCsv: menuFromCsv, parsePrice: parsePrice,
     priceFormatter: priceFormatter, parseSheetLink: parseSheetLink, docUrl: docUrl, cleanTab: cleanTab, DOC_RE: DOC_RE, DEFAULT_TAB: DEFAULT_TAB, currencyCode: currencyCode, allWhole: allWhole, liveUrl: liveUrl,
-    render: render, boot: boot, bytesToB64url: bytesToB64url, b64urlToBytes: b64urlToBytes
+    render: render, setView: setView, boot: boot,
+    payActive: payActive, normalizePay: normalizePay, parseTips: parseTips, checkPayLink: checkPayLink, checkBlik: checkBlik, parseAmount: parseAmount,
+    billsFromRows: billsFromRows, billFor: billFor, tipMinor: tipMinor, payTotals: payTotals, plainAmount: plainAmount, paypalUrl: paypalUrl, paypalCode: paypalCode,
+    isPayPalName: isPayPalName, minorDigits: minorDigits, toMinor: toMinor, moneyFormatter: moneyFormatter, PAY_T: PAY_T, DEFAULT_BILLS: DEFAULT_BILLS, DEFAULT_TIPS: DEFAULT_TIPS, bytesToB64url: bytesToB64url, b64urlToBytes: b64urlToBytes
   };
   global.DMMenu = api;
   if (typeof module === "object" && module && module.exports) module.exports = api;

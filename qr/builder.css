@@ -198,3 +198,22 @@ fieldset.qb-themes { border: 0; padding: 0; margin: 16px 0 0; }
 .qb-badhint { color: #a12a1a !important; font-weight: 600; }
 .qb-okhint { color: var(--herb) !important; font-weight: 600; }
 .btn[hidden] { display: none; }
+
+/* Payments (PAY-1): step 3, the preview switch, the live read-out */
+.qb-opt { font: 600 14px/1 var(--sans); color: var(--muted); }
+.qb-h3 { margin: 18px 0 6px; font-size: 17px; }
+#payBox { margin-top: 12px; }
+#payBox[hidden], #payToggle[hidden], .qb-seg[hidden], .qb-payread[hidden], #shopTableBox[hidden] { display: none; }
+.qb-seg { display: flex; margin: 0 auto 10px; max-width: 372px; border: 1.5px solid var(--accent); border-radius: 999px; overflow: hidden; background: #fff; }
+.qb-seg button { flex: 1; border: 0; background: #fff; color: var(--accent-dark); padding: 9px 10px; font: 600 14px/1 var(--sans); cursor: pointer; }
+.qb-seg button + button { border-left: 1.5px solid var(--accent); }
+.qb-seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.qb-seg button:focus-visible { outline: 3px solid var(--accent); outline-offset: -4px; }
+.qb-payread { background: var(--accent-soft); border-radius: 12px; padding: 12px 16px; margin: 12px 0; }
+.qb-payread .qb-h3 { margin-top: 0; }
+.qb-kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 8px 0 12px; }
+.qb-kv dt { font-weight: 600; color: var(--muted); }
+.qb-kv dd { margin: 0; overflow-wrap: anywhere; }
+.qb-kv dd.bad { color: #a12a1a; font-weight: 600; }
+.field .hint.qb-okhint, .field .hint.qb-badhint { display: block; }
+#numBox .hint { margin: 6px 0 0; }
