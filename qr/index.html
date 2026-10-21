@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free QR Table Menu for Cafes and Bakeries | DoughMath Studio</title>
+<meta name="description" content="Make a free QR code menu for your cafe or bakery. Print table tents or stickers, or order durable stickers from a print shop. No sign-up, nothing is uploaded.">
+<link rel="canonical" href="https://doughmath-studio.github.io/qr/">
+<meta property="og:title" content="Free QR Table Menu Maker for Cafes and Bakeries">
+<meta property="og:description" content="Type your menu, get a QR code and print it for your tables. Free, no sign-up, nothing is uploaded.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://doughmath-studio.github.io/qr/">
+<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/qr/builder.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"QR Table Menu Maker","applicationCategory":"BusinessApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://doughmath-studio.github.io/qr/","publisher":{"@type":"Organization","name":"DoughMath Studio"}}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="wrap wide"><a class="brand" href="/">Dough<span>Math</span> Studio</a><nav class="nav"><a href="/#tools">Free tools</a><a href="/#guides">Guides</a><a href="/#shop">Templates</a><a href="/about/">About</a></nav></div></header>
+
+<main class="wrap wide">
+<p class="crumbs"><a href="/">Home</a> › Free tools</p>
+<h1>QR Table Menu Maker</h1>
+<p class="lead">Type your menu, get a QR code, stick it on your tables. For cafes, bakeries and food trucks. Free, no sign-up.</p>
+
+<div class="qb-privacy" id="privacyNote">
+  <p><strong>The menu lives inside the link (or in your own Google Sheet). Nothing is uploaded to us.</strong></p>
+  <p>In link mode your menu sits in the part of the link after the # sign. Browsers never send that part to any server. Your draft is saved only in this browser, and the guest menu page sets no cookies and uses no analytics. <button type="button" class="qb-linkbtn" id="btnDeleteDraft">Delete my draft</button> <span id="draftState" class="qb-muted" role="status"></span></p>
+</div>
+
+<div class="qb-grid">
+
+<div class="qb-edit">
+
+<section class="calc" id="step-cafe" aria-labelledby="h-cafe">
+  <h2 class="qb-h" id="h-cafe"><span class="qb-n">1</span>Your cafe</h2>
+  <div class="fields">
+    <div class="field">
+      <label for="cafeName">Cafe name</label>
+      <input id="cafeName" maxlength="120" autocomplete="off" placeholder="e.g. Maple Street Cafe">
+      <span class="hint">Shown large at the top of the menu, so guests can check they are in the right place.</span>
+    </div>
+    <div class="field">
+      <label for="cur">Currency</label>
+      <select id="cur"></select>
+      <input id="curOther" maxlength="12" autocomplete="off" placeholder="Symbol or 3-letter code" aria-label="Other currency" hidden>
+    </div>
+    <div class="field">
+      <label for="lang">Menu language</label>
+      <select id="lang"></select>
+      <span class="hint">Used for the labels guests see (Allergens, Sold out) and the printed "Scan for the menu". Your dish names stay as you write them.</span>
+    </div>
+    <div class="field">
+      <label for="footer">Footer text (optional)</label>
+      <input id="footer" maxlength="400" autocomplete="off" placeholder="Wi-Fi: guest / pass 12345 · @instagram">
+      <span class="hint" id="footerHint">Plain text only. Links are not clickable.</span>
+    </div>
+  </div>
+  <fieldset class="qb-themes">
+    <legend>Look</legend>
+    <div class="qb-themegrid" id="themes"></div>
+  </fieldset>
+</section>
+
+<section class="calc" id="step-menu" aria-labelledby="h-menu">
+  <h2 class="qb-h" id="h-menu"><span class="qb-n">2</span>Your menu</h2>
+  <div class="qb-toolbar">
+    <button type="button" class="btn secondary small" id="btnExample">Start from example</button>
+    <button type="button" class="btn secondary small" id="btnBento">Import from Bento</button>
+    <button type="button" class="btn secondary small" id="btnImport">Import JSON</button>
+    <button type="button" class="btn secondary small" id="btnExport">Export JSON</button>
+    <button type="button" class="btn secondary small" id="btnClear">Clear menu</button>
+    <input type="file" id="fileImport" accept="application/json,.json" hidden>
+  </div>
+  <p class="note qb-msg" id="menuMsg" role="status" hidden></p>
+  <div id="sections"></div>
+  <p><button type="button" class="btn small" id="btnAddSection">+ Add section</button></p>
+  <p class="qb-muted qb-legal">Allergen numbers follow the EU list of 14. You are responsible for them being right for your recipes. The example menu is only an example.</p>
+</section>
+
+</div>
+
+<aside class="qb-prev" aria-label="Menu preview">
+  <h2 class="qb-h qb-h-sm">Preview</h2>
+  <div class="qb-phone"><iframe id="previewFrame" title="Menu preview" src="/m/?preview=1"></iframe></div>
+  <p class="qb-muted qb-center" id="prevNote">This is the real guest page, as a phone shows it.</p>
+  <p class="qb-center"><button type="button" class="btn secondary small" id="btnPrevReload" hidden>Reload from my sheet</button></p>
+</aside>
+
+<div class="qb-out">
+
+<section class="calc" id="step-qr" aria-labelledby="h-qr">
+  <h2 class="qb-h" id="h-qr"><span class="qb-n">3</span>Get your QR code</h2>
+  <div class="qb-tabs" role="tablist" aria-label="QR code type">
+    <button type="button" role="tab" id="tabLink" aria-selected="true" aria-controls="panelLink">Link (works right away)</button>
+    <button type="button" role="tab" id="tabLive" aria-selected="false" aria-controls="panelLive">Live (Google Sheet)</button>
+  </div>
+
+  <div id="panelLink" role="tabpanel" aria-labelledby="tabLink">
+    <p>The whole menu is packed into the link. Nothing to set up. To change a price you make a new QR code.</p>
+  </div>
+
+  <div id="panelLive" role="tabpanel" aria-labelledby="tabLive" hidden>
+    <p><strong>The QR never changes.</strong> You edit prices in your own Google Sheet, and guests see the change when they open or reload the menu.</p>
+    <ol class="qb-steps">
+      <li>Use our ready-made Google Sheets template (with dropdowns, checks and an allergen list), or any Google Sheet laid out like the format below. <span id="tplLine"></span></li>
+      <li>In Google Sheets tap <em>Share</em> → <em>General access</em> → <em>Anyone with the link</em> → <em>Viewer</em> → <em>Copy link</em>.</li>
+      <li>Paste it here.</li>
+    </ol>
+    <details class="qb-guide" id="publishBox">
+      <summary>For more privacy: File → Share → Publish to web → this tab → CSV, and paste that link instead</summary>
+      <p>In Google Sheets choose <em>File → Share → Publish to web</em>. Pick the menu tab (not “Entire document”), choose <em>Comma-separated values (.csv)</em> and press Publish. Copy the link Google shows you and paste it in the box below. Only that tab is public, not the rest of the spreadsheet.</p>
+    </details>
+    <details class="qb-guide" id="sheetFormat">
+      <summary>Build your own sheet</summary>
+      <p>You do not need the template. Any Google Sheet works if the tab named <code>Publish this tab</code> has this layout (columns A to G):</p>
+      <pre class="qb-code" id="csvExample">#settings,name,currency,language,theme,footer
+,Example Café &amp; Bakery,zł,en,espresso,Wi-Fi: ExampleGuest · Instagram @examplecafe
+
+section,item,price,description,allergens,tags,sold_out
+Pastries,Almond croissant,13,Filled with almond cream,"1, 3, 7, 8",V,yes
+Breakfast,Shakshuka,34,"Eggs in spiced tomato sauce, sourdough","1, 3","V, SPICY",</pre>
+      <ul>
+        <li><strong>Row 1</strong> is the word <code>#settings</code> followed by <code>name, currency, language, theme, footer</code>. <strong>Row 2</strong> holds your values under them, and cell A2 stays empty. <strong>Row 3</strong> is blank (the menu still works if it is missing).</li>
+        <li><strong>Row 4</strong> is the header: <code>section, item, price, description, allergens, tags, sold_out</code>. From row 5 on, one dish per row. Rows without a dish name are skipped. Sections show in the order they first appear. A blank section cell continues the section above.</li>
+        <li><strong>currency:</strong> a code (PLN, EUR, USD) or a sign (zł, €, $). <strong>language:</strong> en, es, pt, fr, de, pl, uk or ru. <strong>theme:</strong> espresso, pistachio, berry or mono. Anything else falls back to en and espresso.</li>
+        <li><strong>price:</strong> a number with a comma or a dot (<code>12,50</code> or <code>12.5</code>). A currency sign is fine. Text such as <code>ask</code> is shown as it is.</li>
+        <li><strong>allergens:</strong> EU allergen numbers 1 to 14, separated by commas, semicolons or spaces. 1 gluten, 2 crustaceans, 3 eggs, 4 fish, 5 peanuts, 6 soy, 7 milk, 8 tree nuts, 9 celery, 10 mustard, 11 sesame, 12 sulphites, 13 lupin, 14 molluscs. Format this column as <em>Plain text</em> (Format → Number → Plain text) so Sheets does not turn "1, 7" into a number.</li>
+        <li><strong>tags:</strong> V, VG, GF, SPICY, separated by commas, in any letter case (for example <code>VG, GF</code>). <strong>sold_out:</strong> <code>yes</code> greys the dish out as sold out. Leave it empty otherwise.</li>
+      </ul>
+    </details>
+    <div class="field">
+      <label for="liveLink">Google Sheets link</label>
+      <input id="liveLink" autocomplete="off" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/d/…/edit?usp=sharing">
+      <span class="hint" id="liveMsg" role="status"></span>
+    </div>
+    <details class="qb-guide" id="tabBox">
+      <summary>The menu tab has another name?</summary>
+      <div class="field">
+        <label for="liveTab">Tab name</label>
+        <input id="liveTab" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Publish this tab">
+        <span class="hint">Leave empty to read the tab called “Publish this tab”, like the template. Used with a share link; a published link already points at one tab.</span>
+      </div>
+    </details>
+    <p class="note qb-warn" id="livePrivacy"><strong>Privacy.</strong> With a share link, anyone who has the link can open the whole spreadsheet and see the name of the Google account it belongs to. Keep only your menu in it. Publishing to the web shows only the menu tab.</p>
+  </div>
+
+  <div class="qb-qrout">
+    <div class="qb-qrbox" id="qrBox" role="img" aria-label="QR code preview"></div>
+    <div class="qb-qrside">
+      <div class="field">
+        <label for="linkOut">Menu link</label>
+        <textarea id="linkOut" rows="4" readonly spellcheck="false"></textarea>
+      </div>
+      <p class="qb-info" id="qrInfo" role="status"></p>
+      <p class="note qb-warn" id="qrWarn" role="alert" hidden></p>
+      <div class="qb-btnrow">
+        <button type="button" class="btn small" id="btnCopy">Copy link</button>
+        <a class="btn secondary small" id="btnOpen" href="#" target="_blank" rel="noopener">Open menu</a>
+        <button type="button" class="btn secondary small" id="btnSvg">Download SVG</button>
+        <button type="button" class="btn secondary small" id="btnPng">Download PNG</button>
+      </div>
+      <div class="field qb-ec">
+        <label for="ec">Error correction</label>
+        <select id="ec">
+          <option value="L">L · smallest code</option>
+          <option value="M" selected>M · recommended</option>
+          <option value="Q">Q · tougher</option>
+          <option value="H">H · toughest, biggest</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="calc" id="step-print" aria-labelledby="h-print">
+  <h2 class="qb-h" id="h-print"><span class="qb-n">4</span>Print at home or in the office</h2>
+  <div class="qb-layouts" id="layouts" role="radiogroup" aria-label="Print layout"></div>
+  <div class="fields qb-printfields">
+    <div class="field">
+      <label class="qb-check"><input type="checkbox" id="numOn"> Number the cards (one per table)</label>
+      <div id="numBox" hidden>
+        <label for="numCount">Tables 1 to</label>
+        <input id="numCount" type="number" inputmode="numeric" min="1" max="200" value="10">
+      </div>
+    </div>
+    <div class="field">
+      <label for="printLine">Small line (optional)</label>
+      <input id="printLine" maxlength="80" autocomplete="off" placeholder="e.g. Wi-Fi: guest / 12345">
+    </div>
+  </div>
+  <div class="qb-sheetwrap">
+    <div class="qb-sheetprev" id="sheetPrev" aria-label="Print preview, first page"></div>
+    <div class="qb-sheetside">
+      <p class="qb-info" id="printInfo" role="status"></p>
+      <p class="note qb-warn" id="printWarn" role="alert" hidden></p>
+      <p><button type="button" class="btn" id="btnPrint">Print / Save as PDF</button></p>
+      <p class="qb-muted">Pages are A4. In the print dialog choose A4, margins None, scale 100% and turn on background graphics. On an iPhone or iPad choose A4 in the print options. US Letter paper: choose "Fit to page", things shrink about 6%.</p>
+    </div>
+  </div>
+  <p class="note qb-secure"><strong>Fake QR stickers happen.</strong> Someone can stick their own code over yours. Every card shows the web address under the QR, and your menu page shows your cafe name large at the top, so guests can check both. Use tamper-evident or doming stickers that cannot be peeled off cleanly, and look at your stickers every day or two.</p>
+</section>
+
+<section class="calc" id="step-shop" aria-labelledby="h-shop">
+  <h2 class="qb-h" id="h-shop"><span class="qb-n">5</span>Sticker file for a print shop</h2>
+  <p>For durable stickers with a clear protective coat. The file has 3 mm bleed, a 3 mm safe zone, black dots on white at error correction H, dots at least 0.5 mm wide and a 4-dot quiet zone.</p>
+  <div class="qb-layouts" id="shopSizes" role="radiogroup" aria-label="Sticker size"></div>
+  <div class="qb-sheetwrap">
+    <div>
+      <div class="qb-shopprev" id="shopPrev" aria-label="Sticker artwork preview"></div>
+      <p class="qb-muted qb-legend">Preview only. Red dashes: page edge with bleed. Magenta: die-cut line. Blue dashes: 3 mm safe zone. The guides are not in the print file.</p>
+    </div>
+    <div class="qb-sheetside">
+      <p class="qb-info" id="shopInfo" role="status"></p>
+      <p class="note qb-warn" id="shopWarn" role="alert" hidden></p>
+      <div class="qb-btnrow">
+        <button type="button" class="btn" id="btnShopPdf">Print / Save as PDF</button>
+        <button type="button" class="btn secondary" id="btnShopSvg">Download SVG (with CutContour)</button>
+      </div>
+      <p class="qb-muted">PDF: one sticker per page, page size = sticker + 3 mm bleed on every side. Save it from a computer with Chrome, Edge or Firefox (Print → Save as PDF, margins None, background graphics on). SVG: the artwork plus a separate layer named <code>CutContour</code> (100% magenta line, 0.25 pt, no fill) for the die-cut. Text in the SVG is live text, so send the PDF too or ask the shop to outline fonts.</p>
+    </div>
+  </div>
+  <details class="qb-guide" id="orderGuide" open>
+    <summary>Ordering stickers: a short guide</summary>
+    <ul>
+      <li><strong>Material:</strong> white polymer vinyl (or polyester) with a permanent adhesive.</li>
+      <li><strong>Finish:</strong> epoxy doming (a 3D clear dome) or a gloss or matte lamination. Matte glares less, so phones scan it more easily.</li>
+      <li><strong>Optional:</strong> tamper-evident "VOID" material, which shows a pattern if someone peels the sticker off.</li>
+      <li><strong>Send:</strong> the PDF from this page. Add the SVG if the shop asks for a cut line.</li>
+      <li><strong>Always ask for a proof</strong> before the full run. Scan the proof with two or three different phones, in bright light and in a dim room.</li>
+      <li><strong>After you stick them:</strong> check your stickers regularly. A fake sticker can be stuck over a real one.</li>
+    </ul>
+  </details>
+</section>
+
+</div>
+</div>
+</main>
+
+<div id="printRoot" aria-hidden="true"></div>
+
+<footer class="site-footer"><div class="wrap wide"><span>© 2026 DoughMath Studio · Tools by a professional cook</span><span><a href="/privacy/">Privacy</a> · <a href="https://doughmathstudio.etsy.com">Etsy shop</a></span></div></footer>
+
+<script src="/assets/js/qrcode.js"></script>
+<script src="/m/menu.js"></script>
+<script src="/qr/builder.js"></script>
+</body>
+</html>
