@@ -358,3 +358,115 @@ noscript .mn-status { display: block; }
 .pc-nw { white-space: nowrap; }
 .pc-note { margin: 14px 0 0; color: var(--muted); font-size: 14px; line-height: 1.4; text-align: center; }
 .mn-offscreen { position: fixed; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; }
+
+/* PAY-4: a compact Pay screen (same look, smaller scale, less scrolling), the bar with the total, the full screen for the waiter,
+   the planned payment buttons shown as "soon" and the waiter notifications. */
+.mn-pay { gap: 10px; padding-top: 2px; }
+.mn-pay .pc-card { padding: 16px 18px; border-radius: 24px; }
+.mn-pay .pc-h { margin-bottom: 10px; font-size: 12.5px; }
+.mn-pay .mn-back { min-height: 44px; font-size: 15px; }
+.mn-pay .mn-tile { width: 44px; height: 44px; border-radius: 14px; }
+.mn-pay .mn-tile .pc-i { width: 24px; height: 24px; }
+.pc-open { margin-bottom: 4px; font-size: 12px; }
+.pc-name { font-size: clamp(22px, 6.4vw, 28px); }
+.pc-meta { margin-top: 6px; }
+.pc-meta li { font-size: 15px; }
+.pc-seg { padding: 4px; }
+.pc-seg button { min-height: 44px; padding: 4px 6px; font-size: 14px; }
+.pc-amountbox { margin-top: 12px; }
+.mn-pay .mn-amt { min-height: 52px; font-size: 22px; }
+.pc-people { margin-top: 12px; }
+.pc-hint { margin-top: 8px; font-size: 14px; }
+.pc-ihead { margin-bottom: 10px; }
+.pc-items.folded .pc-ihead { margin-bottom: 0; }
+.pc-items .pc-h { margin-bottom: 0; }
+.pc-tog { flex: 0 0 auto; min-height: 44px; padding: 0 14px; border: 1.5px solid var(--line2); border-radius: 999px; background: var(--card); color: var(--ink); font: 600 14px/1 var(--sans); cursor: pointer; }
+.pc-tog:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.pc-ihead .pc-cnt { margin-left: auto; }
+.pc-lines { gap: 8px; }
+.pc-line { min-height: 48px; padding: 4px 16px 4px 12px; border-radius: 18px; }
+.pc-nm { font-size: 16px; }
+.pc-lp { font-size: 15.5px; }
+.pc-refresh { margin-top: 10px; }
+.pc-tiphead { margin-bottom: 10px; }
+.mn-tipbtn { min-height: 44px; font-size: 15px; }
+.pc-customrow { margin-top: 8px; }
+.mn-ctip { min-height: 44px; font-size: 16px; }
+.mn-sum dl { gap: 6px 14px; font-size: 15.5px; }
+.pc-grand { margin-top: 4px; padding-top: 10px; }
+.pc-grand dt { font-size: 13.5px; }
+.pc-grand dd { font-size: clamp(28px, 8.5vw, 36px); }
+.pc-mh { margin: 4px 2px 0; font-size: 12.5px; }
+.mn-methods { gap: 10px; }
+.mn-pay .pc-mcard { padding: 16px 18px; border-radius: 24px; }
+.mn-pay .pc-go-btn { min-height: 52px; padding: 10px 20px; font-size: 16.5px; }
+.mn-pay .mn-val { font-size: 19px; }
+.mn-pay .mn-kv { padding: 8px 0; }
+.mn-pay .mn-safe { padding: 10px 14px; font-size: 14px; border-radius: 18px; }
+.mn-pay .mn-paynote { margin-top: 2px; font-size: 15px; }
+.pc-stars { margin-bottom: 10px; }
+.pc-star { width: 48px; height: 48px; }
+.pc-star .pc-i { width: 38px; height: 38px; }
+.pc-ta { min-height: 64px; padding: 10px 16px; border-radius: 18px; }
+.pc-acts { gap: 8px; margin-top: 12px; }
+.pc-act { min-height: 50px; padding: 8px 18px; font-size: 15.5px; }
+.pc-note { margin-top: 10px; font-size: 13.5px; }
+.pc-cl { font-size: 14.5px; }
+
+/* "Show this to your waiter" opens the big navy total full screen */
+.pc-showw { width: 100%; cursor: pointer; }
+.pc-ov { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: var(--primary); color: var(--on-primary); cursor: pointer;
+  padding: calc(24px + env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); }
+.pc-ov .mn-terminal { width: 100%; max-width: 560px; box-shadow: none; }   /* same navy as the full screen around it */
+.pc-ovclose { margin-top: 28px; min-height: 52px; padding: 0 32px; border: 2px solid var(--on-primary); border-radius: 999px; background: transparent; color: var(--on-primary); font: 700 17px/1 var(--sans); cursor: pointer; }
+.pc-ovclose:focus-visible { outline: 3px solid var(--hi); outline-offset: 3px; }
+html.pc-noscroll, html.pc-noscroll body { overflow: hidden; }
+
+/* The bar at the bottom: the total and one button to the ways of paying */
+.pc-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--card); border-top: 1px solid var(--line); box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.10);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.pc-bar-in { max-width: 648px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+.pc-bar-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pc-bar-l { font: 700 11.5px/1.2 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.pc-bar-v { font: 800 24px/1.1 var(--display); font-variant-numeric: tabular-nums; color: var(--hot-big); overflow-wrap: anywhere; }
+.pc-bar.paid .pc-bar-v { color: var(--good); font-size: 20px; }
+.pc-bar-go { flex: 0 0 auto; min-height: 48px; min-width: 104px; padding: 0 24px; border: 0; border-radius: 999px; background: var(--primary); color: var(--on-primary); font: 700 16px/1 var(--sans); cursor: pointer; box-shadow: var(--shadow); }
+.pc-bar-go:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.pc-barspace { height: calc(84px + env(safe-area-inset-bottom, 0px)); }
+
+/* The planned payment buttons, shown as "soon" (text only, no brand logos) */
+.pc-paybtns { display: flex; flex-direction: column; gap: 10px; }
+.pc-pb { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 8px 16px; border: 2px solid var(--primary); border-radius: 999px; font: 700 16.5px/1.2 var(--sans); cursor: pointer; }
+.pc-pb:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.pc-pb-main { min-height: 58px; background: var(--primary); color: var(--on-primary); font-size: 17.5px; }
+.pc-pbrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.pc-pb-a { background: var(--primary); color: var(--on-primary); }
+.pc-pb-g { background: var(--card); color: var(--ink); }
+.pc-pbt { min-width: 0; overflow-wrap: anywhere; }
+.pc-soon { flex: 0 0 auto; padding: 3px 8px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font: 700 11px/1.2 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; }
+.pc-pb-g .pc-soon { background: var(--soft); color: var(--ink); }
+.pc-pbmsg { margin: 0; padding: 10px 14px; border-radius: 16px; background: var(--soft); color: var(--ink); font-size: 14.5px; line-height: 1.4; text-align: center; }
+
+/* Waiter notifications: the action buttons, the status line, the privacy line, the "paid" line */
+.pc-nbtn { border: 0; cursor: pointer; }
+.pc-nbtn:disabled { opacity: 0.55; cursor: default; }
+.mn-blik .pc-nbtn { margin-top: 12px; }
+.pc-nstat { margin: 0; padding: 10px 14px; border-radius: 16px; font: 600 15px/1.35 var(--sans); }
+.pc-nstat.ok { background: var(--good-bg); color: var(--good); }
+.pc-nstat.err { background: var(--soft); color: var(--danger); }
+.pc-rate .pc-nstat { margin-top: 10px; }
+.pc-npriv { margin: 0 2px; color: var(--muted); font-size: 13.5px; line-height: 1.4; }
+.pc-paid { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0 0; padding: 10px 14px; border-radius: 16px; background: var(--good-bg); color: var(--good); font: 700 16px/1.3 var(--sans); }
+.pc-paid .pc-i { width: 20px; height: 20px; stroke-width: 3; }
+.pc-act-send { background: var(--primary); color: var(--on-primary); cursor: pointer; }
+.pc-act-send:disabled { opacity: 0.55; cursor: default; }
+@media (prefers-reduced-motion: no-preference) { .pc-bar { transition: background-color 0.2s ease; } }
+.pc-pb-main .pc-soon, .pc-pb-a .pc-soon { background: var(--on-primary); color: var(--primary); }
+html:has(.pc-bar) { scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+.mn-pay .mn-ctip { min-height: 44px; font-size: 16px; }
+.pc-pbrow .pc-pb { flex-direction: column; gap: 3px; min-height: 58px; padding: 6px 10px; }
+.pc-pbrow .pc-pbt { white-space: nowrap; overflow-wrap: normal; }
+.pc-pbrow .pc-soon { font-size: 10px; padding: 2px 7px; }
+.mn-methods > .pc-nstat, .mn-blik .pc-nstat { margin-top: -2px; }
+.mn-blik .pc-nstat { margin-top: 10px; }
+.mn-pay .pc-billbox { gap: 10px; }

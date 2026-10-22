@@ -211,6 +211,50 @@
       gBtn: "Опишите визит в Google", mgrBtn: "Написать менеджеру", mgrWa: "WhatsApp", mgrMail: "e-mail", rateNote: "Ваша оценка уходит только в заведение, из вашего собственного приложения.", rated: "оценка {n}/5", fbSubject: "Отзыв о визите" }
   };
   Object.keys(PAY_T2).forEach(function (l) { Object.keys(PAY_T2[l]).forEach(function (k) { PAY_T[l][k] = PAY_T2[l][k]; }); });
+  // PAY-4 labels: waiter notifications through the FastPay API, the compact layout and the payment buttons shown as "soon". Translations are mine: native speakers should check them.
+  var PAY_T4 = {
+    en: { soon: "soon", soonMsg: "This way of paying is coming soon. For now, please pay your waiter.", blikCode: "Pay with a BLIK code", applePay: "Apple Pay", googlePay: "Google Pay",
+      askTerminal: "Ask for the card terminal", blikSent: "I have sent the BLIK transfer", notified: "Your waiter has been notified", notifyFail: "We could not notify your waiter. Please show this screen to the staff.",
+      paid: "Paid, thank you!", notifyPriv: "When you notify the waiter, we send the table number, the amount, the tip and the way of paying. No card details, no cookies. Deleted after 30 days.",
+      sendRate: "Send the rating to the café", rateSent: "Sent, thank you!", rateFail: "Could not send. Please try again.", rateNoteN: "The rating and comment go to the café manager through DoughMath and are kept for 30 days.",
+      close: "Close", payNow: "Pay", show: "Show", hide: "Hide" },
+    es: { soon: "pronto", soonMsg: "Esta forma de pago llegará pronto. Por ahora, paga al camarero.", blikCode: "Pagar con código BLIK", applePay: "Apple Pay", googlePay: "Google Pay",
+      askTerminal: "Pedir el datáfono", blikSent: "He enviado la transferencia BLIK", notified: "Hemos avisado al camarero", notifyFail: "No pudimos avisar al camarero. Enseña esta pantalla al personal.",
+      paid: "¡Pagado, gracias!", notifyPriv: "Al avisar al camarero enviamos el número de mesa, el importe, la propina y la forma de pago. Sin datos de tarjeta ni cookies. Se borra a los 30 días.",
+      sendRate: "Enviar la valoración al local", rateSent: "Enviado, ¡gracias!", rateFail: "No se pudo enviar. Inténtalo de nuevo.", rateNoteN: "La valoración y el comentario llegan al encargado a través de DoughMath y se guardan 30 días.",
+      close: "Cerrar", payNow: "Pagar", show: "Ver", hide: "Ocultar" },
+    pt: { soon: "em breve", soonMsg: "Esta forma de pagamento chega em breve. Por agora, pague ao empregado.", blikCode: "Pagar com código BLIK", applePay: "Apple Pay", googlePay: "Google Pay",
+      askTerminal: "Pedir o terminal", blikSent: "Enviei a transferência BLIK", notified: "O empregado foi avisado", notifyFail: "Não foi possível avisar o empregado. Mostre este ecrã ao pessoal.",
+      paid: "Pago, obrigado!", notifyPriv: "Ao avisar o empregado enviamos o número da mesa, o valor, a gorjeta e a forma de pagamento. Sem dados do cartão nem cookies. Apagado após 30 dias.",
+      sendRate: "Enviar a avaliação ao café", rateSent: "Enviado, obrigado!", rateFail: "Não foi possível enviar. Tente novamente.", rateNoteN: "A avaliação e o comentário vão para o gerente através da DoughMath e são guardados 30 dias.",
+      close: "Fechar", payNow: "Pagar", show: "Ver", hide: "Ocultar" },
+    fr: { soon: "bientôt", soonMsg: "Ce mode de paiement arrive bientôt. Pour l’instant, payez auprès du serveur.", blikCode: "Payer avec un code BLIK", applePay: "Apple Pay", googlePay: "Google Pay",
+      askTerminal: "Demander le terminal", blikSent: "J’ai envoyé le virement BLIK", notified: "Le serveur a été prévenu", notifyFail: "Impossible de prévenir le serveur. Montrez cet écran au personnel.",
+      paid: "Payé, merci !", notifyPriv: "Quand vous prévenez le serveur, nous envoyons le numéro de table, le montant, le pourboire et le mode de paiement. Sans données de carte ni cookies. Supprimé après 30 jours.",
+      sendRate: "Envoyer la note à l’établissement", rateSent: "Envoyé, merci !", rateFail: "Échec de l’envoi. Réessayez.", rateNoteN: "La note et le commentaire sont transmis au responsable via DoughMath et conservés 30 jours.",
+      close: "Fermer", payNow: "Payer", show: "Voir", hide: "Masquer" },
+    de: { soon: "bald", soonMsg: "Diese Zahlungsart kommt bald. Bitte zahlen Sie vorerst beim Kellner.", blikCode: "Mit BLIK-Code bezahlen", applePay: "Apple Pay", googlePay: "Google Pay",
+      askTerminal: "Kartenterminal anfordern", blikSent: "Ich habe die BLIK-Überweisung gesendet", notified: "Ihr Kellner wurde benachrichtigt", notifyFail: "Der Kellner konnte nicht benachrichtigt werden. Bitte zeigen Sie diesen Bildschirm dem Personal.",
+      paid: "Bezahlt, danke!", notifyPriv: "Wenn Sie den Kellner benachrichtigen, senden wir Tischnummer, Betrag, Trinkgeld und Zahlungsart. Keine Kartendaten, keine Cookies. Nach 30 Tagen gelöscht.",
+      sendRate: "Bewertung an das Lokal senden", rateSent: "Gesendet, danke!", rateFail: "Senden fehlgeschlagen. Bitte erneut versuchen.", rateNoteN: "Bewertung und Kommentar gehen über DoughMath an die Leitung und werden 30 Tage gespeichert.",
+      close: "Schließen", payNow: "Bezahlen", show: "Anzeigen", hide: "Ausblenden" },
+    pl: { soon: "wkrótce", soonMsg: "Ta metoda płatności będzie dostępna wkrótce. Teraz zapłać kelnerowi.", blikCode: "Zapłać kodem BLIK", applePay: "Apple Pay", googlePay: "Google Pay",
+      askTerminal: "Poproś o terminal", blikSent: "Wysłałem przelew BLIK", notified: "Kelner dostał powiadomienie", notifyFail: "Nie udało się powiadomić kelnera. Pokaż ten ekran obsłudze.",
+      paid: "Opłacone, dziękujemy!", notifyPriv: "Gdy powiadamiasz kelnera, wysyłamy numer stolika, kwotę, napiwek i sposób płatności. Bez danych karty i bez cookies. Usuwamy po 30 dniach.",
+      sendRate: "Wyślij ocenę do lokalu", rateSent: "Wysłano, dziękujemy!", rateFail: "Nie udało się wysłać. Spróbuj ponownie.", rateNoteN: "Ocena i komentarz trafią do menedżera lokalu przez DoughMath. Przechowujemy je 30 dni.",
+      close: "Zamknij", payNow: "Zapłać", show: "Pokaż", hide: "Ukryj" },
+    uk: { soon: "незабаром", soonMsg: "Цей спосіб оплати незабаром з’явиться. Поки що сплатіть офіціанту.", blikCode: "Сплатити кодом BLIK", applePay: "Apple Pay", googlePay: "Google Pay",
+      askTerminal: "Попросити термінал", blikSent: "Я надіслав(ла) переказ BLIK", notified: "Офіціант отримав сповіщення", notifyFail: "Не вдалося сповістити офіціанта. Покажіть цей екран персоналу.",
+      paid: "Оплачено, дякуємо!", notifyPriv: "Коли ви сповіщаєте офіціанта, ми надсилаємо номер столика, суму, чайові та спосіб оплати. Без даних картки й без cookies. Видаляємо через 30 днів.",
+      sendRate: "Надіслати оцінку закладу", rateSent: "Надіслано, дякуємо!", rateFail: "Не вдалося надіслати. Спробуйте ще раз.", rateNoteN: "Оцінка й коментар надходять менеджеру закладу через DoughMath і зберігаються 30 днів.",
+      close: "Закрити", payNow: "Сплатити", show: "Показати", hide: "Сховати" },
+    ru: { soon: "скоро", soonMsg: "Этот способ оплаты скоро появится. Пока оплатите официанту.", blikCode: "Оплатить кодом BLIK", applePay: "Apple Pay", googlePay: "Google Pay",
+      askTerminal: "Попросить терминал", blikSent: "Я отправил(а) перевод BLIK", notified: "Официант получил уведомление", notifyFail: "Не удалось уведомить официанта. Покажите этот экран персоналу.",
+      paid: "Оплачено, спасибо!", notifyPriv: "Когда вы уведомляете официанта, мы отправляем номер столика, сумму, чаевые и способ оплаты. Без данных карты и без cookies. Удаляем через 30 дней.",
+      sendRate: "Отправить оценку заведению", rateSent: "Отправлено, спасибо!", rateFail: "Не удалось отправить. Попробуйте ещё раз.", rateNoteN: "Оценка и комментарий уходят менеджеру заведения через DoughMath и хранятся 30 дней.",
+      close: "Закрыть", payNow: "Оплатить", show: "Показать", hide: "Скрыть" }
+  };
+  Object.keys(PAY_T4).forEach(function (l) { Object.keys(PAY_T4[l]).forEach(function (k) { PAY_T[l][k] = PAY_T4[l][k]; }); });
   function fill(str, vars) { return String(str).replace(/\{(\w+)\}/g, function (all, k) { return vars && vars[k] != null ? vars[k] : all; }); }
 
   // ---------- small helpers ----------
@@ -528,6 +572,9 @@
   var DEFAULT_BILLS = "Bill feed";   // the mini-POS feed: table,item,qty,price,waiter
   var LEGACY_BILLS = "Bills";         // PAY-1 tab: table,amount (still read as a fallback)
   var YES_RE = /^(yes|y|true|1|tak|да|si|sí|oui|ja|sim)$/i;
+  var FASTPAY_API = "https://fastpay-api.doughmath.workers.dev";   // PAY-4: waiter and manager notifications (Cloudflare Worker, no cookies)
+  var CAFE_RE = /^[a-z0-9][a-z0-9_-]{3,39}$/;   // the cafe code from the manager bot (notify column of the #pay block)
+  var NOTIFY_LOCK_MS = 60000, POLL_MS = 15000, POLL_FOR_MS = 15 * 60000;
   var MINOR0 = { JPY: 1, HUF: 1 };   // currencies shown without decimals; everything else has 2
   function minorDigits(cur) { return MINOR0[currencyCode(cur)] ? 0 : 2; }
   function toMinor(v, d) { return Math.round(parseFloat((v * Math.pow(10, d)).toPrecision(12))); }
@@ -585,7 +632,8 @@
     if (n < 9 || n > 15) return { ok: false, reason: "digits" };
     return { ok: true, value: s.replace(/ {2,}/g, " ") };
   }
-  // The payment config of a menu. f = {e, t, x, l, b, n, r, w, m} (raw values). Never throws.
+  // The payment config of a menu. f = {e, t, x, l, b, n, r, w, m, c, q} (raw values). Never throws.
+  // c = cafe code for waiter notifications (FastPay API), q = show the planned payment buttons as "soon".
   // r = Google review link (https), w = WhatsApp number of the manager, m = e-mail of the manager. Invalid values are dropped and named in .bad
   // ("link" | "blik" | "review" | "whatsapp" | "email").
   function buildPay(f) {
@@ -600,28 +648,32 @@
     if (ws) { var cw = checkBlik(ws); if (cw.ok) p.w = cw.value; else bad.push("whatsapp"); }
     var ms = String(f.m == null ? "" : f.m).trim();
     if (ms) { var cm = checkEmail(ms); if (cm.ok) p.m = cm.value; else bad.push("email"); }
+    var cs = String(f.c == null ? "" : f.c).trim().toLowerCase();
+    if (cs) { if (CAFE_RE.test(cs)) p.c = cs; else bad.push("notify"); }
+    if (f.q) p.q = 1;
     if (bad.length) p.bad = bad;
     return p;
   }
-  var BAD_KEYS = ["link", "blik", "review", "whatsapp", "email"];
+  var BAD_KEYS = ["link", "blik", "review", "whatsapp", "email", "notify"];
   function normalizePay(r) {
     if (!r || typeof r !== "object" || Array.isArray(r)) return null;
     var yes = function (v) { return v === 1 || v === true || v === "1"; };
-    var p = buildPay({ e: yes(r.e), t: "t" in r ? r.t : undefined, x: yes(r.x), l: r.l, b: r.b, n: r.n, r: r.r, w: r.w, m: r.m });
+    var p = buildPay({ e: yes(r.e), t: "t" in r ? r.t : undefined, x: yes(r.x), l: r.l, b: r.b, n: r.n, r: r.r, w: r.w, m: r.m, c: r.c, q: yes(r.q) });
     // what an earlier pass already dropped as invalid stays named (the sheet is read, normalized, shown and reported to the builder: that is normalize() more than once)
     if (Array.isArray(r.bad)) r.bad.forEach(function (k) { if (BAD_KEYS.indexOf(k) >= 0 && (!p.bad || p.bad.indexOf(k) < 0)) (p.bad = p.bad || []).push(k); });
     return p;
   }
   // the guest sees the start screen and the Pay screen only when pay is on AND at least one way of paying is valid
-  function payActive(m) { return !!(m && m.p && m.p.e === 1 && (m.p.x === 1 || m.p.l || m.p.b)); }
+  function payActive(m) { return !!(m && m.p && m.p.e === 1 && (m.p.x === 1 || m.p.l || m.p.b || m.p.q === 1)); }
 
   var PAY_ALIASES = { enabled: "enabled", enable: "enabled", on: "enabled", tips: "tips", tip: "tips", terminal: "terminal", card: "terminal", link: "link", url: "link", blik: "blik", phone: "blik", note: "note", notes: "note",
-    review_link: "review", "review link": "review", review: "review", google_review: "review", feedback_whatsapp: "whatsapp", "feedback whatsapp": "whatsapp", whatsapp: "whatsapp", feedback_email: "email", "feedback email": "email", email: "email" };
+    review_link: "review", "review link": "review", review: "review", google_review: "review", feedback_whatsapp: "whatsapp", "feedback whatsapp": "whatsapp", whatsapp: "whatsapp", feedback_email: "email", "feedback email": "email", email: "email",
+    notify: "notify", telegram: "notify", "telegram code": "notify", "notify code": "notify", preview: "preview", "pay buttons": "preview", "coming soon": "preview" };
   // "#pay" header row + the values row under it (matched by header name, column A is the marker)
   function payFromCells(head, vals) {
     var c = {};
     (head || []).forEach(function (h, i) { var a = i > 0 && PAY_ALIASES[String(h).trim().toLowerCase()]; if (a && !(a in c)) c[a] = String(vals && vals[i] != null ? vals[i] : "").trim(); });
-    return buildPay({ e: YES_RE.test(c.enabled || ""), t: "tips" in c ? c.tips : undefined, x: YES_RE.test(c.terminal || ""), l: c.link, b: c.blik, n: c.note, r: c.review, w: c.whatsapp, m: c.email });
+    return buildPay({ e: YES_RE.test(c.enabled || ""), t: "tips" in c ? c.tips : undefined, x: YES_RE.test(c.terminal || ""), l: c.link, b: c.blik, n: c.note, r: c.review, w: c.whatsapp, m: c.email, c: c.notify, q: YES_RE.test(c.preview || "") });
   }
 
   // An amount typed by a guest or written in the Bills tab: "48,50", "48.5", "1 200,00", "48,50 zł". -> number >= 0 or null
@@ -1033,12 +1085,37 @@
     return box;
   }
 
+  // PAY-4: the FastPay API (waiter / manager notifications through Telegram). Simple CORS requests: a text/plain body, no cookies, no referrer.
+  // Nothing is sent unless the cafe's sheet has a notify code AND the page has a table number.
+  function apiPost(body) {
+    if (typeof fetch !== "function") return Promise.resolve(false);
+    try {
+      return fetch(FASTPAY_API + "/v1/event", { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify(body),
+        keepalive: true, credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", mode: "cors" })
+        .then(function (r) { return r.json().then(function (j) { return !!(r.ok && j && j.ok === true); }, function () { return false; }); }, function () { return false; });
+    } catch (e) { return Promise.resolve(false); }
+  }
+  function apiStatus(cafe, table) {
+    if (typeof fetch !== "function") return Promise.resolve(null);
+    try {
+      return fetch(FASTPAY_API + "/v1/status?cafe=" + encodeURIComponent(cafe) + "&table=" + encodeURIComponent(table),
+        { credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", mode: "cors" })
+        .then(function (r) { return r.ok ? r.json() : null; }, function () { return null; })
+        .then(function (j) { return j && j.ok ? j : null; }, function () { return null; });
+    } catch (e) { return Promise.resolve(null); }
+  }
+  function reducedMotion() { try { return global.matchMedia && global.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } }
+
   // The Pay screen. Everything is built once and then updated in place, so typing and tapping never lose focus.
-  // State (opts.state) lives in memory only; nothing is stored and nothing is sent anywhere.
+  // State (opts.state) lives in memory only; nothing is stored on the device. With a notify code (p.c) and a table number, the guest can tell the waiter
+  // "I am paying" and send the rating to the manager (FastPay API); without it nothing is sent anywhere.
   function renderPay(root, m, L, opts) {
     var P = PAY_T[m.l], p = m.p, d = minorDigits(m.c), F = Math.pow(10, d), fmt = moneyFormatter(m.l, m.c), comma = m.l !== "en";
     var chk = p.l ? checkPayLink(p.l) : { ok: false }, host = chk.ok ? chk.host : "";
     var S = opts.state || (opts.state = { mode: "whole", n: 2, sel: [], sig: "", data: null, from: null, bill: "", touched: false, tip: { kind: "none" }, custom: "", rate: 0, cmt: "", seq: 0 });
+    if (!S.lock) { S.open = false; S.lock = {}; S.nmsg = null; S.paid = false; S.pollEnd = 0; S.pollTimer = null; S.rsent = false; S.rmsg = null; }
+    var tbs = opts.tb == null ? "" : String(opts.tb);
+    var notifyOn = !!(p.c && /^\d{1,4}$/.test(tbs) && Number(tbs) >= 1);
     var canLookUp = typeof opts.bills === "function" && !!opts.tb;
     var pl = null, built = "";   // pl: lines of the open bill in minor units; built: which layout the bill cards have
     function money(minor) { return fmt.format(minor / F); }
@@ -1069,7 +1146,7 @@
 
     // bill cards (split mode, items or amount): built by buildBill()
     var billBox = el("div", "pc-billbox"); main.appendChild(billBox);
-    var segBtns = [], peopleBox, peopleStep, noteEl, itemsCard, cnt, lineEls = [], amtInp, fromLab, splitCard;
+    var segBtns = [], peopleBox, peopleStep, noteEl, itemsCard, cnt, lineEls = [], amtInp, fromLab, splitCard, itTog = null, itUl = null, itRw = null;
 
     // tip card
     var tcard = el("section", "pc-card pc-tipcard"), thead = el("div", "pc-tiphead");
@@ -1091,22 +1168,42 @@
     crow.appendChild(clab); crow.appendChild(cin); tcard.appendChild(crow);
     main.appendChild(tcard);
 
-    // summary: the big total
+    // summary: the big total, and the "paid" line once the waiter marks the table as paid
     var sum = el("section", "pc-card mn-sum"), dl = el("dl");
     function line(cls, label, parent) { var dt = el("dt", cls, label), dd = el("dd", cls, ""); (parent || dl).appendChild(dt); (parent || dl).appendChild(dd); return { dt: dt, dd: dd }; }
     var lWhole = line("mn-l-whole", P.mWhole), lBill = line("mn-l-bill", P.food), lTip = line("mn-l-tip", P.tip);
     var grand = el("div", "pc-grand"); dl.appendChild(grand);
     var lTot = line("mn-l-total", P.toPay, grand);
-    sum.appendChild(dl); main.appendChild(sum);
+    sum.appendChild(dl);
+    var paidEl = withIcon(el("p", "pc-paid", P.paid), "check"); paidEl.setAttribute("role", "status"); paidEl.hidden = true; sum.appendChild(paidEl);
+    main.appendChild(sum);
 
-    var mh = withIcon(el("h2", "pc-mh", P.howH), "card"); main.appendChild(mh);
+    // the payment buttons the owner plans (BLIK code, Apple Pay, Google Pay): shown as "soon" until a payment provider is connected (p.q). Text only, no logos.
+    var pbBox = null, pbMsg = null;
+    if (p.q) {
+      pbBox = el("section", "pc-paybtns"); pbBox.setAttribute("aria-label", P.howH);
+      var pbtn = function (cls, label) {
+        var b = el("button", "pc-pb " + cls); b.type = "button"; b.setAttribute("aria-disabled", "true");
+        b.appendChild(el("span", "pc-pbt", label)); b.appendChild(el("span", "pc-soon", P.soon));
+        b.addEventListener("click", function () { pbMsg.textContent = P.soonMsg; pbMsg.hidden = false; });
+        return b;
+      };
+      pbBox.appendChild(pbtn("pc-pb-main", P.blikCode));
+      var prow = el("div", "pc-pbrow"); prow.appendChild(pbtn("pc-pb-a", P.applePay)); prow.appendChild(pbtn("pc-pb-g", P.googlePay)); pbBox.appendChild(prow);
+      pbMsg = el("p", "pc-pbmsg"); pbMsg.setAttribute("role", "status"); pbMsg.hidden = true; pbBox.appendChild(pbMsg);
+      main.appendChild(pbBox);
+    }
+
+    var anyMethod = !!(p.x || host || p.b);
+    var mh = withIcon(el("h2", "pc-mh", P.howH), "card"); mh.hidden = !anyMethod; main.appendChild(mh);
     var mbox = el("div", "mn-methods"); main.appendChild(mbox);
     if (p.n) main.appendChild(el("p", "mn-paynote", p.n));
+    if (notifyOn) main.appendChild(el("p", "pc-npriv", P.notifyPriv));
     main.appendChild(el("p", "mn-safe", host ? fill(P.safe, { host: host }) : P.safeNo));
 
     // rating: stars, an optional comment and the SAME buttons for every rating (no review gating)
-    var starEls = [], aG = null, aW = null, aM = null, rateCard = null;
-    if (p.r || p.w || p.m) {
+    var starEls = [], aG = null, aW = null, aM = null, rateCard = null, rBtn = null, rMsg = null;
+    if (p.r || p.w || p.m || notifyOn) {
       rateCard = el("section", "pc-card pc-rate");
       rateCard.appendChild(el("h2", "pc-h pc-rateh", P.rateH));
       var stars = el("div", "pc-stars"); stars.setAttribute("role", "radiogroup"); stars.setAttribute("aria-label", P.rateH);
@@ -1117,12 +1214,12 @@
         lab.appendChild(inp); lab.appendChild(icon("star")); stars.appendChild(lab); starEls.push(lab);
       })(si);
       rateCard.appendChild(stars);
-      if (p.w || p.m) {
+      if (p.w || p.m || notifyOn) {
         var cl = el("label", "pc-cl", P.cmt); cl.setAttribute("for", "mn-cmt"); rateCard.appendChild(cl);
-        var ta = el("textarea", "pc-ta"); ta.id = "mn-cmt"; ta.rows = 3; ta.maxLength = 300; ta.value = S.cmt; ta.setAttribute("autocomplete", "off");
+        var ta = el("textarea", "pc-ta"); ta.id = "mn-cmt"; ta.rows = 2; ta.maxLength = 300; ta.value = S.cmt; ta.setAttribute("autocomplete", "off");
         ta.addEventListener("input", function () { S.cmt = ta.value; paintRate(); });
         rateCard.appendChild(ta);
-        rateCard.appendChild(el("p", "pc-hint", P.cmtHint));
+        if (p.w || p.m) rateCard.appendChild(el("p", "pc-hint", P.cmtHint));
       }
       var acts = el("div", "pc-acts");
       function act(cls, ic, label, sub) {
@@ -1130,21 +1227,56 @@
         if (sub) { t.appendChild(document.createTextNode(" ")); t.appendChild(el("span", "pc-nw", "(" + sub + ")")); }   // the bracket stays in one piece: no "(e-" / "mail)"
         a.appendChild(t); acts.appendChild(a); return a;
       }
+      if (notifyOn) {
+        rBtn = el("button", "pc-act pc-act-send", P.sendRate); rBtn.type = "button";
+        rBtn.addEventListener("click", sendRating); acts.appendChild(rBtn);
+      }
       if (p.r) { aG = act("pc-act-g", "ext", P.gBtn); aG.href = p.r; aG.target = "_blank"; aG.rel = "noopener noreferrer"; }
       var both = !!(p.w && p.m);
       if (p.w) { aW = act("pc-act-w", "chat", P.mgrBtn, both ? P.mgrWa : ""); aW.target = "_blank"; aW.rel = "noopener noreferrer"; }
       if (p.m) { aM = act("pc-act-m", "mail", P.mgrBtn, both ? P.mgrMail : ""); }
       rateCard.appendChild(acts);
-      rateCard.appendChild(el("p", "pc-note", P.rateNote));
+      rMsg = el("p", "pc-nstat err"); rMsg.setAttribute("role", "status"); rMsg.hidden = true; rateCard.appendChild(rMsg);
+      rateCard.appendChild(el("p", "pc-note", notifyOn ? P.rateNoteN : P.rateNote));
       main.appendChild(rateCard);
     }
+
+    // full screen for the waiter (the big navy total): opened from "Show this to your waiter", closed with one tap anywhere or Esc
+    var ov = el("div", "pc-ov"); ov.hidden = true; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", P.terminalH);
+    var term = el("section", "mn-terminal");
+    term.appendChild(withIcon(el("h3", "mn-mh", P.terminalH), "card"));
+    term.appendChild(el("p", "mn-t-label", P.toPay));
+    var tTot = el("p", "mn-t-total", "—"), tTip = el("p", "mn-t-tip");
+    term.appendChild(tTot); term.appendChild(tTip);
+    if (opts.tb) term.appendChild(el("p", "mn-t-table", L.table + " " + opts.tb));
+    var ovClose = el("button", "pc-ovclose", P.close); ovClose.type = "button"; term.appendChild(ovClose);
+    ov.appendChild(term);
+    var ovOpener = null;
+    function openOv(btn) { ovOpener = btn || null; ov.hidden = false; document.documentElement.classList.add("pc-noscroll"); ovClose.focus(); }
+    function closeOv() { ov.hidden = true; document.documentElement.classList.remove("pc-noscroll"); if (ovOpener && ovOpener.isConnected) ovOpener.focus(); }
+    ov.addEventListener("click", closeOv);
+    ov.addEventListener("keydown", function (e) { if (e.key === "Escape" || e.key === "Esc") { e.preventDefault(); closeOv(); } });
+
+    // a bar fixed at the bottom: the total and one button that brings the ways of paying into view
+    var bar = el("div", "pc-bar"), barIn = el("div", "pc-bar-in"), barT = el("div", "pc-bar-t");
+    var barL = el("span", "pc-bar-l", P.toPay), barV = el("span", "pc-bar-v", "—");
+    barT.appendChild(barL); barT.appendChild(barV); barIn.appendChild(barT);
+    var barGo = el("button", "pc-bar-go", P.payNow); barGo.type = "button";
+    barGo.addEventListener("click", function () {
+      var target = pbBox || (anyMethod ? mh : null) || sum;
+      try { target.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" }); } catch (e) { target.scrollIntoView(); }
+    });
+    barIn.appendChild(barGo); bar.appendChild(barIn);
+    if (p.x) main.appendChild(ov);
+    main.appendChild(bar);
     root.appendChild(main);
     root.appendChild(brandFooter());
+    root.appendChild(el("div", "pc-barspace"));
 
     // ----- building the bill cards -----
     function layoutKey() { return (pl ? "L" : "A") + S.sig; }
     function buildBill() {
-      billBox.textContent = ""; segBtns = []; lineEls = []; itemsCard = null; amtInp = null; fromLab = null;
+      billBox.textContent = ""; segBtns = []; lineEls = []; itemsCard = null; amtInp = null; fromLab = null; itTog = null; itUl = null; itRw = null;
       built = layoutKey();
       var card = splitCard = el("section", "pc-card pc-splitcard");
       card.appendChild(el("h2", "pc-h", P.splitH));
@@ -1177,11 +1309,14 @@
       noteEl = el("p", "pc-hint pc-splitnote", P.splitNote); card.appendChild(noteEl);
       billBox.appendChild(card);
 
-      if (pl) {
+      if (pl) {   // the ordered items: folded to one line ("show") except in "my items" mode
         var ic = itemsCard = el("section", "pc-card pc-items"), ih = el("div", "pc-ihead");
         ih.appendChild(el("h2", "pc-h", P.ordered)); cnt = el("span", "pc-cnt"); ih.appendChild(cnt);
+        itTog = el("button", "pc-tog"); itTog.type = "button"; itTog.setAttribute("aria-controls", "pc-lines");
+        itTog.addEventListener("click", function () { S.open = !S.open; update(); });
+        ih.appendChild(itTog);
         ic.appendChild(ih);
-        var ul = el("ul", "pc-lines");
+        var ul = itUl = el("ul", "pc-lines"); ul.id = "pc-lines";
         pl.forEach(function (l, i) {
           var li = el("li", "pc-line"), lab = el("label", "pc-lab");
           var ck = el("input", "pc-chk"); ck.type = "checkbox";
@@ -1199,7 +1334,7 @@
           ul.appendChild(li); lineEls.push({ li: li, ck: ck, st: st });
         });
         ic.appendChild(ul);
-        if (canLookUp) { var rw = el("div", "pc-refresh"); rw.appendChild(refreshBtn()); ic.appendChild(rw); }
+        if (canLookUp) { var rw = itRw = el("div", "pc-refresh"); rw.appendChild(refreshBtn()); ic.appendChild(rw); }
         billBox.appendChild(ic);
       }
     }
@@ -1244,6 +1379,12 @@
           if (e.st) e.st.paint();
         });
         cnt.textContent = sel + " / " + all;
+        var listOpen = S.mode === "items" || S.open;
+        itUl.hidden = !listOpen; if (itRw) itRw.hidden = !listOpen;
+        itemsCard.classList.toggle("folded", !listOpen);
+        itTog.hidden = S.mode === "items";
+        itTog.textContent = listOpen ? P.hide : P.show;
+        itTog.setAttribute("aria-expanded", listOpen ? "true" : "false");
       }
     }
     function paintTip(c) {
@@ -1259,6 +1400,8 @@
       var txt = feedbackText(L, P, opts.tb, S.rate, S.cmt);
       if (aW) aW.href = waUrl(p.w, txt);
       if (aM) aM.href = mailUrl(p.m, P.fbSubject + (opts.tb ? " · " + L.table + " " + opts.tb : ""), txt);
+      if (rBtn) { rBtn.disabled = !S.rate || S.rsent; rBtn.textContent = S.rsent ? P.rateSent : P.sendRate; }
+      if (rMsg) { rMsg.hidden = S.rmsg !== "err"; rMsg.textContent = S.rmsg === "err" ? P.rateFail : ""; }
     }
     function copyRow(parent, label, shown, plain) {
       var kv = el("div", "mn-kv"); kv.appendChild(el("span", "mn-k", label));
@@ -1266,25 +1409,40 @@
       kv.appendChild(copyBtn(P.copy, plain, P, v, label));
       parent.appendChild(kv);
     }
+    // "I am paying": one button per way of paying. Locked for a minute after a successful send, so the waiter is not pinged twice.
+    function notifyBtn(parent, method, label, ic, have) {
+      var b = withIcon(el("button", "pc-go-btn pc-nbtn", label), ic); b.type = "button"; b.setAttribute("data-notify", method);
+      b.disabled = !have || (S.lock[method] || 0) > Date.now();
+      b.addEventListener("click", function () { sendPay(method, b); });
+      parent.appendChild(b);
+      notifyStatus(parent, method);
+    }
+    // the answer appears right under the button that was pressed (role=status: read out by screen readers)
+    function notifyStatus(parent, method) {
+      if (!S.nmsg || S.nlast !== method) return;
+      var st = el("p", "pc-nstat " + S.nmsg, S.nmsg === "ok" ? P.notified : P.notifyFail); st.setAttribute("role", "status");
+      parent.appendChild(st);
+    }
     function methods(t) {
       mbox.textContent = "";
       var have = t.total > 0, totalTxt = have ? money(t.total) : "";
+      tTot.textContent = have ? totalTxt : "—";
+      tTip.hidden = !have && !(t.tip > 0);
+      tTip.textContent = t.tip > 0 ? P.tip + ": " + money(t.tip) : (have ? P.noTip : "");
       if (p.x) {
-        var c = el("section", "pc-mcard mn-terminal");
-        c.appendChild(withIcon(el("h3", "mn-mh", P.terminalH), "card"));
-        c.appendChild(el("p", "mn-t-label", P.toPay));
-        c.appendChild(el("p", "mn-t-total", have ? totalTxt : "—"));
-        if (t.tip > 0) c.appendChild(el("p", "mn-t-tip", P.tip + ": " + money(t.tip)));
-        else if (have) c.appendChild(el("p", "mn-t-tip", P.noTip));
-        if (opts.tb) c.appendChild(el("p", "mn-t-table", L.table + " " + opts.tb));
-        mbox.appendChild(c);
+        if (notifyOn) notifyBtn(mbox, "terminal", P.askTerminal, "card", have);
+        var sw = withIcon(el("button", "pc-act pc-showw", P.terminalH), "card"); sw.type = "button";
+        sw.addEventListener("click", function () { openOv(sw); });
+        mbox.appendChild(sw);
       }
       if (host) {
         var inUrl = have && isPayPalName(p.l);
         var a = el("a", "pc-go-btn mn-paylink");
         a.appendChild(icon("link")); a.appendChild(el("span", null, have ? fill(P.payOn, { total: totalTxt, host: host }) : fill(P.openHost, { host: host })));
         a.href = inUrl ? paypalUrl(p.l, t.total, d, paypalCode(m.c)) : p.l; a.target = "_blank"; a.rel = "noopener noreferrer";
+        if (notifyOn && have) a.addEventListener("click", function () { if ((S.lock.link || 0) <= Date.now()) sendPay("link", null); });
         mbox.appendChild(a);
+        if (notifyOn) notifyStatus(mbox, "link");
         if (have && !inUrl) {
           var cr = el("div", "mn-copyrow");
           cr.appendChild(copyBtn(P.copyAmount, plainAmount(t.total, d, comma), P, null));
@@ -1299,6 +1457,7 @@
         if (have) copyRow(bc, P.amount, totalTxt, plainAmount(t.total, d, comma));
         if (opts.tb) copyRow(bc, P.ttl, L.table + " " + opts.tb, L.table + " " + opts.tb);
         bc.appendChild(el("p", "mn-hint", P.blikHint));
+        if (notifyOn) notifyBtn(bc, "blik", P.blikSent, "phone", have);
         mbox.appendChild(bc);
       }
     }
@@ -1312,11 +1471,50 @@
       lTip.dt.textContent = P.tip + (S.tip.kind === "pct" ? " (" + S.tip.pct + "%)" : "");
       lTip.dd.textContent = c.share > 0 || c.tip > 0 ? money(c.tip) : "—";
       lTot.dd.textContent = c.total > 0 ? money(c.total) : "—";
+      paidEl.hidden = !S.paid;
+      bar.classList.toggle("paid", !!S.paid);
+      barL.hidden = !!S.paid; barGo.hidden = !!S.paid;
+      barV.textContent = S.paid ? P.paid : (c.total > 0 ? money(c.total) : "—");
       methods(c);
       paintRate();
     }
     cin.addEventListener("input", function () { S.custom = cin.value; if (cin.value.trim()) S.tip = { kind: "custom" }; else if (S.tip.kind === "custom") S.tip = { kind: "none" }; update(); });
+
+    // ----- notifications (FastPay API) -----
+    function sendPay(method, btn) {
+      var c = calc();
+      if (!(c.share > 0)) return;
+      if (btn) btn.disabled = true;
+      var body = { cafe: p.c, type: "paying", table: tbs, currency: String(m.c || ""), bill: c.whole / F, share: c.share / F, tip: c.tip / F, method: method,
+        split: S.mode === "items" ? "items" : S.mode === "split" ? "people" : "all", waiter: (S.data && S.data.w) || "", lang: m.l };
+      apiPost(body).then(function (ok) {
+        if (ok) {
+          S.lock[method] = Date.now() + NOTIFY_LOCK_MS;
+          setTimeout(function () { if (main.isConnected) update(); }, NOTIFY_LOCK_MS + 50);
+          S.pollEnd = Date.now() + POLL_FOR_MS; startPoll();
+        }
+        S.nmsg = ok ? "ok" : "err"; S.nlast = method;
+        if (main.isConnected) update();
+      });
+    }
+    function startPoll() {
+      if (S.pollTimer) clearInterval(S.pollTimer);
+      S.pollTimer = setInterval(pollOnce, POLL_MS);
+    }
+    function pollOnce() {
+      if (!main.isConnected || S.paid || Date.now() > S.pollEnd) { clearInterval(S.pollTimer); S.pollTimer = null; return; }
+      if (document.hidden) return;   // no requests while the phone screen is off or the tab is in the background
+      apiStatus(p.c, tbs).then(function (j) { if (j && j.paid === true && !S.paid) { S.paid = true; if (main.isConnected) update(); } });
+    }
+    function sendRating() {
+      if (!S.rate || S.rsent || !rBtn) return;
+      rBtn.disabled = true;
+      apiPost({ cafe: p.c, type: "rating", table: tbs, stars: S.rate, comment: String(S.cmt || "").slice(0, 500), waiter: (S.data && S.data.w) || "", lang: m.l })
+        .then(function (ok) { S.rsent = ok; S.rmsg = ok ? "ok" : "err"; if (main.isConnected) paintRate(); });
+    }
+
     buildBill(); update();
+    if (notifyOn && !S.paid && S.pollEnd > Date.now()) startPoll();   // back on this screen while a payment is still open
 
     // the bill from the sheet (live mode with a table number): looked up when this screen opens, never blocks the guest
     function lookUp(force) {
@@ -1332,7 +1530,6 @@
     }
     if (canLookUp) lookUp(false);
   }
-
 
   var scrollOff = null;
   function trackChips(chipBox, chips, secEls) {
