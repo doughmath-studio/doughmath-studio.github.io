@@ -22,8 +22,8 @@
   var ALLERGEN_FULL = ["Cereals containing gluten", "Crustaceans", "Eggs", "Fish", "Peanuts", "Soybeans", "Milk", "Tree nuts", "Celery", "Mustard", "Sesame", "Sulphites", "Lupin", "Molluscs"];
   var TAG_LABELS = { V: "Vegetarian", VG: "Vegan", GF: "Gluten-free", spicy: "Spicy" };
   var CURS = [["PLN", "zł · PLN"], ["EUR", "€ · EUR"], ["USD", "$ · USD"], ["GBP", "£ · GBP"], ["UAH", "₴ · UAH"], ["CZK", "Kč · CZK"], ["HUF", "Ft · HUF"], ["CHF", "CHF"], ["CAD", "C$ · CAD"], ["AUD", "A$ · AUD"], ["BRL", "R$ · BRL"], ["SEK", "SEK"], ["NOK", "NOK"], ["DKK", "DKK"], ["RON", "lei · RON"], ["TRY", "₺ · TRY"], ["JPY", "¥ · JPY"], ["INR", "₹ · INR"], ["__other", "Other…"]];
-  var THEME_NAMES = { espresso: "Espresso", pistachio: "Pistachio", berry: "Berry", mono: "Mono" };
-  var THEME_NOTES = { espresso: "Dark brown, cream", pistachio: "Sage, cream", berry: "Pink, plum", mono: "Black, white" };
+  var THEME_NAMES = { amber: "Amber", espresso: "Espresso", pistachio: "Pistachio", berry: "Berry", mono: "Mono" };
+  var THEME_NOTES = { amber: "Light grey, navy, amber", espresso: "Dark brown, cream", pistachio: "Sage, cream", berry: "Pink, plum", mono: "Black, white" };
 
   var EXAMPLE = {"v":1,"n":"Maple Street Café (example)","c":"EUR","l":"en","t":"espresso","f":"Example menu. Wi-Fi: maplestreet · password: coffee2026","s":[{"t":"Coffee","i":[{"n":"Espresso","p":2.4},{"n":"Flat white","p":3.8,"d":"Double shot, steamed milk.","a":[7],"g":["V"]},{"n":"Oat cappuccino","p":4.2,"d":"Barista oat drink, microfoam.","a":[1],"g":["VG"]},{"n":"Iced latte","p":4.5,"d":"Espresso over ice, cold milk.","a":[7],"g":["V"]},{"n":"Hot chocolate","p":4,"d":"Dark chocolate, whole milk, no cream.","a":[6,7],"g":["V"]}]},{"t":"Breakfast","i":[{"n":"Avocado toast","p":8.9,"d":"Sourdough, smashed avocado, chilli flakes, lemon, sesame.","a":[1,11],"g":["VG","spicy"]},{"n":"Scrambled eggs on rye","p":7.5,"d":"Three eggs, chives, rye bread, butter.","a":[1,3,7],"g":["V"]},{"n":"Granola bowl","p":6.9,"d":"Oat granola, yoghurt, seasonal fruit, honey.","a":[1,7,8],"g":["V"]},{"n":"Smoked salmon bagel","p":9.8,"d":"Cream cheese, capers, red onion, dill.","a":[1,3,4,7,11]}]},{"t":"From the bakery","i":[{"n":"Butter croissant","p":3.2,"d":"Baked every morning.","a":[1,3,7],"g":["V"]},{"n":"Cinnamon roll","p":3.9,"d":"Brown sugar glaze, soft dough.","a":[1,3,7],"g":["V"]},{"n":"Almond financier","p":3.4,"d":"Gluten-free almond cake with browned butter.","a":[3,7,8],"g":["V","GF"]},{"n":"Lemon tart","p":4.6,"d":"Sweet pastry, lemon curd.","a":[1,3,7],"g":["V"],"x":1},{"n":"Sourdough loaf","p":5.5,"d":"Whole loaf to take home. Ask for it sliced.","a":[1],"g":["VG"]}]},{"t":"Lunch and cold drinks","i":[{"n":"Tomato soup","p":6.5,"d":"Roasted tomatoes, basil, olive oil. Served with bread.","a":[1,9],"g":["VG"]},{"n":"Chicken pesto sandwich","p":8.9,"d":"Ciabatta, grilled chicken, basil pesto, rocket.","a":[1,7,8]},{"n":"Fresh lemonade","p":3.9,"d":"Lemon, mint, sparkling water.","g":["VG","GF"]},{"n":"Still or sparkling water","p":2.5}]}]};
 
@@ -73,10 +73,10 @@
   function guessLang() { var l = (navigator.language || "en").toLowerCase().slice(0, 2); return D.LANGS.indexOf(l) >= 0 ? l : "en"; }
   function blankState() {
     return {
-      menu: { n: "", c: guessCur(), l: guessLang(), t: "espresso", f: "", s: [newSection()] },
+      menu: { n: "", c: guessCur(), l: guessLang(), t: "amber", f: "", s: [newSection()] },
       out: { mode: "link", ec: "M", live: "", tab: "", bt: "" },
       pay: { on: false, tips: DEFAULT_TIPS_TEXT, terminal: true, link: "", blik: "", note: "", review: "", whatsapp: "", email: "" },
-      print: { layout: "tent", numbers: false, count: 10, line: "", nfc: false, head: false },
+      print: { layout: "tent", numbers: false, count: 10, line: "", nfc: false, head: false, style: "light", acc: "", accOn: true, logo: false },
       shop: { size: "s6" }
     };
   }
@@ -184,7 +184,7 @@
         b.pay.link = String(d.pay.link || "").slice(0, 400); b.pay.blik = String(d.pay.blik || "").slice(0, 40); b.pay.note = String(d.pay.note || "").slice(0, 200);
         b.pay.review = String(d.pay.review || "").slice(0, 400); b.pay.whatsapp = String(d.pay.whatsapp || "").slice(0, 40); b.pay.email = String(d.pay.email || "").slice(0, 100);
       }
-      if (d.print) { b.print.layout = ["tent", "s6", "s5", "poster"].indexOf(d.print.layout) >= 0 ? d.print.layout : "tent"; b.print.numbers = !!d.print.numbers; b.print.count = Math.max(1, Math.min(MAX_TABLES, parseInt(d.print.count, 10) || 10)); b.print.line = String(d.print.line || "").slice(0, 80); b.print.nfc = d.print.nfc === true; b.print.head = d.print.head === true; }
+      if (d.print) { b.print.layout = ["tent", "s6", "s5", "poster"].indexOf(d.print.layout) >= 0 ? d.print.layout : "tent"; b.print.numbers = !!d.print.numbers; b.print.count = Math.max(1, Math.min(MAX_TABLES, parseInt(d.print.count, 10) || 10)); b.print.line = String(d.print.line || "").slice(0, 80); b.print.nfc = d.print.nfc === true; b.print.head = d.print.head === true; b.print.style = d.print.style === "dark" ? "dark" : "light"; b.print.acc = String(d.print.acc || "").slice(0, 40); b.print.accOn = d.print.accOn !== false; b.print.logo = d.print.logo === true; }
       if (d.shop && PS[d.shop.size]) b.shop.size = d.shop.size;
       st = b;
     } catch (e) { /* ignore a broken draft */ }
@@ -852,6 +852,29 @@
     ["nfcSign", "shopNfcSign"].forEach(function (id) { $(id).checked = !!st.print.nfc; });
     ["nfcHead", "shopNfcHead"].forEach(function (id) { $(id).checked = !!st.print.head; });
     $("nfcHeadRow").hidden = !canHead; $("shopHeadRow").hidden = !canHead;
+    syncDarkBoxes(canHead);
+  }
+  // Card style, the accepted-payments line and the QR-centre logo are offered in step 5 (cards) and step 6 (sticker file). One state, two sets of controls.
+  function syncDarkBoxes(pay) {
+    var dark = darkOn(), T = darkT(), letter = logoLetter(), cq = printLongest();
+    ["styleSel", "shopStyleSel"].forEach(function (id) { $(id).value = st.print.style; });
+    ["darkOpts", "shopDarkOpts"].forEach(function (id) { $(id).hidden = !dark; });
+    ["accOn", "shopAccOn"].forEach(function (id) { $(id).checked = st.print.accOn; $(id).disabled = !pay; });
+    ["accText", "shopAccText"].forEach(function (id) {
+      if (document.activeElement !== $(id)) $(id).value = st.print.acc;
+      $(id).placeholder = T.acc; $(id).disabled = !pay || !st.print.accOn;
+    });
+    ["accHint", "shopAccHint"].forEach(function (id) {
+      $(id).textContent = pay ? "Plain text, no logos. Leave it empty for the default in the menu language." : "Turn on payments in step 3 to show this line. Without payments the dark card shows your cafe name and “" + D.T[st.menu.l].scan + "”.";
+    });
+    // logo: cards need the code at error correction H, stickers always have it
+    var cardMod = cq ? cardQrMm(st.print.layout) / (cq.n + 8) : 0, sp = shopQr ? currentPlan() : null;
+    var small = function (m) { return "The dots would be only " + num(m, 2) + " mm here. A logo needs at least " + LOGO_MIN_MOD + " mm: choose a bigger size, or Live mode (a shorter link)."; };
+    var cardWhy = !letter ? "Type your cafe name in step 1 first." : !cq ? "Needs a QR code first." : cq.level !== "H" ? "Needs error correction H: choose it in step 4 (a bigger code, but it can lose parts)." : cardMod < LOGO_MIN_MOD ? small(cardMod) : "";
+    var shopWhy = !letter ? "Type your cafe name in step 1 first." : !shopQr ? "Needs a QR code first." : sp && !sp.unsupported && sp.mod < LOGO_MIN_MOD ? small(sp.mod) : "";
+    var OK = "The first letter of your cafe name goes in the middle of the code, in an amber square that covers less than 8% of it. Always scan a test print with two phones.";
+    $("logoOn").checked = st.print.logo && !cardWhy; $("logoOn").disabled = !!cardWhy; $("logoHint").textContent = cardWhy || OK;
+    $("shopLogoOn").checked = st.print.logo && !shopWhy; $("shopLogoOn").disabled = !!shopWhy; $("shopLogoHint").textContent = shopWhy || OK;
   }
 
   // ---------- NFC sign and headline on cards and stickers (texts follow the menu language; translations are mine) ----------
@@ -882,13 +905,70 @@
     return Math.max(f.min, Math.floor(f.max * f.w / w * 10) / 10);
   }
 
+  // ---------- Dark card (PAY-3): navy card or sticker, a white QR panel, amber text. Texts follow the menu language; translations are mine. ----------
+  var DARK_T = {
+    en: { title: "Quick payment", sub: "No waiting for the waiter", nfc: "Tap your phone (NFC)", acc: "BLIK \u00b7 card \u00b7 phone" },
+    es: { title: "Pago r\u00e1pido", sub: "Sin esperar al camarero", nfc: "Acerca tu m\u00f3vil (NFC)", acc: "BLIK \u00b7 tarjeta \u00b7 m\u00f3vil" },
+    pt: { title: "Pagamento r\u00e1pido", sub: "Sem esperar pelo empregado", nfc: "Aproxime o telem\u00f3vel (NFC)", acc: "BLIK \u00b7 cart\u00e3o \u00b7 telem\u00f3vel" },
+    fr: { title: "Paiement rapide", sub: "Sans attendre le serveur", nfc: "Approchez votre t\u00e9l\u00e9phone (NFC)", acc: "BLIK \u00b7 carte \u00b7 t\u00e9l\u00e9phone" },
+    de: { title: "Schnell bezahlen", sub: "Ohne auf den Kellner zu warten", nfc: "Handy anhalten (NFC)", acc: "BLIK \u00b7 Karte \u00b7 Handy" },
+    pl: { title: "Szybka p\u0142atno\u015b\u0107", sub: "Bez czekania na kelnera", nfc: "Przy\u0142\u00f3\u017c telefon (NFC)", acc: "BLIK \u00b7 karta \u00b7 telefon" },
+    uk: { title: "\u0428\u0432\u0438\u0434\u043a\u0430 \u043e\u043f\u043b\u0430\u0442\u0430", sub: "\u0411\u0435\u0437 \u043e\u0447\u0456\u043a\u0443\u0432\u0430\u043d\u043d\u044f \u043e\u0444\u0456\u0446\u0456\u0430\u043d\u0442\u0430", nfc: "\u041f\u0440\u0438\u043a\u043b\u0430\u0434\u0456\u0442\u044c \u0442\u0435\u043b\u0435\u0444\u043e\u043d (NFC)", acc: "BLIK \u00b7 \u043a\u0430\u0440\u0442\u043a\u0430 \u00b7 \u0442\u0435\u043b\u0435\u0444\u043e\u043d" },
+    ru: { title: "\u0411\u044b\u0441\u0442\u0440\u0430\u044f \u043e\u043f\u043b\u0430\u0442\u0430", sub: "\u0411\u0435\u0437 \u043e\u0436\u0438\u0434\u0430\u043d\u0438\u044f \u043e\u0444\u0438\u0446\u0438\u0430\u043d\u0442\u0430", nfc: "\u041f\u0440\u0438\u043b\u043e\u0436\u0438\u0442\u0435 \u0442\u0435\u043b\u0435\u0444\u043e\u043d (NFC)", acc: "BLIK \u00b7 \u043a\u0430\u0440\u0442\u0430 \u00b7 \u0442\u0435\u043b\u0435\u0444\u043e\u043d" }
+  };
+  var NAVY = "#0f172a", AMBER = "#fbbf24", SPACED = 0.12;   // letter-spacing of the small amber subtitle, in em
+  function darkOn() { return st.print.style === "dark"; }
+  function darkT() { return DARK_T[st.menu.l] || DARK_T.en; }
+  // What the dark card says. Payments on: "Quick payment / no waiting for the waiter" and the accepted-payments line.
+  // Payments off: the cafe name and "Scan for the menu" (the payment texts would promise something the menu page cannot do).
+  function darkTexts() {
+    var l = st.menu.l, L = D.T[l], T = darkT(), pay = pvActive(), up = function (x) { return x.toLocaleUpperCase(l); };
+    return {
+      pay: pay, title: pay ? T.title : st.menu.n.trim(), sub: up(pay ? T.sub : L.scan), nfc: st.print.nfc ? T.nfc : "",
+      acc: pay && st.print.accOn ? (st.print.acc.trim() || T.acc) : ""
+    };
+  }
+  // Single-line text size so that it fits maxMm (letter-spaced text counts its spacing); 0 when even minPt does not fit.
+  function spacedW(text, weight, pt, sp) { return textW(text, weight, pt, SANS_PS) + (sp ? (text.length - 1) * sp * pt * PT : 0); }
+  function fitSpaced(text, weight, maxPt, minPt, maxMm, sp, orBig) {
+    var w = spacedW(text, weight, maxPt, sp);
+    if (w <= maxMm) return maxPt;
+    var pt = Math.floor(maxPt * maxMm / w * 10) / 10;
+    return pt >= minPt ? pt : (orBig ? minPt : 0);
+  }
+  var DARK_FIT = { a6: { w: 89, title: [26, 13], sub: [9, 6], acc: [12, 7] }, s6: { w: 54, title: [10.5, 6.5], sub: [4.8, 3.4], acc: [5.6, 3.8] },
+    s5: { w: 45, title: [8.5, 5.5], sub: [4.1, 3], acc: [4.6, 3.3] }, poster: { w: 172, title: [52, 26], sub: [18, 11], acc: [24, 14] } };
+
+  // Logo in the QR centre: the first letter of the cafe name in an amber rounded square. Only at error correction H, the square covers at most 8% of the code,
+  // and only where the dots are at least 0.4 mm (the decode tests: both decoders read the code at every version from 5 to 40 down to that size).
+  var LOGO_MAX_AREA = 0.08, LOGO_MIN_K = 7, LOGO_MIN_MOD = 0.4;   // area: at most 8% of the code (the limit is 12%: at 12% some versions did not decode, at 10% a few sizes were flaky, at 8% every one did); dots at least 0.4 mm
+  function logoLetter() { var m = st.menu.n.trim().match(/[\p{L}\p{N}]/u); return m ? m[0].toLocaleUpperCase(st.menu.l) : ""; }
+  // side of the square in modules: the same parity as the code (so it sits on the module grid), at most 8% of n x n (LOGO_MAX_AREA; 12% failed the decode sweep); 0 = not offered
+  function logoModules(q, area) {
+    if (!q || q.level !== "H") return 0;
+    var k = Math.floor(Math.sqrt(area || LOGO_MAX_AREA) * q.n);
+    if ((k - q.n) % 2) k--;
+    return k >= LOGO_MIN_K ? k : 0;
+  }
+  function logoEls(parent, N, k, letter) {
+    var x = (N - k) / 2, r = k * 0.22, fs = k * 0.62;
+    parent.appendChild(s("rect", { x: num(x, 3), y: num(x, 3), width: k, height: k, rx: num(r, 3), ry: num(r, 3), fill: AMBER }));
+    parent.appendChild(s("text", { x: num(N / 2, 3), y: num(N / 2 + fs * 0.358, 3), "text-anchor": "middle", "font-family": SANS_PS, "font-weight": "700", "font-size": num(fs, 3), fill: NAVY }, letter));
+  }
+
   // ---------- A4 print layouts (step 5) ----------
   var LAYOUTS = {
-    tent: { label: "Table tent A6", note: "2 tents per A4. Cut in the middle, fold on the dashed line.", per: 2, qr: 68 },
-    s6: { label: "Stickers 6 × 6 cm", note: "12 per A4 with cut marks.", per: 12, qr: 34, cols: 3, rows: 4, cell: 60 },
-    s5: { label: "Stickers 5 × 5 cm", note: "20 per A4. Small text, short menus only.", per: 20, qr: 28, cols: 4, rows: 5, cell: 50 },
-    poster: { label: "A4 poster", note: "One big card per page.", per: 1, qr: 136 }
+    tent: { label: "Table tent A6", note: "2 tents per A4. Cut in the middle, fold on the dashed line.", per: 2, qr: 68, dqr: [74, 68] },
+    s6: { label: "Stickers 6 × 6 cm", note: "12 per A4 with cut marks.", per: 12, qr: 34, dqr: [34, 30], cols: 3, rows: 4, cell: 60 },
+    s5: { label: "Stickers 5 × 5 cm", note: "20 per A4. Small text, short menus only.", per: 20, qr: 28, dqr: [28, 25], cols: 4, rows: 5, cell: 50 },
+    poster: { label: "A4 poster", note: "One big card per page.", per: 1, qr: 136, dqr: [150, 136] }
   };
+  // Width of the QR (with its quiet zone) on a card. The dark card has a bigger QR when there is no table number / small line row.
+  function cardQrMm(key) {
+    var L = LAYOUTS[key];
+    if (!darkOn()) return L.qr;
+    return L.dqr[st.print.numbers || st.print.line.trim() ? 1 : 0];
+  }
   var NAME_FIT = { a6: { max: 22, min: 11, w: 89 }, s6: { max: 8.5, min: 5, w: 54 }, s5: { max: 7, min: 4.5, w: 45 }, poster: { max: 40, min: 20, w: 172 } };
   function fitNamePt(kind, name) {
     var f = NAME_FIT[kind], w = textW(name, "700", f.max, SERIF), room = f.w * 1.7; // up to two lines, with slack for word wrapping
@@ -908,18 +988,47 @@
     svg.appendChild(defs);
     return svg;
   }
-  function qrUse(id, q) {
-    var N = q.n + 2 * QUIET;
+  function qrUse(id, q, logo) {
+    var N = q.n + 2 * QUIET, k = logo ? logoModules(q) : 0;
     var svg = s("svg", { class: "c-qr", viewBox: "0 0 " + N + " " + N, "aria-hidden": "true", "shape-rendering": "crispEdges" });
     svg.appendChild(s("use", { href: "#" + id }));
+    if (k) logoEls(svg, N, k, logo);
     return svg;
   }
+  // The dark card: title, small amber subtitle, white QR panel, NFC line, a divider, the accepted-payments line, the web address, then the table number and small line.
+  function buildDarkCard(kind, ctx, number) {
+    var c = h("div", { class: "card card-" + kind + " card-dark" }), d = ctx.dark, F = DARK_FIT[kind];
+    if (d.title) { var t = h("div", { class: "c-title" }, d.title); t.style.fontSize = fitSpaced(d.title, "700", F.title[0], F.title[1], F.w * (d.pay ? 0.96 : 1.7), 0, true) + "pt"; c.appendChild(t); }
+    if (d.sub) { var u = h("div", { class: "c-sub" }, d.sub); u.style.fontSize = fitSpaced(d.sub, "700", F.sub[0], F.sub[1], F.w * 0.96, SPACED, true) + "pt"; c.appendChild(u); }
+    var sy = ctx.sym(number), pan = h("div", { class: "c-panel" });
+    pan.style.width = ctx.qrMm + "mm"; pan.style.height = ctx.qrMm + "mm";
+    pan.appendChild(qrUse(sy.id, sy.q, ctx.logo));
+    c.appendChild(pan);
+    if (d.nfc) {
+      var nl = h("div", { class: "c-nfcl" });
+      nl.appendChild(nfcIcon("c-nfc flip")); nl.appendChild(h("span", null, d.nfc)); nl.appendChild(nfcIcon("c-nfc"));
+      c.appendChild(nl);
+    }
+    if (d.acc) {
+      c.appendChild(h("i", { class: "c-rule" }));
+      var a = h("div", { class: "c-acc" }, d.acc); a.style.fontSize = fitSpaced(d.acc, "700", F.acc[0], F.acc[1], F.w * 0.96, 0, true) + "pt"; c.appendChild(a);
+    }
+    c.appendChild(h("div", { class: "c-dom" }, ctx.domain));
+    if (number != null || ctx.line) {
+      var f = h("div", { class: "c-foot" });
+      if (number != null) f.appendChild(h("span", { class: "c-tbl" }, ctx.tableWord + " " + number));
+      if (ctx.line) f.appendChild(h("span", { class: "c-line" }, ctx.line));
+      c.appendChild(f);
+    }
+    return c;
+  }
   function buildCard(kind, ctx, number) {
+    if (ctx.dark) return buildDarkCard(kind, ctx, number);
     var c = h("div", { class: "card card-" + kind });
     if (ctx.name) { var nm = h("div", { class: "c-name" }, ctx.name); nm.style.fontSize = fitNamePt(kind, ctx.name) + "pt"; c.appendChild(nm); }
     if (ctx.head) { var hd = h("div", { class: "c-head" }, ctx.head); hd.style.fontSize = fitHeadPt(kind, ctx.head) + "pt"; c.appendChild(hd); }
     var sy = ctx.sym(number);
-    c.appendChild(qrUse(sy.id, sy.q));
+    c.appendChild(qrUse(sy.id, sy.q, ctx.logo));
     var cap = h("div", { class: "c-cap" });
     if (ctx.nfc) cap.appendChild(nfcIcon("c-nfc"));
     cap.appendChild(h("span", null, ctx.caption));
@@ -948,11 +1057,18 @@
       }
     }
   }
+  // The letter for the QR-centre logo on cards, or "" (off, no letter, or the code is not at error correction H)
+  function cardLogo() {
+    if (!st.print.logo) return "";
+    var q = printLongest();
+    return q && logoModules(q) && cardQrMm(st.print.layout) / (q.n + 8) >= LOGO_MIN_MOD - 1e-9 ? logoLetter() : "";
+  }
   // Numbered cards: every card has its own QR, with tb=N in the link. ctx.sym(n) makes (and remembers) the QR of table n; null = the plain QR.
   function printContext(prefix) {
     var l = st.menu.l, L = D.T[l], used = {}, order = [];
     return {
       name: st.menu.n.trim(), caption: st.print.nfc ? nfcT().cap : L.scan, nfc: !!st.print.nfc, head: headOn() ? nfcT().head : "", tableWord: L.table, line: st.print.line.trim(), domain: domainOf(cur ? cur.link : baseUrl() + "/m/"),
+      dark: darkOn() ? darkTexts() : null, qrMm: cardQrMm(st.print.layout), logo: cardLogo(),
       order: order,
       sym: function (n) {
         var k = n == null ? 0 : n;
@@ -1037,8 +1153,8 @@
     var k = box.clientWidth / 793.7; sheet.style.transformOrigin = "0 0"; sheet.style.transform = "scale(" + k + ")";
     sheet.style.position = "absolute"; sheet.style.left = "0"; sheet.style.top = "0";
     var np = pageCount(key), cards = st.print.numbers ? st.print.count : null;
-    var mod = L.qr / (longQ.n + 8);
-    info.textContent = (cards ? cards + " numbered card" + (cards === 1 ? "" : "s") + ", each with its own QR code (table number inside) · " : "") + np + " page" + (np === 1 ? "" : "s") + " (A4). QR is " + L.qr + " mm wide, each dot about " + num(mod, 2) + " mm.";
+    var qrMm = cardQrMm(key), mod = qrMm / (longQ.n + 8);
+    info.textContent = (cards ? cards + " numbered card" + (cards === 1 ? "" : "s") + ", each with its own QR code (table number inside) · " : "") + np + " page" + (np === 1 ? "" : "s") + " (A4). QR is " + qrMm + " mm wide, each dot about " + num(mod, 2) + " mm.";
     info.setAttribute("data-module-mm", num(mod, 3));
     var notes = [];
     if (mod < 0.3) notes.push("The dots are only " + num(mod, 2) + " mm wide. That may be hard to scan. Choose a bigger layout, or shorten the menu, or use Live mode.");
@@ -1074,9 +1190,9 @@
   // ---------- sticker file for a print shop (step 5) ----------
   var BLEED = 3, SAFE = 3, MIN_MOD = 0.5;
   var PS = {
-    s5: { label: "5 × 5 cm", shape: "sq", size: 50, r: 4, cls: "ps5", nameMax: 6.5, capMax: 5.5, domMax: 5 },
-    s6: { label: "6 × 6 cm", shape: "sq", size: 60, r: 4, cls: "ps6", nameMax: 8, capMax: 6.5, domMax: 6 },
-    s8: { label: "8 × 8 cm", shape: "sq", size: 80, r: 5, cls: "ps8", nameMax: 11, capMax: 8.5, domMax: 7.5 },
+    s5: { label: "5 × 5 cm", shape: "sq", size: 50, r: 4, cls: "ps5", nameMax: 6.5, capMax: 5.5, domMax: 5, d: { title: 8.4, sub: 3.9, nfc: 4.6, acc: 4.4 } },
+    s6: { label: "6 × 6 cm", shape: "sq", size: 60, r: 4, cls: "ps6", nameMax: 8, capMax: 6.5, domMax: 6, d: { title: 10.4, sub: 4.7, nfc: 5.6, acc: 5.3 } },
+    s8: { label: "8 × 8 cm", shape: "sq", size: 80, r: 5, cls: "ps8", nameMax: 11, capMax: 8.5, domMax: 7.5, d: { title: 14, sub: 6.3, nfc: 7.4, acc: 7 } },
     r6: { label: "Ø 6 cm round", shape: "round", size: 60, cls: "pr6", domMax: 5.5 }
   };
   var shopQr = null;   // QR at error correction H for the current link (numbered stickers: the one with the highest table number, which has the smallest dots)
@@ -1089,8 +1205,9 @@
   }
   // Layout of one sticker. All numbers in mm, artwork box = size + 2 * bleed.
   function stickerPlan(key, n, texts) {
+    if (texts.dark) return stickerPlanDark(key, n, texts);
     var P = PS[key], W = P.size + 2 * BLEED, N = n + 2 * QUIET, i;
-    var plan = { key: key, W: W, n: n, ok: false, mod: 0, q: 0, lines: [], omitted: [], tblWord: texts.tblWord || "", nfc: !!texts.nfc };
+    var plan = { key: key, W: W, n: n, ok: false, mod: 0, q: 0, lines: [], omitted: [], tblWord: texts.tblWord || "", nfc: !!texts.nfc, logo: texts.logo || null };
     if (P.shape === "round") {
       var Rs = P.size / 2 - SAFE, c = W / 2, g = 1, gt = 0.4, span = 2 * Rs * 0.75;
       var mk = function (text, maxPt, maxW, kind) { var pt = fitPt(text, "700", maxPt, 3.5, maxW) || 3.5; return { kind: kind, text: text, pt: pt, h: lineMm(pt), w: textW(text, "700", pt, SANS_PS) }; };
@@ -1162,31 +1279,127 @@
     }
     plan.mod = plan.q / N;
     plan.ok = plan.mod >= MIN_MOD - 1e-9;
+    return logoGuard(plan);
+  }
+  // the logo is left out where the dots are too small for it
+  function logoGuard(plan) {
+    if (plan.logo && plan.mod < LOGO_MIN_MOD - 1e-9) { plan.logo = null; plan.logoOff = true; }
     return plan;
+  }
+  // Width of the NFC line: the text with an arc sign on each side
+  function fitNfc(text, maxPt, minPt, maxMm) {
+    var w = textW(text, "700", maxPt, SANS_PS) + 2 * maxPt * PT * 1.5;
+    if (w <= maxMm) return maxPt;
+    var pt = Math.floor(maxPt * maxMm / w * 10) / 10;
+    return pt >= minPt ? pt : 0;
+  }
+  // The dark sticker: navy, title, amber subtitle, white QR panel, NFC line, divider, accepted-payments line, web address, table number.
+  // When the dots get too small it drops, in this order: the accepted-payments line (with its divider), the subtitle, the title, the NFC line.
+  // The web address (the anti-fake check) is never dropped. Round stickers are not offered in this style.
+  var DARK_FILL = { title: "#ffffff", sub: AMBER, nfc: AMBER, acc: "#e2e8f0", dom: "#cbd5e1", tbl: AMBER, tbldom: "#cbd5e1" };
+  var DARK_OMIT = { title: "the title", sub: "the subtitle", nfc: "the NFC line", acc: "the accepted-payments line" };
+  function stickerPlanDark(key, n, texts) {
+    var P = PS[key], W = P.size + 2 * BLEED, N = n + 2 * QUIET, A = P.size - 2 * SAFE, T = texts.dark, DP = P.d, i;
+    var plan = { key: key, W: W, n: n, ok: false, mod: 0, q: 0, lines: [], omitted: [], tblWord: texts.tblWord || "", nfc: !!texts.nfc, dark: true, logo: texts.logo || null };
+    if (P.shape === "round") { plan.unsupported = true; return plan; }
+    var fits = {
+      title: T.title ? fitSpaced(T.title, "700", DP.title, 5, A, 0) : 0,
+      sub: T.sub ? fitSpaced(T.sub, "700", DP.sub, 3.2, A, SPACED) : 0,
+      nfc: T.nfc ? fitNfc(T.nfc, DP.nfc, 4, A) : 0,
+      acc: T.acc ? fitSpaced(T.acc, "700", DP.acc, 3.6, A, 0) : 0,
+      dom: fitSpaced(texts.dom, "700", P.domMax, 3.5, A, 0, true),
+      tbl: texts.tbl ? fitSpaced(texts.tbl, "700", P.nameMax, 4.5, A, 0, true) : 0
+    };
+    var texts2 = { title: T.title, sub: T.sub, nfc: T.nfc, acc: T.acc, dom: texts.dom, tbl: texts.tbl };
+    var ORDER = ["title", "sub", "qr", "nfc", "rule", "acc", "dom", "tbl"], RULE_H = 0.2;
+    var DROPS = [[], ["acc"], ["acc", "sub"], ["acc", "sub", "title"], ["acc", "sub", "title", "nfc"]];
+    function itemsFor(drop, merged) {
+      return ORDER.filter(function (k) {
+        if (drop.indexOf(k) >= 0) return false;
+        if (k === "rule") return !!fits.acc && drop.indexOf("acc") < 0;
+        if (k === "qr" || k === "dom") return !merged || k === "qr" ? true : false;
+        if (k === "tbl") return !!fits.tbl && !merged;
+        return !!fits[k];
+      }).concat(merged ? ["tbldom"] : []);
+    }
+    var gapOf = function (a, b) { return a === "qr" || b === "qr" ? 1.2 : a === "rule" || b === "rule" ? 0.8 : a === "title" && b === "sub" ? 0.3 : 0.5; };
+    function plan1(items, tbldomPt) {
+      // dom / tbldom sit after the QR; sizes
+      var hs = 0, gaps = 0, prev = null;
+      items.forEach(function (k) {
+        var hh = k === "qr" ? 0 : k === "rule" ? RULE_H : lineMm(k === "tbldom" ? tbldomPt : fits[k]);
+        hs += hh; if (prev) gaps += gapOf(prev, k); prev = k;
+      });
+      var q = Math.min(A, A - hs - gaps);
+      return { items: items, q: q, mod: q / N, tbldomPt: tbldomPt };
+    }
+    var chosen = null;
+    for (i = 0; i < DROPS.length; i++) {
+      var cand = plan1(itemsFor(DROPS[i], false), 0);
+      chosen = cand; chosen.drop = DROPS[i];
+      if (cand.mod >= MIN_MOD) break;
+    }
+    if (chosen.mod < MIN_MOD && texts.tbl) {   // "Table 5 \u00b7 web address" on one line saves a line, so the QR can be bigger
+      var mtxt = texts.tbl + " \u00b7 " + texts.dom, mpt = fitSpaced(mtxt, "700", P.domMax, 3.5, A, 0);
+      if (mpt) {
+        var alt = plan1(itemsFor(DROPS[DROPS.length - 1], true), mpt);
+        if (alt.mod > chosen.mod) { chosen = alt; chosen.drop = DROPS[DROPS.length - 1]; texts2.tbldom = mtxt; fits.tbldom = mpt; }
+      }
+    }
+    var cx = W / 2, y = BLEED + SAFE, prevK = null, q = chosen.q;
+    chosen.items.forEach(function (k) {
+      if (prevK) y += gapOf(prevK, k);
+      prevK = k;
+      if (k === "qr") { plan.qx = cx - q / 2; plan.qy = y; y += q; return; }
+      if (k === "rule") { var rw = Math.min(A, q) * 0.8; plan.rule = { x1: cx - rw / 2, x2: cx + rw / 2, y: y + RULE_H / 2 }; y += RULE_H; return; }
+      var pt = k === "tbldom" ? chosen.tbldomPt : fits[k], tx = texts2[k], sp = k === "sub" ? SPACED : 0;
+      plan.lines.push({ kind: k, text: tx, pt: pt, w: spacedW(tx, "700", pt, sp), x: cx, y: y + 0.92 * pt * PT, weight: "700", fill: DARK_FILL[k], sp: sp, dom: texts.dom });
+      y += lineMm(pt);
+    });
+    plan.q = q;
+    ["title", "sub", "nfc", "acc"].forEach(function (k) { if (texts2[k] && chosen.items.indexOf(k) < 0) plan.omitted.push(DARK_OMIT[k]); });
+    plan.mod = plan.q / N;
+    plan.ok = plan.mod >= MIN_MOD - 1e-9;
+    return logoGuard(plan);
   }
   function stickerTexts() {
     var L = D.T[st.menu.l], t = { name: st.menu.n.trim(), cap: st.print.nfc ? nfcT().cap : L.scan, nfc: !!st.print.nfc, head: headOn() ? nfcT().head : "", dom: domainOf(cur ? cur.link : baseUrl() + "/m/") };
     if (st.print.numbers) { t.tblWord = L.table; t.tbl = L.table + " " + st.print.count; }   // sized for the highest table number; digits are all equally wide
+    if (darkOn()) t.dark = darkTexts();
+    if (st.print.logo && shopQr && logoModules(shopQr)) { var lt = logoLetter(); if (lt) t.logo = { letter: lt }; }
     return t;
   }
   // mode: "file" (SVG download: artwork + CutContour), "print" (PDF: artwork only), "preview" (adds guides)
   function stickerSvg(plan, q, mode, tableNo) {
-    var P = PS[plan.key], W = plan.W, N = q.n + 2 * QUIET, m = plan.q / N;
+    var P = PS[plan.key], W = plan.W, N = q.n + 2 * QUIET, m = plan.q / N, dark = !!plan.dark;
     var svg = s("svg", { xmlns: SVGNS, "xmlns:inkscape": "http://www.inkscape.org/namespaces/inkscape", width: W + "mm", height: W + "mm", viewBox: "0 0 " + W + " " + W });
     svg.appendChild(s("title", null, "QR menu sticker " + P.label));
     svg.appendChild(s("desc", null, "Artwork with " + BLEED + " mm bleed. Layer CutContour: 100% magenta stroke 0.25 pt, no fill, die-cut line at the trim edge."));
     var art = s("g", { id: "Artwork", "inkscape:groupmode": "layer", "inkscape:label": "Artwork" });
-    art.appendChild(s("rect", { x: 0, y: 0, width: W, height: W, fill: "#ffffff" }));
+    art.appendChild(s("rect", { x: 0, y: 0, width: W, height: W, fill: dark ? NAVY : "#ffffff" }));
+    // dark: the QR sits on a white panel with rounded corners (3 dots, so the rounding only cuts into the quiet zone)
+    if (dark) art.appendChild(s("rect", { x: num(plan.qx, 4), y: num(plan.qy, 4), width: num(plan.q, 4), height: num(plan.q, 4), rx: num(3 * m, 4), ry: num(3 * m, 4), fill: "#ffffff" }));
     var qg = s("g", { transform: "translate(" + num(plan.qx, 4) + " " + num(plan.qy, 4) + ") scale(" + num(m, 5) + ")", "shape-rendering": "crispEdges" });
-    qg.appendChild(s("rect", { width: N, height: N, fill: "#ffffff" }));
+    if (!dark) qg.appendChild(s("rect", { width: N, height: N, fill: "#ffffff" }));
     qg.appendChild(s("path", { fill: "#000000", d: qrPath(q.qr, QUIET) }));
+    var lk = plan.logo ? logoModules(q) : 0;
+    if (lk) logoEls(qg, N, lk, plan.logo.letter);
     art.appendChild(qg);
+    if (plan.rule) art.appendChild(s("line", { x1: num(plan.rule.x1, 3), x2: num(plan.rule.x2, 3), y1: num(plan.rule.y, 3), y2: num(plan.rule.y, 3), stroke: "#ffffff", "stroke-opacity": "0.25", "stroke-width": "0.2" }));
     plan.lines.forEach(function (ln) {
       var text = ln.text, w = ln.w;
       if (tableNo && (ln.kind === "tbl" || ln.kind === "tbldom")) {   // the plan is sized for the widest label; this table's own text is set at the same size
         text = plan.tblWord + " " + tableNo + (ln.kind === "tbldom" ? " \u00b7 " + ln.dom : ""); w = textW(text, ln.weight, ln.pt, SANS_PS);
       }
       var tx = ln.x;
+      if (ln.kind === "nfc") {   // dark sticker: the text with the tap sign ((( ))) on both sides
+        var dz = ln.pt * PT * 1.15, dg = ln.pt * PT * 0.35, dt = dz + dg + w + dg + dz, d0 = ln.x - dt / 2, ty = ln.y - 0.92 * ln.pt * PT;
+        [[d0 + dz, -1], [d0 + dz + dg + w + dg, 1]].forEach(function (a, ix) {
+          var ng = s("g", { id: ix ? "NFCSignR" : "NFCSignL", transform: "translate(" + num(a[0], 3) + " " + num(ty, 3) + ") scale(" + num(a[1] * dz / 24, 5) + " " + num(dz / 24, 5) + ")", fill: "none", stroke: AMBER, "stroke-width": "2.4", "stroke-linecap": "round" });
+          NFC_ARCS.forEach(function (dd) { ng.appendChild(s("path", { d: dd })); });
+          art.appendChild(ng);
+        });
+      }
       if (ln.kind === "cap" && plan.nfc) {   // the tap sign sits in front of the caption; the pair is centred
         var isz = ln.pt * PT * 1.15, gp = ln.pt * PT * 0.35, tot = isz + gp + w, sx = ln.x - tot / 2;
         tx = sx + isz + gp + w / 2;
@@ -1194,7 +1407,7 @@
         NFC_ARCS.forEach(function (d) { ig.appendChild(s("path", { d: d })); });
         art.appendChild(ig);
       }
-      var t = s("text", { x: num(tx, 3), y: num(ln.y, 3), "text-anchor": "middle", "font-family": SANS_PS, "font-weight": ln.weight, "font-size": num(ln.pt * PT, 3), fill: "#000000", textLength: num(w, 3), lengthAdjust: "spacingAndGlyphs" }, text);
+      var t = s("text", { x: num(tx, 3), y: num(ln.y, 3), "text-anchor": "middle", "font-family": SANS_PS, "font-weight": ln.weight, "font-size": num(ln.pt * PT, 3), fill: ln.fill || "#000000", textLength: num(w, 3), lengthAdjust: ln.sp ? "spacing" : "spacingAndGlyphs" }, text);
       art.appendChild(t);
     });
     svg.appendChild(art);
@@ -1234,7 +1447,7 @@
       sm.className = ""; sm.removeAttribute("data-ok"); sm.removeAttribute("data-mod");
       if (shopQr) {
         var pl = stickerPlan(k, shopQr.n, stickerTexts());
-        sm.textContent = pl.ok ? "Dots " + num(pl.mod, 2) + " mm \u00b7 fits" : "Dots " + num(pl.mod, 2) + " mm \u00b7 too small";
+        sm.textContent = pl.unsupported ? "Light style only" : pl.ok ? "Dots " + num(pl.mod, 2) + " mm \u00b7 fits" : "Dots " + num(pl.mod, 2) + " mm \u00b7 too small";
         if (!pl.ok) sm.className = "bad";
         sm.setAttribute("data-ok", pl.ok ? "1" : "0"); sm.setAttribute("data-mod", num(pl.mod, 3));
       } else sm.textContent = overflow ? "Link too long for H" : "Needs a QR code first";
@@ -1250,6 +1463,13 @@
       return;
     }
     var plan = currentPlan();
+    if (plan.unsupported) {   // the round sticker has no dark version
+      box.appendChild(h("p", { class: "qb-muted qb-center" }, "The dark card comes in square sizes."));
+      info.textContent = ""; info.removeAttribute("data-module-mm"); info.setAttribute("data-ok", "0");
+      warn.hidden = false; warn.textContent = "The round sticker comes in the light style only. Choose a square size for the dark card, or set the style to Light.";
+      toggleOff(["btnShopPdf", "btnShopSvg"], true);
+      return;
+    }
     box.appendChild(stickerSvg(plan, shopQrFor(shopTable), "preview", nums ? shopTable : 0));
     info.textContent = "QR version " + shopQr.version + " at error correction H · " + shopQr.n + " × " + shopQr.n + " dots · each dot " + num(plan.mod, 2) + " mm (minimum " + MIN_MOD + " mm) · QR " + num(plan.q, 1) + " mm wide incl. quiet zone · page " + plan.W + " × " + plan.W + " mm (sticker + " + BLEED + " mm bleed)."
       + (nums ? " Numbered: " + st.print.count + " stickers, each with its own QR code. The size check uses table " + st.print.count + ", the longest link." : "");
@@ -1280,7 +1500,7 @@
     var plan = currentPlan(); if (!plan || !plan.ok) return;
     var nums = st.print.numbers;
     var xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(stickerSvg(plan, nums ? shopQrFor(shopTable) : shopQr, "file", nums ? shopTable : 0));
-    download(new Blob([xml], { type: "image/svg+xml" }), "sticker-" + plan.key + "-" + slug(st.menu.n) + (nums ? "-table-" + shopTable : "") + ".svg");
+    download(new Blob([xml], { type: "image/svg+xml" }), "sticker-" + plan.key + (plan.dark ? "-dark-" : "-") + slug(st.menu.n) + (nums ? "-table-" + shopTable : "") + ".svg");
   }
 
   // ---------- tabs, layouts, wiring ----------
@@ -1300,7 +1520,7 @@
       var inp = h("input", { type: "radio", name: "shopsize", value: k });
       var bx = h("span", { class: "box" }); bx.appendChild(h("b", null, PS[k].label)); bx.appendChild(h("small", null, ""));
       lab.appendChild(inp); lab.appendChild(bx); grid.appendChild(lab);
-      inp.addEventListener("change", function () { st.shop.size = k; renderShop(); saveDraft(); });
+      inp.addEventListener("change", function () { st.shop.size = k; renderShop(); syncNfcBoxes(); saveDraft(); });
     });
   }
   function buildLayouts() {
@@ -1310,7 +1530,7 @@
       var inp = h("input", { type: "radio", name: "layout", value: k }); inp.checked = st.print.layout === k;
       var bx = h("span", { class: "box" }); bx.appendChild(h("b", null, L.label)); bx.appendChild(h("small", null, L.note));
       lab.appendChild(inp); lab.appendChild(bx); box.appendChild(lab);
-      inp.addEventListener("change", function () { st.print.layout = k; renderSheetPreview(); saveDraft(); });
+      inp.addEventListener("change", function () { st.print.layout = k; renderSheetPreview(); syncNfcBoxes(); saveDraft(); });
     });
   }
   function applyPrint() {
@@ -1318,7 +1538,7 @@
     $("printLine").value = st.print.line;
     buildLayouts();
   }
-  function afterOutput() { syncNfcBoxes(); renderSheetPreview(); renderShop(); renderNfc(); }
+  function afterOutput() { syncNfcBoxes(); renderSheetPreview(); renderShop(); syncNfcBoxes(); renderNfc(); }
 
   var changed = (function () {
     var t = null;
@@ -1377,7 +1597,7 @@
     $("btnOpen").addEventListener("click", function (e) { if (!cur) e.preventDefault(); });
 
     // Numbered cards change the QR codes on the sheets and stickers (tb=N), and in live mode the address of the preview page
-    function numbersChanged() { renderSheetPreview(); renderShop(); renderNfc(); if (st.out.mode === "live") refreshOutput(); previewUpdate(); saveDraft(); }
+    function numbersChanged() { renderSheetPreview(); renderShop(); syncNfcBoxes(); renderNfc(); if (st.out.mode === "live") refreshOutput(); previewUpdate(); saveDraft(); }
     ["numOn", "nfcNumOn"].forEach(function (id) { $(id).addEventListener("change", function (e) { st.print.numbers = e.target.checked; numbersChanged(); }); });
     ["numCount", "nfcCount"].forEach(function (id) {
       $(id).addEventListener("input", function (e) {
@@ -1388,6 +1608,11 @@
     function nfcChanged() { syncNfcBoxes(); renderSheetPreview(); renderShop(); saveDraft(); }
     ["nfcSign", "shopNfcSign"].forEach(function (id) { $(id).addEventListener("change", function (e) { st.print.nfc = e.target.checked; nfcChanged(); }); });
     ["nfcHead", "shopNfcHead"].forEach(function (id) { $(id).addEventListener("change", function (e) { st.print.head = e.target.checked; nfcChanged(); }); });
+    function styleChanged() { syncNfcBoxes(); renderSheetPreview(); renderShop(); syncNfcBoxes(); saveDraft(); }
+    ["styleSel", "shopStyleSel"].forEach(function (id) { $(id).addEventListener("change", function (e) { st.print.style = e.target.value === "dark" ? "dark" : "light"; styleChanged(); }); });
+    ["accOn", "shopAccOn"].forEach(function (id) { $(id).addEventListener("change", function (e) { st.print.accOn = e.target.checked; styleChanged(); }); });
+    ["accText", "shopAccText"].forEach(function (id) { $(id).addEventListener("input", function (e) { st.print.acc = e.target.value.slice(0, 40); styleChanged(); }); });
+    ["logoOn", "shopLogoOn"].forEach(function (id) { $(id).addEventListener("change", function (e) { st.print.logo = e.target.checked; styleChanged(); }); });
     $("btnNfcCopy").addEventListener("click", copyNfc);
     $("shopTable").addEventListener("input", function (e) { var v = parseInt(e.target.value, 10); if (v >= 1) { shopTable = Math.min(v, st.print.count); renderShop(); } });
     $("shopTable").addEventListener("change", function () { $("shopTable").value = shopTable; });
@@ -1399,7 +1624,7 @@
     });
     $("billsTab").addEventListener("input", function (e) { st.out.bt = e.target.value.slice(0, 100); refreshOutput(); saveDraft(); });
     $("pvSwitch").addEventListener("click", function (e) { var b = e.target.closest("button[data-view]"); if (b) setPvView(b.getAttribute("data-view")); });
-    $("printLine").addEventListener("input", function (e) { st.print.line = e.target.value; renderSheetPreview(); renderShop(); saveDraft(); });
+    $("printLine").addEventListener("input", function (e) { st.print.line = e.target.value; renderSheetPreview(); renderShop(); syncNfcBoxes(); saveDraft(); });
     $("btnPrint").addEventListener("click", doPrint);
     $("btnShopPdf").addEventListener("click", shopPrint);
     $("btnShopSvg").addEventListener("click", shopSvgDownload);
@@ -1417,7 +1642,15 @@
   window.QRB = {
     getMenu: toSchema, getPay: payConfig, withTable: withTable, tableQr: function (n, level) { if (!cur) return null; var l = withTable(cur.link, n), q = qrFor(l, level || st.out.ec); return q ? { link: l, n: q.n, level: q.level } : null; }, getLongestQr: printLongest, getLink: function () { return cur ? cur.link : ""; }, getQr: function () { return cur ? cur.q : null; },
     example: function () { return clone(EXAMPLE); }, state: function () { return st; }, live: function () { return { shown: liveShown.search, result: liveRes }; }, TEMPLATE_URL: TEMPLATE_URL,
-    stickerPlan: function (key, n, texts) { return stickerPlan(key, n, texts); }, PS: PS, LAYOUTS: LAYOUTS
+    stickerPlan: function (key, n, texts) { return stickerPlan(key, n, texts); }, PS: PS, LAYOUTS: LAYOUTS,
+    logoModules: function (q) { return logoModules(q); }, DARK_T: DARK_T, cardQrMm: cardQrMm,
+    // for tests: the QR of any text at error correction H with the centre logo, as the cards draw it (SVG text)
+    qrWithLogo: function (text, letter, area) {
+      var q = makeQr(text, "H"); if (!q || q.level !== "H") return null;
+      var svg = qrSvgEl(q, 0), k = letter ? logoModules(q, area) : 0;
+      if (k) logoEls(svg, q.n + 2 * QUIET, k, letter);
+      return { svg: new XMLSerializer().serializeToString(svg), n: q.n, k: k, version: q.version };
+    }
   };
   init();
 })();

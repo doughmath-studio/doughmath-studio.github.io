@@ -11,8 +11,8 @@
   var HOME = "https://doughmath-studio.github.io/qr/";
   var LANGS = ["en", "es", "pt", "fr", "de", "pl", "uk", "ru"];
   var LOCALES = { en: "en-US", es: "es-ES", pt: "pt-PT", fr: "fr-FR", de: "de-DE", pl: "pl-PL", uk: "uk-UA", ru: "ru-RU" };
-  var THEMES = ["espresso", "pistachio", "berry", "mono"];
-  var THEME_COLORS = { espresso: "#2a1d17", pistachio: "#f2f5e8", berry: "#fff3f6", mono: "#ffffff" };
+  var THEMES = ["amber", "espresso", "pistachio", "berry", "mono"];
+  var THEME_COLORS = { amber: "#eef1f6", espresso: "#2a1d17", pistachio: "#f3f6e9", berry: "#fff3f6", mono: "#ffffff" };
   var TAGS = ["V", "VG", "GF", "spicy"];
   var LIMITS = { sections: 60, items: 600, name: 160, title: 120, desc: 600, footer: 400, priceText: 40, json: 1048576 };
 
@@ -825,9 +825,10 @@
   function renderMenu(root, m, L, opts) {
     var fmt = priceFormatter(m.l, m.c, allWhole(m));
 
-    var head = el("header", "mn-head");
-    head.appendChild(el("h1", "mn-title", m.n || L.menu));
-    head.appendChild(el("div", "mn-rule"));
+    var head = el("header", "mn-head"), hl = el("div", "mn-hl");
+    hl.appendChild(el("p", "mn-kicker", L.menu));
+    hl.appendChild(el("h1", "mn-title", m.n || L.menu));
+    head.appendChild(hl); head.appendChild(tile());
     root.appendChild(head);
 
     var sections = m.s.filter(function (s) { return s.i.length; });
@@ -972,6 +973,7 @@
   var SVGNS = "http://www.w3.org/2000/svg";
   var ICONS = {
     pin: "M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.4-6.5 11-6.5 11z|M12 12.2a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4z",
+    dish: "M3.5 12.5h17a8.5 8.5 0 01-8.5 7.5 8.5 8.5 0 01-8.5-7.5z|M8 9.5c-.9-1.2.9-1.8 0-3.2|M12 9.5c-.9-1.2.9-1.8 0-3.2|M16 9.5c-.9-1.2.9-1.8 0-3.2|M8.5 20.5h7",
     person: "M12 12a4 4 0 100-8 4 4 0 000 8z|M4.5 20.5c.6-3.6 3.6-5.5 7.5-5.5s6.9 1.9 7.5 5.5",
     card: "M3.5 6.5h17v11h-17z|M3.5 10.5h17|M6.5 14.5h4",
     link: "M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1|M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1",
@@ -995,16 +997,17 @@
     ICONS[name].split("|").forEach(function (dd) { var pa = document.createElementNS(SVGNS, "path"); pa.setAttribute("d", dd); s.appendChild(pa); });
     return s;
   }
+  function tile() { var t = el("div", "mn-tile"); t.setAttribute("aria-hidden", "true"); t.appendChild(icon("dish")); return t; }
   function withIcon(node, name, cls, after) { if (after) node.appendChild(icon(name, cls)); else node.insertBefore(icon(name, cls), node.firstChild); return node; }
 
   function renderStart(root, m, L, opts) {
     var P = PAY_T[m.l];
-    var head = el("header", "mn-head");
-    head.appendChild(el("h1", "mn-title", m.n || L.menu));
-    head.appendChild(el("div", "mn-rule"));
+    var head = el("header", "mn-head"), hl = el("div", "mn-hl");
+    hl.appendChild(el("h1", "mn-title", m.n || L.menu));
+    if (opts.tb) hl.appendChild(withIcon(el("p", "mn-table", L.table + " " + opts.tb), "pin"));
+    head.appendChild(hl); head.appendChild(tile());
     root.appendChild(head);
     var main = el("main", "mn-start");
-    if (opts.tb) main.appendChild(withIcon(el("p", "mn-table", L.table + " " + opts.tb), "pin"));
     function big(cls, ic, label, view) {
       var b = el("button", "mn-big " + cls); b.type = "button";
       b.appendChild(icon(ic, "pc-bigi")); b.appendChild(el("span", "pc-bigt", label)); b.appendChild(icon("go", "pc-go"));
@@ -1055,14 +1058,14 @@
     main.appendChild(back);
 
     // header card: cafe, table, waiter (only when the sheet has one), "open table" when the bill has items
-    var top = el("header", "pc-card pc-top"), trow = el("div", "pc-toprow");
-    trow.appendChild(el("h1", "pc-name", m.n || L.menu));
-    var chipOpen = el("span", "pc-chip pc-open"); chipOpen.appendChild(el("span", "pc-dot")); chipOpen.appendChild(el("span", null, P.open));
-    trow.appendChild(chipOpen); top.appendChild(trow);
+    var top = el("header", "pc-card pc-top"), trow = el("div", "pc-toprow"), tl = el("div", "pc-tl");
+    var chipOpen = el("p", "pc-open"); chipOpen.appendChild(el("span", "pc-dot")); chipOpen.appendChild(el("span", null, P.open));
+    tl.appendChild(chipOpen);
+    tl.appendChild(el("h1", "pc-name", m.n || L.menu));
     var meta = el("ul", "pc-meta");
     if (opts.tb) meta.appendChild(withIcon(el("li", "pc-tb", L.table + " " + opts.tb), "pin"));
-    var liW = withIcon(el("li", "pc-wt"), "person"), wTxt = el("span"); liW.appendChild(wTxt); meta.appendChild(liW);
-    top.appendChild(meta); main.appendChild(top);
+    var liW = el("li", "pc-wt"), wTxt = el("span"); liW.appendChild(wTxt); meta.appendChild(liW);
+    tl.appendChild(meta); trow.appendChild(tl); trow.appendChild(tile()); top.appendChild(trow); main.appendChild(top);
 
     // bill cards (split mode, items or amount): built by buildBill()
     var billBox = el("div", "pc-billbox"); main.appendChild(billBox);
@@ -1073,17 +1076,17 @@
     var tipH = el("h2", "pc-h"), tipVal = el("span", "pc-tipval");
     thead.appendChild(tipH); thead.appendChild(tipVal); tcard.appendChild(thead);
     var grp = el("div", "pc-chips"); grp.setAttribute("role", "radiogroup"); grp.setAttribute("aria-label", P.tip);
-    var choices = [{ kind: "none", label: P.noTip }].concat(p.t.map(function (n) { return { kind: "pct", pct: n, label: n + "%" }; })).concat([{ kind: "custom", label: P.custom }]);
+    var choices = [{ kind: "none", label: "0%" }].concat(p.t.map(function (n) { return { kind: "pct", pct: n, label: n + "%" }; }));
     var tbtns = choices.map(function (c) {
       var b = el("button", "mn-tipbtn", c.label); b.type = "button"; b.setAttribute("role", "radio");
-      if (c.kind === "pct") b.setAttribute("data-pct", String(c.pct)); else b.setAttribute("data-tip", c.kind);
-      b.addEventListener("click", function () { S.tip = c.kind === "pct" ? { kind: "pct", pct: c.pct } : { kind: c.kind }; update(); if (c.kind === "custom") cin.focus(); });
+      if (c.kind === "pct") b.setAttribute("data-pct", String(c.pct)); else { b.setAttribute("data-tip", c.kind); b.setAttribute("aria-label", P.noTip + " (0%)"); }
+      b.addEventListener("click", function () { S.tip = c.kind === "pct" ? { kind: "pct", pct: c.pct } : { kind: c.kind }; S.custom = ""; cin.value = ""; update(); });
       grp.appendChild(b); return b;
     });
     tcard.appendChild(grp);
-    var crow = el("div", "pc-customrow");
-    var clab = el("label", "mn-fromline", P.customLabel + " (" + currencySign(m.c) + ")"); clab.setAttribute("for", "mn-ctip");
-    var cin = el("input", "mn-amt mn-ctip"); cin.id = "mn-ctip"; cin.type = "text"; cin.value = S.custom; cin.maxLength = 12; cin.spellcheck = false;
+    var crow = el("div", "pc-customrow"), cplace = P.custom + " (" + currencySign(m.c) + ")";
+    var clab = el("label", "pc-sr", P.customLabel + " (" + currencySign(m.c) + ")"); clab.setAttribute("for", "mn-ctip");
+    var cin = el("input", "mn-amt mn-ctip"); cin.id = "mn-ctip"; cin.type = "text"; cin.value = S.custom; cin.maxLength = 12; cin.spellcheck = false; cin.placeholder = cplace;
     cin.setAttribute("inputmode", "decimal"); cin.setAttribute("autocomplete", "off"); cin.setAttribute("autocapitalize", "off");
     crow.appendChild(clab); crow.appendChild(cin); tcard.appendChild(crow);
     main.appendChild(tcard);
@@ -1122,11 +1125,15 @@
         rateCard.appendChild(el("p", "pc-hint", P.cmtHint));
       }
       var acts = el("div", "pc-acts");
-      function act(cls, ic, label) { var a = el("a", "pc-act " + cls); a.appendChild(icon(ic)); a.appendChild(el("span", null, label)); acts.appendChild(a); return a; }
+      function act(cls, ic, label, sub) {
+        var a = el("a", "pc-act " + cls), t = el("span", null, label); a.appendChild(icon(ic));
+        if (sub) { t.appendChild(document.createTextNode(" ")); t.appendChild(el("span", "pc-nw", "(" + sub + ")")); }   // the bracket stays in one piece: no "(e-" / "mail)"
+        a.appendChild(t); acts.appendChild(a); return a;
+      }
       if (p.r) { aG = act("pc-act-g", "ext", P.gBtn); aG.href = p.r; aG.target = "_blank"; aG.rel = "noopener noreferrer"; }
       var both = !!(p.w && p.m);
-      if (p.w) { aW = act("pc-act-w", "chat", P.mgrBtn + (both ? " (" + P.mgrWa + ")" : "")); aW.target = "_blank"; aW.rel = "noopener noreferrer"; }
-      if (p.m) { aM = act("pc-act-m", "mail", P.mgrBtn + (both ? " (" + P.mgrMail + ")" : "")); }
+      if (p.w) { aW = act("pc-act-w", "chat", P.mgrBtn, both ? P.mgrWa : ""); aW.target = "_blank"; aW.rel = "noopener noreferrer"; }
+      if (p.m) { aM = act("pc-act-m", "mail", P.mgrBtn, both ? P.mgrMail : ""); }
       rateCard.appendChild(acts);
       rateCard.appendChild(el("p", "pc-note", P.rateNote));
       main.appendChild(rateCard);
@@ -1173,13 +1180,12 @@
       if (pl) {
         var ic = itemsCard = el("section", "pc-card pc-items"), ih = el("div", "pc-ihead");
         ih.appendChild(el("h2", "pc-h", P.ordered)); cnt = el("span", "pc-cnt"); ih.appendChild(cnt);
-        if (canLookUp) ih.appendChild(refreshBtn());
         ic.appendChild(ih);
         var ul = el("ul", "pc-lines");
         pl.forEach(function (l, i) {
           var li = el("li", "pc-line"), lab = el("label", "pc-lab");
-          var ck = el("input", "pc-chk pc-pickable"); ck.type = "checkbox";
-          var bx = el("span", "pc-box pc-pickable"); bx.appendChild(icon("check", "pc-ck")); bx.appendChild(icon("minus", "pc-mi"));
+          var ck = el("input", "pc-chk"); ck.type = "checkbox";
+          var bx = el("span", "pc-box"); bx.appendChild(icon("check", "pc-ck")); bx.appendChild(icon("minus", "pc-mi"));
           var tx = el("span", "pc-tx"); tx.appendChild(el("span", "pc-nm", l.n));
           if (l.q > 1) tx.appendChild(el("span", "pc-sub", l.q + " × " + money(l.u)));
           lab.appendChild(ck); lab.appendChild(bx); lab.appendChild(tx); li.appendChild(lab);
@@ -1192,7 +1198,9 @@
           ck.addEventListener("change", function () { S.sel[i] = ck.checked ? l.q : 0; update(); });
           ul.appendChild(li); lineEls.push({ li: li, ck: ck, st: st });
         });
-        ic.appendChild(ul); billBox.appendChild(ic);
+        ic.appendChild(ul);
+        if (canLookUp) { var rw = el("div", "pc-refresh"); rw.appendChild(refreshBtn()); ic.appendChild(rw); }
+        billBox.appendChild(ic);
       }
     }
     function refreshBtn() {
@@ -1229,7 +1237,9 @@
         pl.forEach(function (l, i) {
           var n = S.mode === "items" ? Math.max(0, Math.min(l.q, S.sel[i] | 0)) : l.q, e = lineEls[i];
           sel += n; all += l.q;
-          e.ck.checked = S.mode === "items" && n > 0; e.ck.indeterminate = S.mode === "items" && n > 0 && n < l.q;
+          var pickMode = S.mode === "items";
+          e.ck.disabled = !pickMode; if (pickMode) e.ck.removeAttribute("aria-hidden"); else e.ck.setAttribute("aria-hidden", "true");
+          e.ck.checked = pickMode ? n > 0 : true; e.ck.indeterminate = pickMode && n > 0 && n < l.q;
           e.li.classList.toggle("on", S.mode === "items" && n > 0);
           if (e.st) e.st.paint();
         });
@@ -1241,7 +1251,7 @@
         var ch = choices[i], on = ch.kind === S.tip.kind && (ch.kind !== "pct" || ch.pct === S.tip.pct);
         b.setAttribute("aria-checked", on ? "true" : "false");
       });
-      crow.hidden = S.tip.kind !== "custom";
+      cin.classList.toggle("is-on", S.tip.kind === "custom");
       tipVal.textContent = (c.share > 0 || c.tip > 0) ? money(c.tip) + (S.tip.kind === "pct" ? " (" + S.tip.pct + "%)" : "") : "—";
     }
     function paintRate() {
@@ -1305,7 +1315,7 @@
       methods(c);
       paintRate();
     }
-    cin.addEventListener("input", function () { S.custom = cin.value; update(); });
+    cin.addEventListener("input", function () { S.custom = cin.value; if (cin.value.trim()) S.tip = { kind: "custom" }; else if (S.tip.kind === "custom") S.tip = { kind: "none" }; update(); });
     buildBill(); update();
 
     // the bill from the sheet (live mode with a table number): looked up when this screen opens, never blocks the guest

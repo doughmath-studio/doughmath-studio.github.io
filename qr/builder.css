@@ -40,6 +40,7 @@ fieldset.qb-themes { border: 0; padding: 0; margin: 16px 0 0; }
 .qb-theme .sw i { display: block; width: 26px; height: 3px; border-radius: 2px; margin-top: 8px; }
 .qb-theme input:checked + .sw { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .qb-theme input:focus-visible + .sw { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sw-amber { background: #eef1f6; color: #0f172a; } .sw-amber i { background: #fbbf24; }
 .sw-espresso { background: #2a1d17; color: #f7ecd9; } .sw-espresso i { background: #e9c48b; }
 .sw-pistachio { background: #f3f6e9; color: #232d1c; } .sw-pistachio i { background: #46663a; }
 .sw-berry { background: #fff3f6; color: #38102d; } .sw-berry i { background: #a8205a; }
@@ -230,3 +231,57 @@ fieldset.qb-themes { border: 0; padding: 0; margin: 16px 0 0; }
 .card-s5 .c-head { margin-bottom: .5mm; }
 .card-poster .c-head { margin-bottom: 6mm; }
 #payRateNote, #payWaiterNote { margin: 10px 0 0; }
+
+/* PAY-3: the dark card (cards and tents). Navy, white title, amber small text, the QR on a white rounded panel. Sizes in mm/pt like the light cards. */
+.card-dark { background: #0f172a; color: #fff; justify-content: center; }
+.card-dark .c-title { font-weight: 800; line-height: 1.1; max-width: 100%; color: #fff; overflow-wrap: anywhere; }
+.card-dark .c-sub { font-weight: 700; line-height: 1.2; color: #fbbf24; text-transform: uppercase; letter-spacing: .12em; white-space: nowrap; margin-right: -.12em; }
+.card-dark .c-panel { flex: 0 0 auto; background: #fff; overflow: hidden; line-height: 0; }
+.card-dark .c-panel .c-qr { width: 100%; height: 100%; }
+.card-dark .c-nfcl { display: flex; align-items: center; justify-content: center; gap: .4em; color: #fbbf24; font-weight: 700; line-height: 1.2; max-width: 100%; }
+.card-dark .c-nfcl span { text-align: center; }
+.card-dark .c-nfcl .c-nfc { flex: none; display: block; margin: 0; width: 1.25em; height: 1.25em; vertical-align: baseline; }
+.card-dark .c-nfcl .c-nfc.flip { transform: scaleX(-1); }
+.card-dark .c-rule { display: block; width: 78%; height: 0; border-top: .25mm solid rgba(255, 255, 255, .25); }
+.card-dark .c-acc { font-weight: 700; line-height: 1.2; color: #e2e8f0; white-space: nowrap; }
+.card-dark .c-dom { color: #cbd5e1; }
+.card-dark .c-tbl { border-color: #fbbf24; color: #fbbf24; }
+.card-dark .c-line { color: #e2e8f0; }
+
+.card-a6.card-dark { padding: 7mm 8mm; }
+.card-a6.card-dark .c-sub { margin-top: 1.2mm; }
+.card-a6.card-dark .c-panel { margin-top: 4mm; border-radius: 3.2mm; }
+.card-a6.card-dark .c-nfcl { font-size: 11pt; margin-top: 3mm; }
+.card-a6.card-dark .c-rule { margin: 3mm 0 2.4mm; }
+.card-a6.card-dark .c-acc + .c-dom { margin-top: 1.6mm; }
+.card-a6.card-dark .c-dom { font-size: 8.5pt; margin-top: 3mm; }
+.card-a6.card-dark .c-foot { margin-top: 3mm; }
+
+.card-s6.card-dark { padding: 2.5mm 3mm; border-radius: 3.5mm; }
+.card-s6.card-dark .c-sub { margin-top: .4mm; }
+.card-s6.card-dark .c-panel { margin-top: 1mm; border-radius: 1.4mm; }
+.card-s6.card-dark .c-nfcl { font-size: 5.4pt; margin-top: .8mm; }
+.card-s6.card-dark .c-rule { margin: .7mm 0 .6mm; border-top-width: .15mm; }
+.card-s6.card-dark .c-dom { font-size: 6.2pt; margin-top: .6mm; }
+.card-s6.card-dark .c-foot { margin-top: .6mm; }
+
+.card-s5.card-dark { padding: 2mm 2.5mm; border-radius: 3mm; }
+.card-s5.card-dark .c-sub { margin-top: .3mm; }
+.card-s5.card-dark .c-panel { margin-top: .8mm; border-radius: 1.2mm; }
+.card-s5.card-dark .c-nfcl { font-size: 4.4pt; margin-top: .6mm; }
+.card-s5.card-dark .c-rule { margin: .5mm 0 .5mm; border-top-width: .15mm; }
+.card-s5.card-dark .c-dom { font-size: 5.4pt; margin-top: .5mm; }
+.card-s5.card-dark .c-foot { margin-top: .5mm; }
+
+.card-poster.card-dark { padding: 16mm 18mm; border-radius: 8mm; }
+.card-poster.card-dark .c-sub { margin-top: 3mm; }
+.card-poster.card-dark .c-panel { margin-top: 9mm; border-radius: 7mm; }
+.card-poster.card-dark .c-nfcl { font-size: 22pt; margin-top: 7mm; }
+.card-poster.card-dark .c-rule { margin: 7mm 0 6mm; border-top-width: .4mm; }
+.card-poster.card-dark .c-dom { font-size: 14pt; margin-top: 7mm; }
+.card-poster.card-dark .c-foot { margin-top: 6mm; }
+.card-poster.card-dark .c-acc + .c-dom { margin-top: 4mm; }
+
+.tent .face.l .card-dark { border-radius: 6mm 0 0 6mm; }
+.tent .face.r .card-dark { border-radius: 0 6mm 6mm 0; }
+.card-dark .c-tbl { font-weight: 800; }
