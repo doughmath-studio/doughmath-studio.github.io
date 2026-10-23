@@ -572,7 +572,9 @@
   var DEFAULT_BILLS = "Bill feed";   // the mini-POS feed: table,item,qty,price,waiter
   var LEGACY_BILLS = "Bills";         // PAY-1 tab: table,amount (still read as a fallback)
   var YES_RE = /^(yes|y|true|1|tak|да|si|sí|oui|ja|sim)$/i;
-  var FASTPAY_API = "https://fastpay-api.doughmath.workers.dev";   // PAY-4: waiter and manager notifications (Cloudflare Worker, no cookies)
+  var FASTPAY_API = "https://fastpay.doughmath.workers.dev";   // PAY-4: waiter and manager notifications; since phase 13 also menus and bills of venues kept in the FastPay cabinet (Cloudflare Worker, no cookies)
+  // test-only: a local copy of the FastPay worker serves this page and its API on localhost (?api=self, honoured on localhost only)
+  try { if (global.location && isLocalHost() && new URLSearchParams(global.location.search).get("api") === "self") FASTPAY_API = global.location.origin; } catch (e) { /* not a browser */ }
   var CAFE_RE = /^[a-z0-9][a-z0-9_-]{3,39}$/;   // the cafe code from the manager bot (notify column of the #pay block)
   var NOTIFY_LOCK_MS = 60000, POLL_MS = 15000, POLL_FOR_MS = 15 * 60000;
   var MINOR0 = { JPY: 1, HUF: 1 };   // currencies shown without decimals; everything else has 2
@@ -1596,6 +1598,26 @@
     });
   }
 
+  // Venue mode (?v=<cafe code>): the menu and the bills live in the FastPay cabinet, not in a Google Sheet.
+  // -> Promise of {w, lines, amount?} | null (any failure = no bill, the guest types the amount)
+  function fetchVenueBill(v, tb) {
+    if (!tb) return Promise.resolve(null);
+    var ctrl = typeof AbortController === "function" ? new AbortController() : null, timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 10000) : 0;
+    return fetch(FASTPAY_API + "/api/public/bill?v=" + encodeURIComponent(v) + "&tb=" + encodeURIComponent(tb), { credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", signal: ctrl ? ctrl.signal : undefined })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (j) {
+        clearTimeout(timer);
+        var b = j && j.bill;
+        if (!b || typeof b !== "object" || !Array.isArray(b.lines)) return null;
+        var lines = b.lines.filter(function (l) { return l && typeof l.n === "string" && typeof l.u === "number" && isFinite(l.u) && l.u >= 0 && Number(l.q) >= 1; })
+          .slice(0, FEED_LIMITS.lines).map(function (l) { return { n: clip(l.n, FEED_LIMITS.name), q: Math.min(FEED_LIMITS.qty, Math.round(Number(l.q))), u: l.u }; });
+        if (lines.length) return { w: clip(b.w, FEED_LIMITS.waiter), lines: lines };
+        if (typeof b.amount === "number" && isFinite(b.amount) && b.amount > 0) return { w: clip(b.w, FEED_LIMITS.waiter), lines: [], amount: b.amount };
+        return null;
+      })
+      .catch(function () { clearTimeout(timer); return null; });
+  }
+
   // Pasted Google Sheets link -> one of
   //   {ok:true, kind:"share", doc}              any normal sharing link (/edit, /view, ?usp=sharing, #gid=, /u/0/, long mobile links) or the bare id
   //   {ok:true, kind:"pub"|"pubhtml", id, gid}  a "publish to web" link (/d/e/.../pub...) or the whole embed code
@@ -1700,10 +1722,11 @@
     var tbRaw = q.get("tb"), tb = /^\d{1,3}$/.test(tbRaw || "") && +tbRaw >= 1 ? +tbRaw : 0;   // table number 1..999 (from the table's own QR)
     var bt = q.get("bt");                                                                          // name of the bills tab (default "Bill feed")
     // show the menu; with payments switched on the guest first sees the start screen (Menu / Pay the bill)
-    function present(raw, docId) {
+    function present(raw, docId, venue) {
       var m = normalize(raw), o = { tb: tb, nav: !embed, view: payActive(m) ? "start" : "menu" };
       if (embed) o.onView = function (v) { tell({ dmView: v }); };   // the builder's Start / Menu / Pay switch follows the guest page
       if (docId) o.bills = function () { return fetchBills(docId, bt, tb); };
+      if (venue) o.bills = function () { return fetchVenueBill(venue, tb); };
       render(root, m, o);
       if (o.nav) { try { global.history.replaceState({ dmView: last.view }, "", global.location.href); } catch (e) { /* ignore */ } }
       return last.m;
@@ -1716,8 +1739,35 @@
     function load() {
       var my = ++started;
       root.setAttribute("aria-busy", "true");
-      var s = q.get("s"), g = q.get("g"), d = q.get("d"), t = q.get("t");
+      var s = q.get("s"), g = q.get("g"), d = q.get("d"), t = q.get("t"), v = q.get("v");
       var override = isLocalHost() ? q.get("csv") : null; // test-only: honoured on localhost only
+
+      if (v !== null && !hash && !override) {
+        // venue mode: the FastPay cabinet keeps this menu (?v=<cafe code>)
+        v = String(v).trim().toLowerCase();
+        if (!CAFE_RE.test(v)) { tell({ dmLive: 1, ok: false, key: "badLink" }); return showError(root, uiLang, "badLink"); }
+        var vctrl = (typeof AbortController === "function") ? new AbortController() : null;
+        var vtimer = vctrl ? setTimeout(function () { vctrl.abort(); }, 15000) : 0;
+        var vretry = function () { status(root, T[uiLang].loading, "load"); load(); };
+        fetch(FASTPAY_API + "/api/public/menu?v=" + encodeURIComponent(v), { credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", signal: vctrl ? vctrl.signal : undefined }).then(function (res) {
+          if (res.status === 404 || res.status === 400) throw fail("gone");
+          if (!res.ok) throw fail("net");
+          return res.json();
+        }).then(function (j) {
+          clearTimeout(vtimer);
+          if (my !== started) return;
+          if (!j || !j.menu || typeof j.menu !== "object") throw fail("net");
+          var shown = present(j.menu, "", v);
+          tell({ dmLive: 1, ok: true, menu: shown });
+        }).catch(function (err) {
+          clearTimeout(vtimer);
+          if (my !== started) return;
+          var key = err && err.code === "gone" ? "badLink" : "netErr";
+          tell({ dmLive: 1, ok: false, key: key });
+          showError(root, uiLang, key, key === "netErr" ? vretry : null);
+        });
+        return;
+      }
 
       if (hash) {
         decodePayload(hash).then(function (obj) {
@@ -1775,7 +1825,7 @@
     priceFormatter: priceFormatter, parseSheetLink: parseSheetLink, docUrl: docUrl, cleanTab: cleanTab, DOC_RE: DOC_RE, DEFAULT_TAB: DEFAULT_TAB, currencyCode: currencyCode, allWhole: allWhole, liveUrl: liveUrl,
     render: render, setView: setView, boot: boot,
     payActive: payActive, normalizePay: normalizePay, parseTips: parseTips, checkPayLink: checkPayLink, checkBlik: checkBlik, parseAmount: parseAmount,
-    billsFromRows: billsFromRows, billFor: billFor, feedFromRows: feedFromRows, parseBills: parseBills, pickBill: pickBill, fetchBills: fetchBills, splitShare: splitShare, prepLines: prepLines, linesTotal: linesTotal, selTotal: selTotal,
+    billsFromRows: billsFromRows, billFor: billFor, feedFromRows: feedFromRows, parseBills: parseBills, pickBill: pickBill, fetchBills: fetchBills, fetchVenueBill: fetchVenueBill, FASTPAY_API: FASTPAY_API, splitShare: splitShare, prepLines: prepLines, linesTotal: linesTotal, selTotal: selTotal,
     feedbackText: feedbackText, waUrl: waUrl, mailUrl: mailUrl, checkEmail: checkEmail, LEGACY_BILLS: LEGACY_BILLS, tipMinor: tipMinor, payTotals: payTotals, plainAmount: plainAmount, paypalUrl: paypalUrl, paypalCode: paypalCode,
     isPayPalName: isPayPalName, minorDigits: minorDigits, toMinor: toMinor, moneyFormatter: moneyFormatter, PAY_T: PAY_T, DEFAULT_BILLS: DEFAULT_BILLS, DEFAULT_TIPS: DEFAULT_TIPS, bytesToB64url: bytesToB64url, b64urlToBytes: b64urlToBytes
   };
