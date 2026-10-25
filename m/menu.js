@@ -575,6 +575,10 @@
   var FASTPAY_API = "https://fastpay.doughmath.workers.dev";   // PAY-4: waiter and manager notifications; since phase 13 also menus and bills of venues kept in the FastPay cabinet (Cloudflare Worker, no cookies)
   // test-only: a local copy of the FastPay worker serves this page and its API on localhost (?api=self, honoured on localhost only)
   try { if (global.location && isLocalHost() && new URLSearchParams(global.location.search).get("api") === "self") FASTPAY_API = global.location.origin; } catch (e) { /* not a browser */ }
+  // FastPay is now Passa: on its own domain the page talks to the same origin (passa.cafe serves this page and the API)
+  try { if (global.location && /(^|\.)passa\.cafe$/.test(global.location.hostname)) FASTPAY_API = global.location.origin; } catch (e) { /* not a browser */ }
+  var PASSA_HOME = "https://passa.cafe/";
+  var brandPassa = false;   // venue mode (?v=): the venue uses Passa, so the footer names Passa instead of the free sheet template
   var CAFE_RE = /^[a-z0-9][a-z0-9_-]{3,39}$/;   // the cafe code from the manager bot (notify column of the #pay block)
   var NOTIFY_LOCK_MS = 60000, POLL_MS = 15000, POLL_FOR_MS = 15 * 60000;
   var MINOR0 = { JPY: 1, HUF: 1 };   // currencies shown without decimals; everything else has 2
@@ -973,9 +977,7 @@
 
     var foot = el("footer", "mn-foot");
     if (m.f) foot.appendChild(el("p", "mn-ft", m.f));
-    var a = el("a", "mn-brand", "Free QR menu by DoughMath Studio");
-    a.href = HOME; a.rel = "noopener";
-    foot.appendChild(a);
+    foot.appendChild(brandLink());
     root.appendChild(foot);
 
     if (chips.length) trackChips(chipBox, chips, secEls);
@@ -984,10 +986,14 @@
   // ---------- start screen and Pay screen (PAY-1) ----------
   var last = null;   // the last render: {root, m, opts, view}; setView() re-renders it
   function currencySign(cur) { var code = currencyCode(cur); return SIGNS[code] || String(cur || ""); }
+  function brandLink() {
+    var a = el("a", "mn-brand", brandPassa ? "passa.cafe" : "Free QR menu by DoughMath Studio");
+    a.href = brandPassa ? PASSA_HOME : HOME; a.rel = "noopener";
+    return a;
+  }
   function brandFooter() {
     var foot = el("footer", "mn-foot");
-    var a = el("a", "mn-brand", "Free QR menu by DoughMath Studio");
-    a.href = HOME; a.rel = "noopener"; foot.appendChild(a);
+    foot.appendChild(brandLink());
     return foot;
   }
   // view: "start" | "menu" | "pay". The real page (opts.nav) also gets a browser-history entry, so the phone's Back button works.
@@ -1685,8 +1691,7 @@
     }
     root.appendChild(box);
     var foot = el("footer", "mn-foot");
-    var a = el("a", "mn-brand", "Free QR menu by DoughMath Studio");
-    a.href = HOME; a.rel = "noopener"; foot.appendChild(a);
+    foot.appendChild(brandLink());
     box.appendChild(foot);
   }
 
@@ -1743,7 +1748,8 @@
       var override = isLocalHost() ? q.get("csv") : null; // test-only: honoured on localhost only
 
       if (v !== null && !hash && !override) {
-        // venue mode: the FastPay cabinet keeps this menu (?v=<cafe code>)
+        // venue mode: the Passa cabinet (formerly FastPay) keeps this menu (?v=<cafe code>)
+        brandPassa = true;
         v = String(v).trim().toLowerCase();
         if (!CAFE_RE.test(v)) { tell({ dmLive: 1, ok: false, key: "badLink" }); return showError(root, uiLang, "badLink"); }
         var vctrl = (typeof AbortController === "function") ? new AbortController() : null;
