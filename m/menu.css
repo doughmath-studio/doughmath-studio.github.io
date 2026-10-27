@@ -82,7 +82,7 @@ html[data-theme="mono"] {
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--bg); }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--bg); overscroll-behavior-y: none; }   /* no pull-to-refresh: a reload would drop what the guest chose */
 body {
   margin: 0; color: var(--ink);
   background-color: var(--bg); background-image: radial-gradient(circle, var(--dot) 1.1px, transparent 1.6px); background-size: 22px 22px;

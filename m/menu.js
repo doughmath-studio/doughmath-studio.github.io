@@ -1542,14 +1542,17 @@
   var scrollOff = null;
   function trackChips(chipBox, chips, secEls) {
     if (scrollOff) scrollOff();
-    var active = -1, ticking = false;
+    var active = -1, ticking = false, centerTimer = 0;
     function setActive(i) {
       if (i === active) return;
       active = i;
       chips.forEach(function (c, k) {
         if (k === i) { c.setAttribute("aria-current", "true"); c.classList.add("on"); } else { c.removeAttribute("aria-current"); c.classList.remove("on"); }
       });
-      var c = chips[i];
+    }
+    // the chip strip is moved only when the page stops: moving it during a swipe stops the page's momentum on iPhones
+    function centerActive() {
+      var c = chips[active];
       if (c && chipBox.scrollWidth > chipBox.clientWidth) {
         var target = c.offsetLeft - (chipBox.clientWidth - c.offsetWidth) / 2;
         if (typeof chipBox.scrollTo === "function") chipBox.scrollTo({ left: target, behavior: "auto" }); else chipBox.scrollLeft = target;
@@ -1563,11 +1566,14 @@
       if (atEnd && global.scrollY > 0) idx = secEls.length - 1;
       setActive(idx);
     }
-    function onScroll() { if (!ticking) { ticking = true; global.requestAnimationFrame(update); } }
+    function onScroll() {
+      if (!ticking) { ticking = true; global.requestAnimationFrame(update); }
+      clearTimeout(centerTimer); centerTimer = setTimeout(centerActive, 180);
+    }
     global.addEventListener("scroll", onScroll, { passive: true });
     global.addEventListener("resize", onScroll);
-    scrollOff = function () { global.removeEventListener("scroll", onScroll); global.removeEventListener("resize", onScroll); };
-    update();
+    scrollOff = function () { clearTimeout(centerTimer); global.removeEventListener("scroll", onScroll); global.removeEventListener("resize", onScroll); };
+    update(); centerActive();
   }
 
   // ---------- boot (viewer page only) ----------
