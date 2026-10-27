@@ -310,6 +310,7 @@
         (Array.isArray(it.g) ? it.g : []).forEach(function (k) { if (TAGS.indexOf(k) >= 0 && g.indexOf(k) < 0) g.push(k); });
         if (g.length) x.g = g;
         if (it.x === 1 || it.x === true || it.x === "1") x.x = 1;
+        if (typeof it.ph === "string" && /^[0-9a-f]{32}$/.test(it.ph)) x.ph = it.ph;   // a dish photo uploaded in the Passa cabinet
         o.i.push(x);
       });
       out.s.push(o);
@@ -880,6 +881,52 @@
     return m;
   }
 
+  // ---------- dish photos (Passa cabinet): a thumbnail beside the dish, tap for a large view ----------
+  // the cabinet's live preview (?preview=1) is served by the same Passa host that keeps the photos
+  function photoUrl(id) {
+    var own = false;
+    try { own = !!global.location && new URLSearchParams(global.location.search).get("preview") === "1"; } catch (e) { own = false; }
+    return (own ? "" : FASTPAY_API) + "/img/" + id;
+  }
+  function addPhoto(li, it, fmt, lang) {
+    var b = el("button", "mn-ph"); b.type = "button";
+    b.setAttribute("aria-label", it.n);
+    var im = el("img"); im.alt = ""; im.width = 96; im.height = 96; im.loading = "lazy"; im.decoding = "async";
+    im.addEventListener("error", function () { li.classList.remove("has-ph"); if (b.parentNode) b.parentNode.removeChild(b); });
+    im.src = photoUrl(it.ph);
+    b.appendChild(im);
+    b.addEventListener("click", function () { openPhoto(it, fmt, lang, b); });
+    li.classList.add("has-ph");
+    li.appendChild(b);
+  }
+  function openPhoto(it, fmt, lang, from) {
+    var P = PAY_T[lang] || PAY_T.en, doc = document.documentElement;
+    var bd = el("div", "mn-lb");
+    bd.setAttribute("role", "dialog"); bd.setAttribute("aria-modal", "true"); bd.setAttribute("aria-label", it.n);
+    var fig = el("figure", "mn-lb-fig");
+    var im = el("img"); im.alt = it.n; im.decoding = "async"; im.src = photoUrl(it.ph);
+    var cap = el("figcaption", "mn-lb-cap"), top = el("div", "mn-row");
+    top.appendChild(el("h2", "mn-iname", it.n));
+    if (it.p !== undefined) top.appendChild(el("span", "mn-price", typeof it.p === "number" ? fmt.format(it.p) : it.p));
+    cap.appendChild(top);
+    if (it.d) cap.appendChild(el("p", "mn-desc", it.d));
+    fig.appendChild(im); fig.appendChild(cap);
+    var x = el("button", "mn-lb-x"); x.type = "button"; x.setAttribute("aria-label", P.close); x.appendChild(icon("x"));
+    bd.appendChild(fig); bd.appendChild(x);
+    function key(e) { if (e.key === "Escape") close(); else if (e.key === "Tab") { e.preventDefault(); x.focus(); } }
+    function close() {
+      if (bd.parentNode) bd.parentNode.removeChild(bd);
+      document.removeEventListener("keydown", key);
+      doc.classList.remove("mn-lock");
+      if (from && from.focus) from.focus();
+    }
+    bd.addEventListener("click", function (e) { if (!fig.contains(e.target) || e.target === im) close(); });
+    document.addEventListener("keydown", key);
+    document.body.appendChild(bd);
+    doc.classList.add("mn-lock");
+    x.focus();
+  }
+
   function renderMenu(root, m, L, opts) {
     var fmt = priceFormatter(m.l, m.c, allWhole(m));
 
@@ -934,6 +981,7 @@
         (it.g || []).forEach(function (g) { var t = el("span", "mn-tag", L.tags[g]); t.setAttribute("data-tag", g); meta.appendChild(t); });
         if (it.x) meta.appendChild(el("span", "mn-sold", L.soldOut));
         if (meta.childNodes.length) li.appendChild(meta);
+        if (it.ph) addPhoto(li, it, fmt, m.l);   // last in reading order, shown on the right
         ul.appendChild(li);
       });
       s.appendChild(ul);
@@ -1049,7 +1097,8 @@
     back: "M19 12H5|M11 18l-6-6 6-6",
     ext: "M14 4h6v6|M20 4l-9 9|M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5",
     chat: "M4.5 5.5h15a1 1 0 011 1v9a1 1 0 01-1 1H10l-4.5 3.5v-3.5h-1a1 1 0 01-1-1v-9a1 1 0 011-1z",
-    mail: "M3.5 6.5h17v11h-17z|M3.5 7l8.5 6.5L20.5 7"
+    mail: "M3.5 6.5h17v11h-17z|M3.5 7l8.5 6.5L20.5 7",
+    x: "M6 6l12 12|M18 6L6 18"
   };
   function icon(name, cls) {
     var s = document.createElementNS(SVGNS, "svg");
