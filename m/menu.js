@@ -255,6 +255,18 @@
       close: "Закрыть", payNow: "Оплатить", show: "Показать", hide: "Скрыть" }
   };
   Object.keys(PAY_T4).forEach(function (l) { Object.keys(PAY_T4[l]).forEach(function (k) { PAY_T[l][k] = PAY_T4[l][k]; }); });
+  // online payment through Stripe Checkout (the venue's own Stripe account, Passa cabinet)
+  var PAY_T5 = {
+    en: { safeOnline: "Card details are entered only on Stripe’s page — this page never asks for them.", payOnline: "Pay online · {total}", payOnlineIdle: "Pay online", payOnlineSub: "Card, BLIK, Apple Pay, Google Pay — on Stripe’s secure page", payOnlineErr: "Could not open the payment. Please try again or choose another way.", payOnlineCheck: "Checking the payment…" },
+    es: { safeOnline: "Los datos de la tarjeta se introducen solo en la página de Stripe; esta página nunca los pide.", payOnline: "Pagar online · {total}", payOnlineIdle: "Pagar online", payOnlineSub: "Tarjeta, BLIK, Apple Pay, Google Pay — en la página segura de Stripe", payOnlineErr: "No se pudo abrir el pago. Inténtalo de nuevo o elige otra forma.", payOnlineCheck: "Comprobando el pago…" },
+    pt: { safeOnline: "Os dados do cartão são introduzidos apenas na página da Stripe — esta página nunca os pede.", payOnline: "Pagar online · {total}", payOnlineIdle: "Pagar online", payOnlineSub: "Cartão, BLIK, Apple Pay, Google Pay — na página segura da Stripe", payOnlineErr: "Não foi possível abrir o pagamento. Tente de novo ou escolha outra forma.", payOnlineCheck: "A verificar o pagamento…" },
+    fr: { safeOnline: "Les données de carte se saisissent uniquement sur la page de Stripe — cette page ne les demande jamais.", payOnline: "Payer en ligne · {total}", payOnlineIdle: "Payer en ligne", payOnlineSub: "Carte, BLIK, Apple Pay, Google Pay — sur la page sécurisée de Stripe", payOnlineErr: "Impossible d’ouvrir le paiement. Réessayez ou choisissez un autre moyen.", payOnlineCheck: "Vérification du paiement…" },
+    de: { safeOnline: "Kartendaten gibst du nur auf der Seite von Stripe ein — diese Seite fragt nie danach.", payOnline: "Online bezahlen · {total}", payOnlineIdle: "Online bezahlen", payOnlineSub: "Karte, BLIK, Apple Pay, Google Pay — auf der sicheren Seite von Stripe", payOnlineErr: "Die Zahlung konnte nicht geöffnet werden. Bitte erneut versuchen oder anders zahlen.", payOnlineCheck: "Zahlung wird geprüft…" },
+    pl: { safeOnline: "Dane karty podajesz tylko na stronie Stripe — ta strona nigdy o nie nie prosi.", payOnline: "Zapłać online · {total}", payOnlineIdle: "Zapłać online", payOnlineSub: "Karta, BLIK, Apple Pay, Google Pay — na bezpiecznej stronie Stripe", payOnlineErr: "Nie udało się otworzyć płatności. Spróbuj jeszcze raz albo wybierz inny sposób.", payOnlineCheck: "Sprawdzamy płatność…" },
+    uk: { safeOnline: "Дані картки вводяться лише на сторінці Stripe — ця сторінка ніколи їх не запитує.", payOnline: "Оплатити онлайн · {total}", payOnlineIdle: "Оплатити онлайн", payOnlineSub: "Картка, BLIK, Apple Pay, Google Pay — на захищеній сторінці Stripe", payOnlineErr: "Не вдалося відкрити оплату. Спробуйте ще раз або оберіть інший спосіб.", payOnlineCheck: "Перевіряємо оплату…" },
+    ru: { safeOnline: "Данные карты вводятся только на странице Stripe — эта страница никогда их не запрашивает.", payOnline: "Оплатить онлайн · {total}", payOnlineIdle: "Оплатить онлайн", payOnlineSub: "Карта, BLIK, Apple Pay, Google Pay — на защищённой странице Stripe", payOnlineErr: "Не получилось открыть оплату. Попробуйте ещё раз или выберите другой способ.", payOnlineCheck: "Проверяем оплату…" }
+  };
+  Object.keys(PAY_T5).forEach(function (l) { Object.keys(PAY_T5[l]).forEach(function (k) { PAY_T[l][k] = PAY_T5[l][k]; }); });
   function fill(str, vars) { return String(str).replace(/\{(\w+)\}/g, function (all, k) { return vars && vars[k] != null ? vars[k] : all; }); }
 
   // ---------- small helpers ----------
@@ -658,6 +670,7 @@
     var cs = String(f.c == null ? "" : f.c).trim().toLowerCase();
     if (cs) { if (CAFE_RE.test(cs)) p.c = cs; else bad.push("notify"); }
     if (f.q) p.q = 1;
+    if (f.s) p.s = 1;   // "Pay online" (Stripe Checkout on the venue's own Stripe account; only from the Passa cabinet)
     if (bad.length) p.bad = bad;
     return p;
   }
@@ -665,13 +678,13 @@
   function normalizePay(r) {
     if (!r || typeof r !== "object" || Array.isArray(r)) return null;
     var yes = function (v) { return v === 1 || v === true || v === "1"; };
-    var p = buildPay({ e: yes(r.e), t: "t" in r ? r.t : undefined, x: yes(r.x), l: r.l, b: r.b, n: r.n, r: r.r, w: r.w, m: r.m, c: r.c, q: yes(r.q) });
+    var p = buildPay({ e: yes(r.e), t: "t" in r ? r.t : undefined, x: yes(r.x), l: r.l, b: r.b, n: r.n, r: r.r, w: r.w, m: r.m, c: r.c, q: yes(r.q), s: yes(r.s) });
     // what an earlier pass already dropped as invalid stays named (the sheet is read, normalized, shown and reported to the builder: that is normalize() more than once)
     if (Array.isArray(r.bad)) r.bad.forEach(function (k) { if (BAD_KEYS.indexOf(k) >= 0 && (!p.bad || p.bad.indexOf(k) < 0)) (p.bad = p.bad || []).push(k); });
     return p;
   }
   // the guest sees the start screen and the Pay screen only when pay is on AND at least one way of paying is valid
-  function payActive(m) { return !!(m && m.p && m.p.e === 1 && (m.p.x === 1 || m.p.l || m.p.b || m.p.q === 1)); }
+  function payActive(m) { return !!(m && m.p && m.p.e === 1 && (m.p.x === 1 || m.p.l || m.p.b || m.p.q === 1 || (m.p.s === 1 && m.p.c))); }
 
   var PAY_ALIASES = { enabled: "enabled", enable: "enabled", on: "enabled", tips: "tips", tip: "tips", terminal: "terminal", card: "terminal", link: "link", url: "link", blik: "blik", phone: "blik", note: "note", notes: "note",
     review_link: "review", "review link": "review", review: "review", google_review: "review", feedback_whatsapp: "whatsapp", "feedback whatsapp": "whatsapp", whatsapp: "whatsapp", feedback_email: "email", "feedback email": "email", email: "email",
@@ -1251,12 +1264,13 @@
       main.appendChild(pbBox);
     }
 
-    var anyMethod = !!(p.x || host || p.b);
+    var online = !!(p.s && notifyOn);   // "Pay online": Stripe Checkout, needs the cafe code and the table number
+    var anyMethod = !!(online || p.x || host || p.b);
     var mh = withIcon(el("h2", "pc-mh", P.howH), "card"); mh.hidden = !anyMethod; main.appendChild(mh);
     var mbox = el("div", "mn-methods"); main.appendChild(mbox);
     if (p.n) main.appendChild(el("p", "mn-paynote", p.n));
     if (notifyOn) main.appendChild(el("p", "pc-npriv", P.notifyPriv));
-    main.appendChild(el("p", "mn-safe", host ? fill(P.safe, { host: host }) : P.safeNo));
+    main.appendChild(el("p", "mn-safe", online ? P.safeOnline : host ? fill(P.safe, { host: host }) : P.safeNo));
 
     // rating: stars, an optional comment and the SAME buttons for every rating (no review gating)
     var starEls = [], aG = null, aW = null, aM = null, rateCard = null, rBtn = null, rMsg = null;
@@ -1486,6 +1500,14 @@
       tTot.textContent = have ? totalTxt : "—";
       tTip.hidden = !have && !(t.tip > 0);
       tTip.textContent = t.tip > 0 ? P.tip + ": " + money(t.tip) : (have ? P.noTip : "");
+      if (online && !S.paid) {
+        var ob = el("button", "pc-go-btn pc-online"); ob.type = "button";
+        ob.appendChild(icon("card")); ob.appendChild(el("span", null, have ? fill(P.payOnline, { total: totalTxt }) : P.payOnlineIdle));
+        ob.disabled = !have || S.going;
+        ob.addEventListener("click", function () { payOnline(ob); });
+        mbox.appendChild(ob);
+        mbox.appendChild(el("p", "pc-online-sub" + (S.oerr ? " err" : ""), S.oerr ? P.payOnlineErr : P.payOnlineSub));
+      }
       if (p.x) {
         if (notifyOn) notifyBtn(mbox, "terminal", P.askTerminal, "card", have);
         var sw = withIcon(el("button", "pc-act pc-showw", P.terminalH), "card"); sw.type = "button";
@@ -1554,6 +1576,39 @@
         if (main.isConnected) update();
       });
     }
+    // Stripe Checkout: the server makes the session on the venue's own Stripe account; the guest comes back with ?sid=
+    function payOnline(btn) {
+      var c = calc();
+      if (!(c.share > 0) || S.going) return;
+      S.going = true; S.oerr = false; if (btn) btn.disabled = true;
+      var body = { cafe: p.c, table: tbs, currency: String(m.c || ""), bill: c.whole / F, share: c.share / F, tip: c.tip / F,
+        split: S.mode === "items" ? "items" : S.mode === "split" ? "people" : "all", waiter: (S.data && S.data.w) || "", lang: m.l };
+      var done = function (url) {
+        if (url && /^https:\/\/checkout\.stripe\.com\//.test(url)) {
+          global.location.assign(url);
+          setTimeout(function () { S.going = false; if (main.isConnected) update(); }, 8000);   // back from Stripe with the browser's Back button
+          return;
+        }
+        S.going = false; S.oerr = true; if (main.isConnected) update();
+      };
+      try {
+        fetch(FASTPAY_API + "/v1/pay/checkout", { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify(body), credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", mode: "cors" })
+          .then(function (r) { return r.json(); }).then(function (j) { done(j && j.ok ? j.url : null); }, function () { done(null); });
+      } catch (e) { done(null); }
+    }
+    // back from Stripe: the server asks Stripe itself whether the session was paid
+    function checkOnline(sid) {
+      S.sidDone = true;
+      try { var u = new URL(global.location.href); u.searchParams.delete("sid"); global.history.replaceState(global.history.state, "", u.pathname + u.search + u.hash); } catch (e) { /* ignore */ }
+      var tries = 0;
+      (function ask() {
+        fetch(FASTPAY_API + "/v1/pay/session?cafe=" + encodeURIComponent(p.c) + "&sid=" + encodeURIComponent(sid), { credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", mode: "cors" })
+          .then(function (r) { return r.json(); }).then(function (j) {
+            if (j && j.paid === true) { S.paid = true; if (main.isConnected) update(); }
+            else if (++tries < 6) setTimeout(ask, 2500);   // BLIK can take a few seconds
+          }, function () { if (++tries < 6) setTimeout(ask, 2500); });
+      })();
+    }
     function startPoll() {
       if (S.pollTimer) clearInterval(S.pollTimer);
       S.pollTimer = setInterval(pollOnce, POLL_MS);
@@ -1571,6 +1626,7 @@
     }
 
     buildBill(); update();
+    if (online && opts.sid && !S.sidDone && /^cs_(test|live)_[A-Za-z0-9]{10,200}$/.test(opts.sid)) checkOnline(opts.sid);
     if (notifyOn && !S.paid && S.pollEnd > Date.now()) startPoll();   // back on this screen while a payment is still open
 
     // the bill from the sheet (live mode with a table number): looked up when this screen opens, never blocks the guest
@@ -1780,10 +1836,12 @@
     // builder preview (?embed=1): tell the same-origin parent page what was loaded, so it can show the result next to the preview
     var embed = q.get("embed") === "1" && global.parent && global.parent !== global.self;
     var tbRaw = q.get("tb"), tb = /^\d{1,3}$/.test(tbRaw || "") && +tbRaw >= 1 ? +tbRaw : 0;   // table number 1..999 (from the table's own QR)
-    var bt = q.get("bt");                                                                          // name of the bills tab (default "Bill feed")
+    var bt = q.get("bt");
+    var sid = q.get("sid");                                                                        // back from Stripe Checkout (venue mode)                                                                          // name of the bills tab (default "Bill feed")
     // show the menu; with payments switched on the guest first sees the start screen (Menu / Pay the bill)
     function present(raw, docId, venue) {
-      var m = normalize(raw), o = { tb: tb, nav: !embed, view: payActive(m) ? "start" : "menu" };
+      var m = normalize(raw), o = { tb: tb, nav: !embed, view: payActive(m) ? (sid && venue ? "pay" : "start") : "menu" };
+      if (sid && venue) o.sid = sid;
       if (embed) o.onView = function (v) { tell({ dmView: v }); };   // the builder's Start / Menu / Pay switch follows the guest page
       if (docId) o.bills = function () { return fetchBills(docId, bt, tb); };
       if (venue) o.bills = function () { return fetchVenueBill(venue, tb); };

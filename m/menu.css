@@ -489,3 +489,7 @@ html:has(.pc-bar) { scroll-padding-bottom: calc(96px + env(safe-area-inset-botto
 .mn-methods > .pc-nstat, .mn-blik .pc-nstat { margin-top: -2px; }
 .mn-blik .pc-nstat { margin-top: 10px; }
 .mn-pay .pc-billbox { gap: 10px; }
+
+/* "Pay online" (Stripe Checkout) */
+.pc-online-sub { margin: 6px 4px 14px; color: var(--muted); font-size: 14px; text-align: center; }
+.pc-online-sub.err { color: var(--danger, #b91c1c); }
