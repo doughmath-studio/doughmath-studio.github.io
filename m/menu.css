@@ -32,13 +32,14 @@
     --badge: #ffffff; --on-badge: #000000; --star-on: #ffffff; --star-edge: #ffffff; --star-off: #ffffff; --danger: #ffb4a6; --dotc: #ffffff; }
 }
 
-/* Amber: the owner's reference look. Cool light grey page with a dot grid, white cards, navy text and buttons, amber chips, orange amounts, a green tip pill. */
+/* Amber (stored name kept): the Passa look since Nov 2026 — warm kitchen paper with a dot grid, cream cards, espresso text,
+   ketchup-red buttons and amounts, butter chips, a green tip pill (same palette as passa.cafe). */
 html[data-theme="amber"] {
-  --bg: #eef1f6; --dot: rgba(15, 23, 42, 0.09); --card: #ffffff; --field: #f8fafc; --ink: #0f172a; --muted: #475569; --line: #e4e9f0; --line2: #cbd5e1; --soft: #e8ecf2;
-  --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
-  --accent: #fbbf24; --on-accent: #0f172a; --edge: #f5b000; --primary: #0f172a; --on-primary: #ffffff; --hi: #fbbf24;
-  --hot: #be5a00; --hot-big: #e07000; --good: #15803d; --good-bg: #dcfce7; --tile: #fef3c7; --tile-ink: #b45309; --ctl: #64748b; --ring: #0f172a;
-  --badge: #0f172a; --on-badge: #ffffff; --star-on: #fbbf24; --star-edge: #d97706; --star-off: #64748b; --danger: #b91c1c; --dotc: #16a34a;
+  --bg: #f8f1e1; --dot: rgba(43, 29, 22, 0.08); --card: #fffdf6; --field: #fffaf0; --ink: #2b1d16; --muted: #66503f; --line: #ecdfc9; --line2: #d9c7a8; --soft: #f1e6cf;
+  --shadow: 0 14px 34px rgba(43, 29, 22, 0.09);
+  --accent: #f6dd8f; --on-accent: #2b1d16; --edge: #e9c24f; --primary: #c43b25; --on-primary: #ffffff; --hi: #f6dd8f;
+  --hot: #b8321c; --hot-big: #c43b25; --good: #15803d; --good-bg: #dcfce7; --tile: #fbf0cc; --tile-ink: #8a3d10; --ctl: #7d6a5d; --ring: #2b1d16;
+  --badge: #2b1d16; --on-badge: #ffffff; --star-on: #f2b632; --star-edge: #c98a12; --star-off: #7d6a5d; --danger: #b91c1c; --dotc: #16a34a;
   color-scheme: light;
 }
 html[data-theme="espresso"] {

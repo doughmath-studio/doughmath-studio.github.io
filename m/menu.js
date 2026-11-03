@@ -12,7 +12,7 @@
   var LANGS = ["en", "es", "pt", "fr", "de", "pl", "uk", "ru"];
   var LOCALES = { en: "en-US", es: "es-ES", pt: "pt-PT", fr: "fr-FR", de: "de-DE", pl: "pl-PL", uk: "uk-UA", ru: "ru-RU" };
   var THEMES = ["amber", "espresso", "pistachio", "berry", "mono"];
-  var THEME_COLORS = { amber: "#eef1f6", espresso: "#2a1d17", pistachio: "#f3f6e9", berry: "#fff3f6", mono: "#ffffff" };
+  var THEME_COLORS = { amber: "#f8f1e1", espresso: "#2a1d17", pistachio: "#f3f6e9", berry: "#fff3f6", mono: "#ffffff" };
   var TAGS = ["V", "VG", "GF", "spicy"];
   var LIMITS = { sections: 60, items: 600, name: 160, title: 120, desc: 600, footer: 400, priceText: 40, json: 1048576 };
 
@@ -591,7 +591,7 @@
   // FastPay is now Passa: on its own domain the page talks to the same origin (passa.cafe serves this page and the API)
   try { if (global.location && /(^|\.)passa\.cafe$/.test(global.location.hostname)) FASTPAY_API = global.location.origin; } catch (e) { /* not a browser */ }
   var PASSA_HOME = "https://passa.cafe/";
-  var brandPassa = false;   // venue mode (?v=): the venue uses Passa, so the footer names Passa instead of the free sheet template
+  var brandPassa = /^\/app\//.test(location.pathname) || /(^|\.)passa\.cafe$/.test(location.hostname);   // venue mode (?v=): the venue uses Passa, so the footer names Passa instead of the free sheet template
   var CAFE_RE = /^[a-z0-9][a-z0-9_-]{3,39}$/;   // the cafe code from the manager bot (notify column of the #pay block)
   var NOTIFY_LOCK_MS = 60000, POLL_MS = 15000, POLL_FOR_MS = 15 * 60000;
   var MINOR0 = { JPY: 1, HUF: 1 };   // currencies shown without decimals; everything else has 2
