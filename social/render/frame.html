@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Passa social frame</title>
+<link rel="stylesheet" href="../assets/fonts.css">
+<style>
+/* One frame = one Instagram image. Post 1080×1350 (4:5), story 1080×1920 (9:16, UI-safe zones top 250 / bottom 340).
+   Themes follow the Passa brand: noir (Passa Tip), cream (Passa Menu), butter, pink. */
+:root {
+  --display: "Outfit", "Inter", sans-serif; --body: "Inter", sans-serif; --mono: "Space Mono", monospace; --script: "Great Vibes", cursive;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1350px; overflow: hidden; }
+body.story { height: 1920px; }
+body.story html { height: 1920px; }
+.f { position: relative; width: 1080px; height: 1350px; overflow: hidden; display: flex; flex-direction: column; padding: 96px 88px 84px; gap: 34px;
+  background: var(--bg); color: var(--ink); font-family: var(--body); }
+.story .f { height: 1920px; padding: 270px 88px 360px; }
+.t-noir { --bg: #0f0d0e; --ink: #f4ede4; --muted: #b5a79d; --acc: #e0457b; --acc2: #f6dd8f; --line: rgba(244,237,228,.14); --card: #1d181a; }
+.t-cream { --bg: #f8f1e1; --ink: #1d1714; --muted: #6f6158; --acc: #c43b25; --acc2: #e0457b; --line: rgba(29,23,20,.14); --card: #fffaf0; }
+.t-butter { --bg: #f6dd8f; --ink: #1d1714; --muted: #5f4f32; --acc: #c43b25; --acc2: #1d1714; --line: rgba(29,23,20,.18); --card: #fff3c4; }
+.t-pink { --bg: #e0457b; --ink: #fff7f0; --muted: #ffd9e5; --acc: #f6dd8f; --acc2: #1d1714; --line: rgba(255,255,255,.25); --card: #c93a6c; }
+.grain::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
+  background-image: radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 1.5px), radial-gradient(circle at 70% 80%, #fff 0 1px, transparent 1.5px);
+  background-size: 7px 7px, 11px 11px; }
+.eyebrow { font: 700 26px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--acc); display: flex; align-items: center; gap: 16px; }
+.eyebrow::before { content: ""; width: 16px; height: 16px; border-radius: 50%; background: var(--acc); }
+h1 { font: 800 112px/0.98 var(--display); letter-spacing: -.02em; text-wrap: balance; }
+h1 em { font-style: normal; color: var(--acc); }
+h1.s { font-size: 92px; } h1.xs { font-size: 76px; }
+.sub { font: 400 40px/1.35 var(--body); color: var(--muted); max-width: 30ch; text-wrap: pretty; }
+.sub b { color: var(--ink); font-weight: 700; }
+.grow { flex: 1; }
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 2px solid var(--line); padding-top: 30px; }
+.brand { display: flex; align-items: center; gap: 16px; font: 800 44px var(--display); letter-spacing: -.01em; }
+.brand img { width: 64px; height: 69px; }
+.brand i { font: 700 22px var(--mono); font-style: normal; background: var(--acc2); color: var(--bg); padding: 4px 10px; border-radius: 8px; margin-left: 4px; }
+.handle { font: 700 26px var(--mono); color: var(--muted); }
+.pill { display: inline-flex; font: 700 28px var(--mono); padding: 12px 22px; border-radius: 999px; border: 2px solid var(--line); color: var(--ink); }
+.pills { display: flex; flex-wrap: wrap; gap: 14px; }
+/* stat */
+.big { font: 800 330px/0.85 var(--display); letter-spacing: -.05em; color: var(--acc); }
+.big small { font-size: .38em; letter-spacing: -.02em; }
+.label { font: 700 56px/1.12 var(--display); max-width: 18ch; text-wrap: balance; }
+.src { font: 400 24px/1.4 var(--mono); color: var(--muted); }
+/* chat */
+.chat { display: flex; flex-direction: column; gap: 26px; }
+.msg { max-width: 82%; padding: 30px 36px; border-radius: 40px; font: 500 44px/1.28 var(--body); background: var(--card); border: 2px solid var(--line); }
+.msg .who { display: block; font: 700 22px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.msg.r { align-self: flex-end; background: var(--acc); color: #fff; border-color: transparent; border-bottom-right-radius: 10px; }
+.msg.r .who { color: rgba(255,255,255,.75); }
+.msg.l { border-bottom-left-radius: 10px; }
+.punch { font: 800 64px/1.05 var(--display); text-wrap: balance; }
+.punch em { font-style: normal; color: var(--acc); }
+/* list */
+.list { display: flex; flex-direction: column; gap: 26px; counter-reset: n; }
+.list li { list-style: none; display: grid; grid-template-columns: 92px 1fr; gap: 26px; align-items: start; counter-increment: n; font: 500 42px/1.3 var(--body); }
+.list li::before { content: counter(n); width: 92px; height: 92px; border-radius: 28px; display: grid; place-items: center; font: 800 48px var(--display); background: var(--acc); color: #fff; }
+.list li b { display: block; font: 800 50px/1.1 var(--display); margin-bottom: 4px; }
+/* cards */
+.cards { display: flex; gap: 40px; justify-content: center; align-items: center; flex: 1; min-height: 0; }
+.cards svg { height: 640px; width: auto; filter: drop-shadow(0 40px 60px rgba(0,0,0,.45)); }
+.cards svg:nth-child(1) { transform: rotate(-6deg); } .cards svg:nth-child(2) { transform: rotate(5deg) translateY(30px); }
+.story .cards svg { height: 900px; }
+/* question (story) */
+.q { background: var(--card); border: 2px solid var(--line); border-radius: 44px; padding: 54px; display: flex; flex-direction: column; gap: 26px; }
+.q .opts { display: grid; gap: 18px; }
+.q .opt { font: 700 46px var(--display); padding: 28px 34px; border-radius: 28px; border: 2px solid var(--line); }
+.art { position: absolute; right: -30px; bottom: 330px; width: 430px; height: auto; transform: rotate(-8deg); filter: drop-shadow(0 30px 40px rgba(0,0,0,.35)); pointer-events: none; }
+.story .art { bottom: 560px; width: 520px; }
+.pills, .foot, .sub, h1 { position: relative; z-index: 1; }
+.slide-no { position: absolute; top: 96px; right: 88px; font: 700 26px var(--mono); color: var(--muted); }
+.story .slide-no { top: 270px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../assets/qrcode.js"></script>
+<script src="../assets/tipcard.js"></script>
+<script src="../assets/tipskin.js"></script>
+<script>
+// window.render(item) draws one frame. item: {format: "post"|"story", theme, layout, ...layout fields}. Text fields are plain
+// text; *word* becomes the accent colour. Everything is escaped.
+(function () {
+  "use strict";
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var rich = function (s) { return esc(s).replace(/\*([^*]+)\*/g, "<em>$1</em>").replace(/\n/g, "<br>"); };
+  var bold = function (s) { return esc(s).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>"); };
+  function foot(it) {
+    var tip = it.product === "tip";
+    return '<div class="foot"><div class="brand"><img src="../assets/chef.webp" alt="">passa' + (tip ? "<i>tip</i>" : "") + '</div><div class="handle">' + esc(it.handle || (tip ? "passa.cafe/tip" : "passa.cafe")) + "</div></div>";
+  }
+  function hsize(t) { var n = String(t || "").length; return n > 70 ? "xs" : n > 42 ? "s" : ""; }
+  var L = {
+    headline: function (it) {
+      return '<p class="eyebrow">' + esc(it.eyebrow) + "</p><h1 class=\"" + hsize(it.title) + '">' + rich(it.title) + "</h1>" +
+        (it.sub ? '<p class="sub">' + bold(it.sub) + "</p>" : "") + '<div class="grow"></div>' +
+        (it.pills ? '<div class="pills">' + it.pills.map(function (p) { return '<span class="pill">' + esc(p) + "</span>"; }).join("") + "</div>" : "") + foot(it);
+    },
+    stat: function (it) {
+      return '<p class="eyebrow">' + esc(it.eyebrow) + '</p><div class="grow"></div><div class="big">' + rich(it.number) + '</div><p class="label">' + esc(it.label) + "</p>" +
+        (it.sub ? '<p class="sub">' + bold(it.sub) + "</p>" : "") + '<div class="grow"></div>' + (it.source ? '<p class="src">Źródło: ' + esc(it.source) + "</p>" : "") + foot(it);
+    },
+    chat: function (it) {
+      return '<p class="eyebrow">' + esc(it.eyebrow) + '</p><div class="chat">' + it.lines.map(function (m) {
+        return '<div class="msg ' + (m.side === "r" ? "r" : "l") + '"><span class="who">' + esc(m.who) + "</span>" + esc(m.text) + "</div>";
+      }).join("") + '</div><div class="grow"></div>' + (it.punch ? '<p class="punch">' + rich(it.punch) + "</p>" : "") + foot(it);
+    },
+    list: function (it) {
+      return '<p class="eyebrow">' + esc(it.eyebrow) + '</p><h1 class="' + (hsize(it.title) || "s") + '">' + rich(it.title) + '</h1><ol class="list">' +
+        it.items.map(function (x) { return "<li><span><b>" + esc(x.b) + "</b>" + esc(x.t) + "</span></li>"; }).join("") + '</ol><div class="grow"></div>' + foot(it);
+    },
+    cards: function (it) {
+      var c = it.card || { n: "Ola", r: "Kelnerka", v: "Kraków", s: "noir" };
+      var demo = (function () { var q = window.qrcode(0, "M"); q.addData("https://passa.cafe/tip/"); q.make(); return { n: q.getModuleCount(), dark: function (r, k) { return q.isDark(r, k); } }; })();
+      var A = { chef: "../assets/chef.webp", wm: null };
+      return '<p class="eyebrow">' + esc(it.eyebrow) + '</p><h1 class="' + (hsize(it.title) || "s") + '">' + rich(it.title) + "</h1>" +
+        '<div class="cards">' + window.PassaSkin.svg(c, null, A, "a", "front", { mag: !!it.mag }) + window.PassaSkin.svg(c, demo, A, "b", "back", { mag: !!it.mag }) + "</div>" + foot(it);
+    },
+    question: function (it) {
+      return '<p class="eyebrow">' + esc(it.eyebrow) + '</p><h1 class="' + (hsize(it.title) || "s") + '">' + rich(it.title) + '</h1><div class="grow"></div><div class="q"><p class="sub">' + bold(it.sub || "") + '</p><div class="opts">' +
+        (it.options || []).map(function (o) { return '<div class="opt">' + esc(o) + "</div>"; }).join("") + '</div></div><div class="grow"></div>' + foot(it);
+    },
+  };
+  window.render = function (it) {
+    document.body.className = it.format === "story" ? "story" : "";
+    if (it.format === "story") { document.documentElement.style.height = "1920px"; document.body.style.height = "1920px"; }
+    var root = document.getElementById("root");
+    root.innerHTML = '<div class="f grain t-' + esc(it.theme || "noir") + '">' + (it.slide ? '<span class="slide-no">' + esc(it.slide) + "</span>" : "") +
+      (it.art === "chef" ? '<img class="art" src="../assets/chef.webp" alt="">' : "") + (L[it.layout] || L.headline)(it) + "</div>";
+    return document.fonts.ready.then(function () {
+      return Promise.all(Array.prototype.map.call(document.images, function (i) { return i.complete ? 0 : new Promise(function (ok) { i.onload = i.onerror = ok; }); }));
+    });
+  };
+})();
+</script>
+</body>
+</html>

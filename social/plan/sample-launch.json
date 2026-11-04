@@ -1,0 +1,157 @@
+{
+ "date": "sample-launch",
+ "items": [
+  {
+   "id": "intro",
+   "format": "post",
+   "theme": "cream",
+   "layout": "headline",
+   "product": "menu",
+   "eyebrow": "Nowe w Krakowie",
+   "title": "Stolik *płaci sam.*",
+   "sub": "QR-menu, rachunek i płatność z telefonu gościa. **0 zł abonamentu**, maksymalnie 99 zł miesięcznie.",
+   "pills": [
+    "30 dni gratis",
+    "1% od płatności online",
+    "maks. 99 zł / mies."
+   ],
+   "art": "chef"
+  },
+  {
+   "id": "tip1",
+   "group": "tip-jak",
+   "slide": "1/4",
+   "format": "post",
+   "theme": "noir",
+   "layout": "cards",
+   "product": "tip",
+   "eyebrow": "Passa Tip",
+   "title": "Napiwek. *Jednym dotknięciem.*",
+   "card": {
+    "n": "Ola",
+    "r": "Kelnerka",
+    "v": "Kraków",
+    "s": "noir"
+   }
+  },
+  {
+   "id": "tip2",
+   "group": "tip-jak",
+   "slide": "2/4",
+   "format": "post",
+   "theme": "noir",
+   "layout": "list",
+   "product": "tip",
+   "eyebrow": "Jak to działa",
+   "title": "Trzy kroki, *zero aplikacji.*",
+   "items": [
+    {
+     "b": "Wklejasz swój link",
+     "t": "Tippin', TipTip, Revolut albo numer do BLIK."
+    },
+    {
+     "b": "Wybierasz kartę",
+     "t": "Noir, Espresso albo Masło. Twoje imię, Twój podpis."
+    },
+    {
+     "b": "Gość przykłada telefon",
+     "t": "Widzi Twoje imię i jeden przycisk. 5 sekund."
+    }
+   ]
+  },
+  {
+   "id": "tip3",
+   "group": "tip-jak",
+   "slide": "3/4",
+   "format": "post",
+   "theme": "noir",
+   "layout": "headline",
+   "product": "tip",
+   "eyebrow": "Bez prowizji",
+   "title": "*0 zł* od Twoich napiwków.",
+   "sub": "Pieniądze idą prosto przez serwis, którego już używasz. **Passa ich nie dotyka** i nie widzi kwot.",
+   "art": "chef"
+  },
+  {
+   "id": "tip4",
+   "group": "tip-jak",
+   "slide": "4/4",
+   "format": "post",
+   "theme": "pink",
+   "layout": "headline",
+   "product": "tip",
+   "eyebrow": "Spróbuj teraz",
+   "title": "Zrób swoją kartę *za darmo.*",
+   "sub": "passa.cafe/tip — dwie minuty, bez zakładania konta.",
+   "pills": [
+    "NFC",
+    "QR",
+    "MagSafe"
+   ],
+   "art": "chef"
+  },
+  {
+   "id": "meme1",
+   "format": "post",
+   "theme": "noir",
+   "layout": "chat",
+   "product": "tip",
+   "eyebrow": "Kelnerska prawda",
+   "lines": [
+    {
+     "who": "Gość",
+     "side": "l",
+     "text": "Zostawiłbym napiwek, ale nie mam gotówki."
+    },
+    {
+     "who": "Kelnerka",
+     "side": "r",
+     "text": "Proszę przyłożyć telefon do karty."
+    },
+    {
+     "who": "Gość",
+     "side": "l",
+     "text": "…to wszystko?"
+    }
+   ],
+   "punch": "Tak. *To wszystko.*"
+  },
+  {
+   "id": "stat1",
+   "format": "post",
+   "theme": "butter",
+   "layout": "stat",
+   "product": "tip",
+   "eyebrow": "Passa Tip w liczbach",
+   "number": "5 s",
+   "label": "od dotknięcia karty do napiwku",
+   "sub": "Bez aplikacji. Bez konta. **Bez gotówki.**"
+  },
+  {
+   "id": "story-q",
+   "format": "story",
+   "theme": "butter",
+   "layout": "question",
+   "product": "tip",
+   "eyebrow": "Pytanie dnia",
+   "title": "Ile napiwków dostajesz *na kartę?*",
+   "sub": "Zaznacz w ankiecie — wyniki pokażemy jutro.",
+   "options": [
+    "Prawie wszystkie",
+    "Mniej niż połowę",
+    "Prawie nic, terminal nie pyta"
+   ]
+  },
+  {
+   "id": "story-kuchnia",
+   "format": "story",
+   "theme": "pink",
+   "layout": "headline",
+   "product": "tip",
+   "eyebrow": "Nowość w Krakowie",
+   "title": "Kuchnia też zasługuje *na napiwek.*",
+   "sub": "Stojak „Napiwek dla kuchni” stawiasz przy kasie. Gość dotyka — kucharze dostają swoje.",
+   "art": "chef"
+  }
+ ]
+}
