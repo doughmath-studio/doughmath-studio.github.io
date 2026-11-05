@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-05-teaser",
+  "kind": "reel",
+  "video": "../p/2026-11-05-teaser/teaser.mp4",
+  "items": [
+    { "id": "cover", "format": "story", "ai": true,
+      "caption": "Coś się gotuje. 👨‍🍳\n\nKawa, talerz, rachunek, napiwek. Wkrótce pokażemy, co z tym zrobimy. Dla kelnerów, baristów i kuchni z Krakowa.\n\nZostań z nami, pierwsze danie już niedługo.\n\n#krakow #gastrokrakow #kelner #barista #napiwek\n\nPostacie i zdjęcia: AI 🎨" },
+    { "id": "f1", "format": "story" },
+    { "id": "f2", "format": "story" },
+    { "id": "f3", "format": "story" }
+  ]
+}
