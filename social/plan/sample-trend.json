@@ -1,0 +1,12 @@
+{ "date": "sample-trend", "items": [
+  { "id": "sms", "format": "post", "layout": "imessage", "contact": "Kierowniczka", "time": "Piątek 19:42",
+    "lines": [ { "side": "l", "text": "Ola, stolik 4 pyta, czy może zapłacić kartą i zostawić napiwek" },
+               { "side": "r", "text": "Przecież mają kod Passy na stoliku" },
+               { "side": "l", "text": "…to czemu jeszcze siedzą?" },
+               { "side": "r", "text": "Zamówili deser. Też przez telefon." } ],
+    "read": "Przeczytano",
+    "caption": "Najkrótsza rozmowa na zmianie, jaką znamy.\n\nStolik sam zamawia, sam dzieli rachunek i sam płaci. Ty masz czas na deser dla stolika 7.\n\nOznacz kierowniczkę, która musi to zobaczyć.\n\n#krakow #gastrokrakow #kelner #restauracjakrakow" },
+  { "id": "notes", "format": "post", "layout": "notes", "date": "5 listopada 2026 o 23:58", "title": "Rzeczy, które słyszę na każdej zmianie",
+    "body": "— «A można podzielić na siedem osób?»\n— «Napiwek bym dał, ale nie mam gotówki»\n— «Proszę pani, terminal!»\n— «Ja tylko zapytam…»\n— ~~«Nie spieszymy się»~~ nikt tak nie mówi",
+    "caption": "Zapisane w telefonie między stolikiem 3 a kuchnią.\n\nCo dopisałabyś do tej listy? Najlepsze trafią do następnej notatki.\n\n#kelner #barista #gastrokrakow #napiwek" }
+] }
