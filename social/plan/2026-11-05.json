@@ -1,0 +1,21 @@
+{
+ "date": "2026-11-05",
+ "items": [
+  {
+   "id": "intro",
+   "format": "post",
+   "theme": "cream",
+   "layout": "headline",
+   "product": "menu",
+   "eyebrow": "Nowe w Krakowie",
+   "title": "Stolik *płaci sam.*",
+   "sub": "QR-menu, rachunek i płatność z telefonu gościa. **0 zł abonamentu**, maksymalnie 99 zł miesięcznie.",
+   "pills": [
+    "30 dni gratis",
+    "1% od płatności online",
+    "maks. 99 zł / mies."
+   ],
+   "art": "chef"
+  }
+ ]
+}
