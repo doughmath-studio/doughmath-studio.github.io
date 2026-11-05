@@ -1,0 +1,7 @@
+{ "bpm": 120,
+  "objects": ["../gen/reel1/o1-espresso.webp", "../gen/reel1/o4-takeaway.webp", "../gen/reel1/o3-plate.webp", "../gen/reel1/o7-receipt.webp",
+              "../gen/reel1/o5-apron.webp", "../gen/reel1/o6-tipjar.webp", "../gen/reel1/o2-phone.webp", "../gen/reel1/o1-espresso.webp"],
+  "final": "../gen/reel1/o2-phone.webp",
+  "text": "Coś się gotuje.",
+  "sub": "passa.cafe · wkrótce",
+  "mascot_scale": 0.36 }
